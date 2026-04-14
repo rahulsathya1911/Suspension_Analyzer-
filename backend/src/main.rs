@@ -63,6 +63,166 @@ fn bad_request(msg: &str) -> Custom<Json<ApiError>> {
     Custom(Status::BadRequest, Json(ApiError { error: msg.to_string() }))
 }
 
+#[derive(Debug, Clone, Serialize)]
+#[serde(crate = "rocket::serde")]
+struct ResolvedQuarterParams {
+    ms: f64,
+    mu: f64,
+    k: f64,
+    c: f64,
+    kt: f64,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(crate = "rocket::serde")]
+struct BikeModelInput {
+    ms_front: f64,
+    ms_rear: f64,
+    mu_front: f64,
+    mu_rear: f64,
+    k_front: f64,
+    k_rear: f64,
+    c_front: f64,
+    c_rear: f64,
+    #[serde(default)]
+    kt_front: Option<f64>,
+    #[serde(default)]
+    kt_rear: Option<f64>,
+    #[serde(default)]
+    front_weight_distribution_pct: Option<f64>,
+    #[serde(default)]
+    rider_mass_kg: Option<f64>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[serde(crate = "rocket::serde")]
+enum BikeClassInput {
+    Scooter,
+    Commuter,
+    Middleweight,
+    Supersport,
+    Heavyweight,
+    Adventure,
+    Offroad,
+    ElectricMoto,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[serde(crate = "rocket::serde")]
+enum BikeSuspensionInput {
+    TelescopicFork,
+    UsdFork,
+    Monoshock,
+    DualShock,
+    Telelever,
+    Paralever,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(crate = "rocket::serde")]
+struct BikeResolvedSummary {
+    ms_front: f64,
+    ms_rear: f64,
+    mu_front: f64,
+    mu_rear: f64,
+    k_front: f64,
+    k_rear: f64,
+    c_front: f64,
+    c_rear: f64,
+    kt_front: f64,
+    kt_rear: f64,
+    front_weight_distribution_pct: f64,
+    rider_mass_kg: f64,
+    equivalent: ResolvedQuarterParams,
+}
+
+fn bike_natural_frequency_hz(k: f64, m: f64) -> f64 {
+    (k / m).sqrt() / (2.0 * std::f64::consts::PI)
+}
+
+fn validate_bike_model(b: &BikeModelInput) -> Result<(), &'static str> {
+    if b.ms_front <= 0.0 || b.ms_rear <= 0.0 { return Err("bike sprung masses must be positive"); }
+    if b.mu_front <= 0.0 || b.mu_rear <= 0.0 { return Err("bike unsprung masses must be positive"); }
+    if b.k_front <= 0.0 || b.k_rear <= 0.0 { return Err("bike spring rates must be positive"); }
+    if b.c_front < 0.0 || b.c_rear < 0.0 { return Err("bike damping values must be non-negative"); }
+    if b.mu_front >= b.ms_front || b.mu_rear >= b.ms_rear {
+        return Err("bike unsprung mass must be less than sprung mass on each axle");
+    }
+
+    let wf = b.front_weight_distribution_pct.unwrap_or(50.0);
+    if !(35.0..=65.0).contains(&wf) {
+        return Err("front_weight_distribution_pct must be between 35 and 65");
+    }
+
+    if let Some(rider_mass) = b.rider_mass_kg {
+        if !(40.0..=140.0).contains(&rider_mass) {
+            return Err("rider_mass_kg must be between 40 and 140");
+        }
+    }
+
+    if let Some(ktf) = b.kt_front {
+        if ktf <= 0.0 { return Err("kt_front must be positive"); }
+    }
+    if let Some(ktr) = b.kt_rear {
+        if ktr <= 0.0 { return Err("kt_rear must be positive"); }
+    }
+
+    let fn_front = bike_natural_frequency_hz(b.k_front, b.ms_front);
+    let fn_rear  = bike_natural_frequency_hz(b.k_rear, b.ms_rear);
+    if !(0.8..=3.5).contains(&fn_front) || !(0.8..=3.5).contains(&fn_rear) {
+        return Err("bike ride natural frequencies must be in a realistic range (0.8–3.5 Hz)");
+    }
+
+    Ok(())
+}
+
+fn resolve_bike_to_quarter(b: &BikeModelInput, fallback_kt: Option<f64>) -> Result<BikeResolvedSummary, &'static str> {
+    validate_bike_model(b)?;
+
+    let wf = b.front_weight_distribution_pct.unwrap_or_else(|| {
+        let total_ms = b.ms_front + b.ms_rear;
+        if total_ms <= 0.0 { 50.0 } else { 100.0 * b.ms_front / total_ms }
+    });
+    let wr = 100.0 - wf;
+
+    let kt_fallback = fallback_kt.unwrap_or(130_000.0);
+    let kt_front = b.kt_front.unwrap_or(kt_fallback);
+    let kt_rear  = b.kt_rear.unwrap_or(kt_fallback);
+
+    let wf_n = wf / 100.0;
+    let wr_n = wr / 100.0;
+    let equivalent = ResolvedQuarterParams {
+        ms: wf_n * b.ms_front + wr_n * b.ms_rear,
+        mu: wf_n * b.mu_front + wr_n * b.mu_rear,
+        k:  wf_n * b.k_front  + wr_n * b.k_rear,
+        c:  wf_n * b.c_front  + wr_n * b.c_rear,
+        kt: wf_n * kt_front   + wr_n * kt_rear,
+    };
+
+    if equivalent.mu <= 0.0 || equivalent.ms <= 0.0 || equivalent.k <= 0.0 || equivalent.kt <= 0.0 {
+        return Err("resolved bike equivalent parameters are invalid");
+    }
+    if equivalent.mu >= equivalent.ms {
+        return Err("resolved bike model is unstable: equivalent unsprung mass must be less than sprung mass");
+    }
+
+    Ok(BikeResolvedSummary {
+        ms_front: b.ms_front,
+        ms_rear: b.ms_rear,
+        mu_front: b.mu_front,
+        mu_rear: b.mu_rear,
+        k_front: b.k_front,
+        k_rear: b.k_rear,
+        c_front: b.c_front,
+        c_rear: b.c_rear,
+        kt_front,
+        kt_rear,
+        front_weight_distribution_pct: wf,
+        rider_mass_kg: b.rider_mass_kg.unwrap_or(75.0),
+        equivalent,
+    })
+}
+
 // ═══════════════════════════════════════════════════════════
 // SECTION 2 — Road profile JSON representation
 // ═══════════════════════════════════════════════════════════
@@ -136,22 +296,88 @@ impl RoadProfileInput {
 #[derive(Deserialize)]
 #[serde(crate = "rocket::serde")]
 struct SimulationInput {
-    ms:           f64,
-    mu:           f64,
-    k:            f64,
-    c:            f64,
-    kt:           f64,
+    ms:           Option<f64>,
+    mu:           Option<f64>,
+    k:            Option<f64>,
+    c:            Option<f64>,
+    kt:           Option<f64>,
+    #[serde(default)]
+    bike:         Option<BikeModelInput>,
+    #[serde(default)]
+    bike_class:   Option<BikeClassInput>,
+    #[serde(default)]
+    bike_suspension_type: Option<BikeSuspensionInput>,
+    #[serde(default)]
+    rake_angle_deg: Option<f64>,
+    #[serde(default)]
+    fn_target_hz: Option<f64>,
+    #[serde(default)]
+    zeta_target: Option<f64>,
+    #[serde(default)]
+    front_travel_mm: Option<f64>,
+    #[serde(default)]
+    rear_travel_mm: Option<f64>,
+    #[serde(default)]
+    preload_mm: Option<f64>,
     road_profile: RoadProfileInput,
 }
 
 impl SimulationInput {
+    fn resolve_params(&self) -> Result<(ResolvedQuarterParams, Option<BikeResolvedSummary>), &'static str> {
+        if let Some(bike) = &self.bike {
+            let resolved = resolve_bike_to_quarter(bike, self.kt)?;
+            return Ok((resolved.equivalent.clone(), Some(resolved)));
+        }
+
+        let ms = self.ms.ok_or("ms is required unless bike model is provided")?;
+        let mu = self.mu.ok_or("mu is required unless bike model is provided")?;
+        let k  = self.k.ok_or("k is required unless bike model is provided")?;
+        let c  = self.c.ok_or("c is required unless bike model is provided")?;
+        let kt = self.kt.ok_or("kt is required unless bike model is provided")?;
+
+        if ms  <= 0.0  { return Err("ms must be positive"); }
+        if mu  <= 0.0  { return Err("mu must be positive"); }
+        if k   <= 0.0  { return Err("k must be positive"); }
+        if c   <  0.0  { return Err("c must be non-negative"); }
+        if kt  <= 0.0  { return Err("kt must be positive"); }
+        if mu  >= ms { return Err("unsprung mass must be less than sprung mass"); }
+
+        Ok((ResolvedQuarterParams { ms, mu, k, c, kt }, None))
+    }
+
     fn validate(&self) -> Result<(), &'static str> {
-        if self.ms  <= 0.0  { return Err("ms must be positive"); }
-        if self.mu  <= 0.0  { return Err("mu must be positive"); }
-        if self.k   <= 0.0  { return Err("k must be positive"); }
-        if self.c   <  0.0  { return Err("c must be non-negative"); }
-        if self.kt  <= 0.0  { return Err("kt must be positive"); }
-        if self.mu  >= self.ms { return Err("unsprung mass must be less than sprung mass"); }
+        self.resolve_params()?;
+        let _bike_meta_present = self.bike_class.is_some() || self.bike_suspension_type.is_some();
+        if let Some(rake) = self.rake_angle_deg {
+            if !(15.0..=40.0).contains(&rake) {
+                return Err("rake_angle_deg must be between 15 and 40");
+            }
+        }
+        if let Some(fn_target) = self.fn_target_hz {
+            if !(0.5..=4.0).contains(&fn_target) {
+                return Err("fn_target_hz must be between 0.5 and 4.0");
+            }
+        }
+        if let Some(zeta_target) = self.zeta_target {
+            if !(0.1..=0.8).contains(&zeta_target) {
+                return Err("zeta_target must be between 0.1 and 0.8");
+            }
+        }
+        if let Some(front_travel) = self.front_travel_mm {
+            if front_travel <= 0.0 {
+                return Err("front_travel_mm must be positive");
+            }
+        }
+        if let Some(rear_travel) = self.rear_travel_mm {
+            if rear_travel <= 0.0 {
+                return Err("rear_travel_mm must be positive");
+            }
+        }
+        if let Some(preload) = self.preload_mm {
+            if preload < 0.0 {
+                return Err("preload_mm must be non-negative");
+            }
+        }
         self.road_profile.validate()
     }
 }
@@ -175,6 +401,14 @@ struct SimulationOutput {
     rms_tire_force:        f64,
     max_suspension_travel: f64,
     iso2631_weighted_rms:  f64,
+    model_type:            String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    bike_front_rear:       Option<BikeResolvedSummary>,
+    bottom_out:            bool,
+    static_sag_mm:         f64,
+    sag_percent:           f64,
+    fn_sprung:             f64,
+    fn_unsprung:           f64,
 }
 
 #[post("/simulate", format = "json", data = "<input>")]
@@ -187,15 +421,39 @@ async fn simulate_api(
 
     let profile_label = input.road_profile.label();
 
-    // Clone scalars before consuming input
-    let ms = input.ms;
-    let mu = input.mu;
-    let k  = input.k;
-    let c  = input.c;
-    let kt = input.kt;
+    let (resolved_params, bike_front_rear) = input.resolve_params().map_err(bad_request)?;
+    let ms = resolved_params.ms;
+    let mu = resolved_params.mu;
+    let k  = resolved_params.k;
+    let c  = resolved_params.c;
+    let kt = resolved_params.kt;
 
-    let profile = input.into_inner().road_profile.into_core();
+    let sim_in = input.into_inner();
+    let static_sag_m = (ms * 9.81) / k;
+    let static_sag_mm = static_sag_m * 1000.0;
+    let preload_mm = sim_in.preload_mm.unwrap_or(0.0);
+    let effective_sag_mm = (static_sag_mm - preload_mm).max(0.0);
+    let fn_sprung = bike_natural_frequency_hz(k, ms);
+    let fn_unsprung = ((k + kt) / mu).sqrt() / (2.0 * std::f64::consts::PI);
+
+    let travel_limit_mm = match (sim_in.front_travel_mm, sim_in.rear_travel_mm, &sim_in.bike) {
+        (Some(front), Some(rear), Some(b)) => {
+            let wf = b.front_weight_distribution_pct.unwrap_or(50.0) / 100.0;
+            Some(wf * front + (1.0 - wf) * rear)
+        }
+        (Some(front), Some(rear), None) => Some(0.5 * (front + rear)),
+        (Some(front), None, _) => Some(front),
+        (None, Some(rear), _) => Some(rear),
+        (None, None, _) => None,
+    };
+
+    let profile = sim_in.road_profile.into_core();
     let result  = run_simulation(ms, mu, k, c, kt, &profile);
+    let max_travel_mm = result.max_suspension_travel * 1000.0;
+    let bottom_out = travel_limit_mm.map(|limit| max_travel_mm > limit).unwrap_or(false);
+    let sag_percent = travel_limit_mm
+        .map(|limit| if limit > 0.0 { (effective_sag_mm / limit) * 100.0 } else { 0.0 })
+        .unwrap_or(0.0);
 
     // Persist to DB
     sqlx::query(
@@ -236,6 +494,13 @@ async fn simulate_api(
         rms_tire_force:        result.rms_tire_force,
         max_suspension_travel: result.max_suspension_travel,
         iso2631_weighted_rms:  result.iso2631_weighted_rms,
+        model_type:            if bike_front_rear.is_some() { "bike".into() } else { "quarter_car".into() },
+        bike_front_rear,
+        bottom_out,
+        static_sag_mm:         effective_sag_mm,
+        sag_percent,
+        fn_sprung,
+        fn_unsprung,
     }))
 }
 
@@ -290,11 +555,25 @@ async fn history(db: &State<PgPool>) -> ApiResult<Vec<SimulationRecord>> {
 #[derive(Deserialize)]
 #[serde(crate = "rocket::serde")]
 struct FrfInput {
-    ms:      f64,
-    mu:      f64,
-    k:       f64,
-    c:       f64,
-    kt:      f64,
+    ms:      Option<f64>,
+    mu:      Option<f64>,
+    k:       Option<f64>,
+    c:       Option<f64>,
+    kt:      Option<f64>,
+    #[serde(default)]
+    bike:    Option<BikeModelInput>,
+    #[serde(default)]
+    rake_angle_deg: Option<f64>,
+    #[serde(default)]
+    fn_target_hz: Option<f64>,
+    #[serde(default)]
+    zeta_target: Option<f64>,
+    #[serde(default)]
+    front_travel_mm: Option<f64>,
+    #[serde(default)]
+    rear_travel_mm: Option<f64>,
+    #[serde(default)]
+    preload_mm: Option<f64>,
     /// Start frequency for sweep [Hz] — default 0.5
     f_min:   Option<f64>,
     /// End frequency for sweep [Hz] — default 25.0
@@ -315,12 +594,29 @@ struct FrfPoint {
 #[post("/frf", format = "json", data = "<input>")]
 async fn frf_api(input: Json<FrfInput>) -> ApiResult<Vec<FrfPoint>> {
     let inp = input.into_inner();
+    let _rake_angle_deg = inp.rake_angle_deg.unwrap_or(25.0);
+    let _fn_target_hz = inp.fn_target_hz.unwrap_or(1.5);
+    let _zeta_target = inp.zeta_target.unwrap_or(0.30);
+    let _front_travel_mm = inp.front_travel_mm.unwrap_or(120.0);
+    let _rear_travel_mm = inp.rear_travel_mm.unwrap_or(120.0);
+    let _preload_mm = inp.preload_mm.unwrap_or(0.0);
 
-    if inp.ms <= 0.0 { return Err(bad_request("ms must be positive")); }
-    if inp.mu <= 0.0 { return Err(bad_request("mu must be positive")); }
-    if inp.k  <= 0.0 { return Err(bad_request("k must be positive")); }
-    if inp.c  <  0.0 { return Err(bad_request("c must be non-negative")); }
-    if inp.kt <= 0.0 { return Err(bad_request("kt must be positive")); }
+    let resolved = if let Some(bike) = &inp.bike {
+        resolve_bike_to_quarter(bike, inp.kt).map_err(bad_request)?.equivalent
+    } else {
+        let ms = inp.ms.ok_or_else(|| bad_request("ms is required unless bike model is provided"))?;
+        let mu = inp.mu.ok_or_else(|| bad_request("mu is required unless bike model is provided"))?;
+        let k = inp.k.ok_or_else(|| bad_request("k is required unless bike model is provided"))?;
+        let c = inp.c.ok_or_else(|| bad_request("c is required unless bike model is provided"))?;
+        let kt = inp.kt.ok_or_else(|| bad_request("kt is required unless bike model is provided"))?;
+        if ms <= 0.0 { return Err(bad_request("ms must be positive")); }
+        if mu <= 0.0 { return Err(bad_request("mu must be positive")); }
+        if k  <= 0.0 { return Err(bad_request("k must be positive")); }
+        if c  <  0.0 { return Err(bad_request("c must be non-negative")); }
+        if kt <= 0.0 { return Err(bad_request("kt must be positive")); }
+        if mu >= ms { return Err(bad_request("unsprung mass must be less than sprung mass")); }
+        ResolvedQuarterParams { ms, mu, k, c, kt }
+    };
 
     let f_min    = inp.f_min.unwrap_or(0.5).max(0.01);
     let f_max    = inp.f_max.unwrap_or(25.0);
@@ -331,7 +627,7 @@ async fn frf_api(input: Json<FrfInput>) -> ApiResult<Vec<FrfPoint>> {
     }
 
     let freqs  = log_freq_range(f_min, f_max, n_points);
-    let points = compute_frf(inp.ms, inp.mu, inp.k, inp.c, inp.kt, &freqs, 0.01);
+    let points = compute_frf(resolved.ms, resolved.mu, resolved.k, resolved.c, resolved.kt, &freqs, 0.01);
 
     let output: Vec<FrfPoint> = points.into_iter().map(|p| FrfPoint {
         freq_hz:                     p.freq_hz,
@@ -349,9 +645,23 @@ async fn frf_api(input: Json<FrfInput>) -> ApiResult<Vec<FrfPoint>> {
 #[derive(Deserialize)]
 #[serde(crate = "rocket::serde")]
 struct SweepInput {
-    ms:           f64,
-    mu:           f64,
-    kt:           f64,
+    ms:           Option<f64>,
+    mu:           Option<f64>,
+    kt:           Option<f64>,
+    #[serde(default)]
+    bike:         Option<BikeModelInput>,
+    #[serde(default)]
+    rake_angle_deg: Option<f64>,
+    #[serde(default)]
+    fn_target_hz: Option<f64>,
+    #[serde(default)]
+    zeta_target: Option<f64>,
+    #[serde(default)]
+    front_travel_mm: Option<f64>,
+    #[serde(default)]
+    rear_travel_mm: Option<f64>,
+    #[serde(default)]
+    preload_mm: Option<f64>,
     /// Spring rate range [N/m]: [min, max]
     k_range:      [f64; 2],
     /// Damping coefficient range [N·s/m]: [min, max]
@@ -377,11 +687,26 @@ struct ParetoOutput {
 #[post("/sweep", format = "json", data = "<input>")]
 async fn sweep_api(input: Json<SweepInput>) -> ApiResult<Vec<ParetoOutput>> {
     let inp = input.into_inner();
+    let _rake_angle_deg = inp.rake_angle_deg.unwrap_or(25.0);
+    let _fn_target_hz = inp.fn_target_hz.unwrap_or(1.5);
+    let _zeta_target = inp.zeta_target.unwrap_or(0.30);
+    let _front_travel_mm = inp.front_travel_mm.unwrap_or(120.0);
+    let _rear_travel_mm = inp.rear_travel_mm.unwrap_or(120.0);
+    let _preload_mm = inp.preload_mm.unwrap_or(0.0);
 
     // Validate fixed parameters
-    if inp.ms <= 0.0 { return Err(bad_request("ms must be positive")); }
-    if inp.mu <= 0.0 { return Err(bad_request("mu must be positive")); }
-    if inp.kt <= 0.0 { return Err(bad_request("kt must be positive")); }
+    let resolved = if let Some(bike) = &inp.bike {
+        resolve_bike_to_quarter(bike, inp.kt).map_err(bad_request)?.equivalent
+    } else {
+        let ms = inp.ms.ok_or_else(|| bad_request("ms is required unless bike model is provided"))?;
+        let mu = inp.mu.ok_or_else(|| bad_request("mu is required unless bike model is provided"))?;
+        let kt = inp.kt.ok_or_else(|| bad_request("kt is required unless bike model is provided"))?;
+        if ms <= 0.0 { return Err(bad_request("ms must be positive")); }
+        if mu <= 0.0 { return Err(bad_request("mu must be positive")); }
+        if kt <= 0.0 { return Err(bad_request("kt must be positive")); }
+        if mu >= ms { return Err(bad_request("unsprung mass must be less than sprung mass")); }
+        ResolvedQuarterParams { ms, mu, k: 0.0, c: 0.0, kt }
+    };
 
     // Validate ranges
     if inp.k_range[0] <= 0.0 || inp.k_range[1] <= 0.0 {
@@ -405,7 +730,7 @@ async fn sweep_api(input: Json<SweepInput>) -> ApiResult<Vec<ParetoOutput>> {
     let c_values = linspace(inp.c_range[0], inp.c_range[1], steps);
     let profile  = inp.road_profile.into_core();
 
-    let all_points = parameter_sweep(inp.ms, inp.mu, inp.kt, &k_values, &c_values, &profile);
+    let all_points = parameter_sweep(resolved.ms, resolved.mu, resolved.kt, &k_values, &c_values, &profile);
     let pareto     = extract_pareto_front(&all_points);
 
     let output: Vec<ParetoOutput> = pareto.into_iter().map(|p| ParetoOutput {
@@ -888,6 +1213,9 @@ struct MotoConfig {
     /// Rider mass [kg] — included in sprung mass per SAE J1299 §3.1
     /// Typical: 70–90 kg. Use 75 kg for SAE standard rider.
     rider_mass_kg:   f64,
+    /// Optional front static weight distribution [%].
+    /// Rear will use (100 - front). Typical motorcycles are 45–52% front static.
+    front_weight_distribution_pct: Option<f64>,
     /// Fork/steering head rake angle [degrees]
     /// Typical range: 22–28° road bikes, 27–32° cruisers, 20–23° supersport
     /// Used to compute effective spring rate: k_eff = k × cos²(rake)
@@ -926,6 +1254,11 @@ impl MotoConfig {
         if self.rider_mass_kg < 40.0 || self.rider_mass_kg > 130.0 {
             return Err("rider_mass_kg must be between 40 and 130 kg".to_string());
         }
+        if let Some(front_pct) = self.front_weight_distribution_pct {
+            if !(35.0..=65.0).contains(&front_pct) {
+                return Err("front_weight_distribution_pct must be between 35 and 65".to_string());
+            }
+        }
         if let Some(rake) = self.rake_angle_deg {
             if rake < 15.0 || rake > 40.0 {
                 return Err("rake_angle_deg must be between 15° and 40°".to_string());
@@ -948,6 +1281,12 @@ impl MotoConfig {
     /// Based on typical wheelbase CG position.
     /// EV motos shift weight rearward due to battery placement.
     fn axle_load_fraction(&self) -> f64 {
+        if let Some(front_pct) = self.front_weight_distribution_pct {
+            return match self.axle {
+                MotoAxle::Front => front_pct / 100.0,
+                MotoAxle::Rear  => 1.0 - (front_pct / 100.0),
+            };
+        }
         let is_electric = matches!(self.moto_class, MotoClass::ElectricMoto);
         match (&self.axle, is_electric) {
             (MotoAxle::Front, false) => 0.48, // ICE: slightly front-heavy with engine
