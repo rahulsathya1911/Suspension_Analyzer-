@@ -1,0 +1,16 @@
+# Rust
+target/
+**/target/
+
+# Debug / binaries
+*.pdb
+*.rlib
+
+# Environment
+.env
+
+# IDE
+.idea/
+
+# OS
+.DS_Store
