@@ -1,0 +1,34 @@
+What to work upon
+
+Phase 1 — Fix the tool before using it (this week)
+-Fix FRF chart to log scale on x-axis + mark body resonance and wheel hop frequency
+-Remove duplicate setProfile / setMainTab definitions (dead code, lines 537–562)
+-Add bottoming-out flag: warn when max_suspension_travel exceeds 120 mm (rear limit)
+-Replace silent FRF error catch with visible error state in the chart panel
+-Add run overlay: store last 3 results and draw them as faded traces on time + FRF charts
+-Increase Pareto sweep grid to 20×20 (400 points) and rename label to "Design space sweep"
+-Phase 2 — SAE deliverables (weeks 1–4)
+-Deliverable 1 · week 1–2
+
+Baseline characterisation — get real vehicle data (weigh frame, battery, wheels separately)
+Run ISO 8608 Class C @ 40 km/h with actual params → produce 1-page table: ISO RMS + comfort band + tyre force
+
+Deliverable 2 · week 2–3
+
+Spring rate decision — run 20×20 Pareto sweep, k range = 0.7×–1.5× baseline, filter bottomed-out points
+Output: Pareto plot + CSV export + recommended k–c pair with justification
+
+Deliverable 3 · week 3–4
+
+Speed sweep report — run ISO 8608 Class C at 20 / 40 / 60 / 80 / 100 km/h manually
+Plot ISO 2631 vs speed for baseline + recommended tuning. Mark comfort threshold bands (0.315, 0.63, 1.0 m/s²)
+
+Phase 3 — Model upgrades (weeks 3–6, run in parallel)
+
+A. Split damper into c_compression + c_rebound inputs (backend + two sliders in UI) — ~1 week
+
+B. Add separate front fork sliders: k_front, c_front (prep for half-car model) — ~1 week
+
+C. Implement 4-DOF half-car pitch model: add wheelbase L, CoG height h, pitch inertia Iy inputs — 2–3 weeks
+
+D. Add battery mass input (mass + height from ground) as separate sprung sub-mass — ~1 week
