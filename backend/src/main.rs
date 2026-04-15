@@ -94,29 +94,7 @@ struct BikeModelInput {
     rider_mass_kg: Option<f64>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
-#[serde(crate = "rocket::serde")]
-enum BikeClassInput {
-    Scooter,
-    Commuter,
-    Middleweight,
-    Supersport,
-    Heavyweight,
-    Adventure,
-    Offroad,
-    ElectricMoto,
-}
 
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
-#[serde(crate = "rocket::serde")]
-enum BikeSuspensionInput {
-    TelescopicFork,
-    UsdFork,
-    Monoshock,
-    DualShock,
-    Telelever,
-    Paralever,
-}
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(crate = "rocket::serde")]
@@ -304,16 +282,6 @@ struct SimulationInput {
     #[serde(default)]
     bike:         Option<BikeModelInput>,
     #[serde(default)]
-    bike_class:   Option<BikeClassInput>,
-    #[serde(default)]
-    bike_suspension_type: Option<BikeSuspensionInput>,
-    #[serde(default)]
-    rake_angle_deg: Option<f64>,
-    #[serde(default)]
-    fn_target_hz: Option<f64>,
-    #[serde(default)]
-    zeta_target: Option<f64>,
-    #[serde(default)]
     front_travel_mm: Option<f64>,
     #[serde(default)]
     rear_travel_mm: Option<f64>,
@@ -347,22 +315,6 @@ impl SimulationInput {
 
     fn validate(&self) -> Result<(), &'static str> {
         self.resolve_params()?;
-        let _bike_meta_present = self.bike_class.is_some() || self.bike_suspension_type.is_some();
-        if let Some(rake) = self.rake_angle_deg {
-            if !(15.0..=40.0).contains(&rake) {
-                return Err("rake_angle_deg must be between 15 and 40");
-            }
-        }
-        if let Some(fn_target) = self.fn_target_hz {
-            if !(0.5..=4.0).contains(&fn_target) {
-                return Err("fn_target_hz must be between 0.5 and 4.0");
-            }
-        }
-        if let Some(zeta_target) = self.zeta_target {
-            if !(0.1..=0.8).contains(&zeta_target) {
-                return Err("zeta_target must be between 0.1 and 0.8");
-            }
-        }
         if let Some(front_travel) = self.front_travel_mm {
             if front_travel <= 0.0 {
                 return Err("front_travel_mm must be positive");
@@ -563,12 +515,6 @@ struct FrfInput {
     #[serde(default)]
     bike:    Option<BikeModelInput>,
     #[serde(default)]
-    rake_angle_deg: Option<f64>,
-    #[serde(default)]
-    fn_target_hz: Option<f64>,
-    #[serde(default)]
-    zeta_target: Option<f64>,
-    #[serde(default)]
     front_travel_mm: Option<f64>,
     #[serde(default)]
     rear_travel_mm: Option<f64>,
@@ -594,9 +540,6 @@ struct FrfPoint {
 #[post("/frf", format = "json", data = "<input>")]
 async fn frf_api(input: Json<FrfInput>) -> ApiResult<Vec<FrfPoint>> {
     let inp = input.into_inner();
-    let _rake_angle_deg = inp.rake_angle_deg.unwrap_or(25.0);
-    let _fn_target_hz = inp.fn_target_hz.unwrap_or(1.5);
-    let _zeta_target = inp.zeta_target.unwrap_or(0.30);
     let _front_travel_mm = inp.front_travel_mm.unwrap_or(120.0);
     let _rear_travel_mm = inp.rear_travel_mm.unwrap_or(120.0);
     let _preload_mm = inp.preload_mm.unwrap_or(0.0);
@@ -651,12 +594,6 @@ struct SweepInput {
     #[serde(default)]
     bike:         Option<BikeModelInput>,
     #[serde(default)]
-    rake_angle_deg: Option<f64>,
-    #[serde(default)]
-    fn_target_hz: Option<f64>,
-    #[serde(default)]
-    zeta_target: Option<f64>,
-    #[serde(default)]
     front_travel_mm: Option<f64>,
     #[serde(default)]
     rear_travel_mm: Option<f64>,
@@ -687,9 +624,6 @@ struct ParetoOutput {
 #[post("/sweep", format = "json", data = "<input>")]
 async fn sweep_api(input: Json<SweepInput>) -> ApiResult<Vec<ParetoOutput>> {
     let inp = input.into_inner();
-    let _rake_angle_deg = inp.rake_angle_deg.unwrap_or(25.0);
-    let _fn_target_hz = inp.fn_target_hz.unwrap_or(1.5);
-    let _zeta_target = inp.zeta_target.unwrap_or(0.30);
     let _front_travel_mm = inp.front_travel_mm.unwrap_or(120.0);
     let _rear_travel_mm = inp.rear_travel_mm.unwrap_or(120.0);
     let _preload_mm = inp.preload_mm.unwrap_or(0.0);
