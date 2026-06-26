@@ -73,135 +73,89 @@ struct ResolvedQuarterParams {
     kt: f64,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-#[serde(crate = "rocket::serde")]
-struct BikeModelInput {
-    ms_front: f64,
-    ms_rear: f64,
-    mu_front: f64,
-    mu_rear: f64,
-    k_front: f64,
-    k_rear: f64,
-    c_front: f64,
-    c_rear: f64,
-    #[serde(default)]
-    kt_front: Option<f64>,
-    #[serde(default)]
-    kt_rear: Option<f64>,
-    #[serde(default)]
-    front_weight_distribution_pct: Option<f64>,
-    #[serde(default)]
-    rider_mass_kg: Option<f64>,
-}
-
-
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(crate = "rocket::serde")]
-struct BikeResolvedSummary {
-    ms_front: f64,
-    ms_rear: f64,
-    mu_front: f64,
-    mu_rear: f64,
-    k_front: f64,
-    k_rear: f64,
-    c_front: f64,
-    c_rear: f64,
-    kt_front: f64,
-    kt_rear: f64,
-    front_weight_distribution_pct: f64,
-    rider_mass_kg: f64,
-    equivalent: ResolvedQuarterParams,
-}
-
-fn bike_natural_frequency_hz(k: f64, m: f64) -> f64 {
+fn natural_frequency_hz(k: f64, m: f64) -> f64 {
     (k / m).sqrt() / (2.0 * std::f64::consts::PI)
 }
 
-fn validate_bike_model(b: &BikeModelInput) -> Result<(), &'static str> {
-    if b.ms_front <= 0.0 || b.ms_rear <= 0.0 { return Err("bike sprung masses must be positive"); }
-    if b.mu_front <= 0.0 || b.mu_rear <= 0.0 { return Err("bike unsprung masses must be positive"); }
-    if b.k_front <= 0.0 || b.k_rear <= 0.0 { return Err("bike spring rates must be positive"); }
-    if b.c_front < 0.0 || b.c_rear < 0.0 { return Err("bike damping values must be non-negative"); }
-    if b.mu_front >= b.ms_front || b.mu_rear >= b.ms_rear {
-        return Err("bike unsprung mass must be less than sprung mass on each axle");
-    }
+// ═══════════════════════════════════════════════════════════
+// SECTION 1.5 — Validation Schema
+// ═══════════════════════════════════════════════════════════
 
-    let wf = b.front_weight_distribution_pct.unwrap_or(50.0);
-    if !(35.0..=65.0).contains(&wf) {
-        return Err("front_weight_distribution_pct must be between 35 and 65");
-    }
-
-    if let Some(rider_mass) = b.rider_mass_kg {
-        if !(40.0..=140.0).contains(&rider_mass) {
-            return Err("rider_mass_kg must be between 40 and 140");
-        }
-    }
-
-    if let Some(ktf) = b.kt_front {
-        if ktf <= 0.0 { return Err("kt_front must be positive"); }
-    }
-    if let Some(ktr) = b.kt_rear {
-        if ktr <= 0.0 { return Err("kt_rear must be positive"); }
-    }
-
-    let fn_front = bike_natural_frequency_hz(b.k_front, b.ms_front);
-    let fn_rear  = bike_natural_frequency_hz(b.k_rear, b.ms_rear);
-    if !(0.8..=3.5).contains(&fn_front) || !(0.8..=3.5).contains(&fn_rear) {
-        return Err("bike ride natural frequencies must be in a realistic range (0.8–3.5 Hz)");
-    }
-
-    Ok(())
+#[derive(Serialize, Clone)]
+#[serde(crate = "rocket::serde")]
+struct VehicleLimits {
+    ms_min: f64, ms_max: f64,
+    mu_min: f64, mu_max: f64,
+    k_min:  f64, k_max:  f64,
+    c_min:  f64, c_max:  f64,
+    kt_min: f64, kt_max: f64,
 }
 
-fn resolve_bike_to_quarter(b: &BikeModelInput, fallback_kt: Option<f64>) -> Result<BikeResolvedSummary, &'static str> {
-    validate_bike_model(b)?;
+#[derive(Serialize, Clone)]
+#[serde(crate = "rocket::serde")]
+struct ValidationSchema {
+    car: VehicleLimits,
+    bike: VehicleLimits,
+}
 
-    let wf = b.front_weight_distribution_pct.unwrap_or_else(|| {
-        let total_ms = b.ms_front + b.ms_rear;
-        if total_ms <= 0.0 { 50.0 } else { 100.0 * b.ms_front / total_ms }
-    });
-    let wr = 100.0 - wf;
-
-    let kt_fallback = fallback_kt.unwrap_or(130_000.0);
-    let kt_front = b.kt_front.unwrap_or(kt_fallback);
-    let kt_rear  = b.kt_rear.unwrap_or(kt_fallback);
-
-    let wf_n = wf / 100.0;
-    let wr_n = wr / 100.0;
-    let equivalent = ResolvedQuarterParams {
-        ms: wf_n * b.ms_front + wr_n * b.ms_rear,
-        mu: wf_n * b.mu_front + wr_n * b.mu_rear,
-        k:  wf_n * b.k_front  + wr_n * b.k_rear,
-        c:  wf_n * b.c_front  + wr_n * b.c_rear,
-        kt: wf_n * kt_front   + wr_n * kt_rear,
-    };
-
-    if equivalent.mu <= 0.0 || equivalent.ms <= 0.0 || equivalent.k <= 0.0 || equivalent.kt <= 0.0 {
-        return Err("resolved bike equivalent parameters are invalid");
+impl Default for ValidationSchema {
+    fn default() -> Self {
+        Self {
+            car: VehicleLimits {
+                ms_min: 150.0, ms_max: 2000.0,
+                mu_min: 15.0,  mu_max: 150.0,
+                k_min:  5000.0, k_max: 150000.0,
+                c_min:  100.0,  c_max: 10000.0,
+                kt_min: 80000.0, kt_max: 500000.0,
+            },
+            bike: VehicleLimits {
+                ms_min: 30.0,  ms_max: 400.0,
+                mu_min: 5.0,   mu_max: 80.0,
+                k_min:  1000.0, k_max: 60000.0,
+                c_min:  10.0,   c_max: 6000.0,
+                kt_min: 50000.0, kt_max: 300000.0,
+            },
+        }
     }
-    if equivalent.mu >= equivalent.ms {
-        return Err("resolved bike model is unstable: equivalent unsprung mass must be less than sprung mass");
-    }
+}
 
-    Ok(BikeResolvedSummary {
-        ms_front: b.ms_front,
-        ms_rear: b.ms_rear,
-        mu_front: b.mu_front,
-        mu_rear: b.mu_rear,
-        k_front: b.k_front,
-        k_rear: b.k_rear,
-        c_front: b.c_front,
-        c_rear: b.c_rear,
-        kt_front,
-        kt_rear,
-        front_weight_distribution_pct: wf,
-        rider_mass_kg: b.rider_mass_kg.unwrap_or(75.0),
-        equivalent,
-    })
+impl ValidationSchema {
+    fn validate_params(&self, vehicle_mode: Option<&str>, is_sae_derived: Option<bool>, ms: f64, mu: f64, k: f64, c: f64, kt: f64) -> Result<(), &'static str> {
+        let limits = match vehicle_mode {
+            Some("bike") => &self.bike,
+            _ => &self.car, // default to car
+        };
+
+        // If SAE-derived, we trust the parameters implicitly, as they are generated by our physics engine.
+        // We only enforce that they are physically possible (> 0).
+        let sae = is_sae_derived.unwrap_or(false);
+        
+        if ms <= 0.0 { return Err("ms must be positive"); }
+        if mu <= 0.0 { return Err("mu must be positive"); }
+        if k  <= 0.0 { return Err("k must be positive"); }
+        if c  <  0.0 { return Err("c must be non-negative"); }
+        if kt <= 0.0 { return Err("kt must be positive"); }
+        if mu >= ms { return Err("unsprung mass must be less than sprung mass"); }
+
+        if !sae {
+            if ms < limits.ms_min || ms > limits.ms_max { return Err("ms out of bounds for vehicle mode"); }
+            if mu < limits.mu_min || mu > limits.mu_max { return Err("mu out of bounds for vehicle mode"); }
+            if k < limits.k_min || k > limits.k_max { return Err("k out of bounds for vehicle mode"); }
+            if c < limits.c_min || c > limits.c_max { return Err("c out of bounds for vehicle mode"); }
+            if kt < limits.kt_min || kt > limits.kt_max { return Err("kt out of bounds for vehicle mode"); }
+        }
+
+        Ok(())
+    }
+}
+
+#[get("/validation-schema")]
+fn validation_schema_api() -> Json<ValidationSchema> {
+    Json(ValidationSchema::default())
 }
 
 // ═══════════════════════════════════════════════════════════
+
 // SECTION 2 — Road profile JSON representation
 // ═══════════════════════════════════════════════════════════
 
@@ -280,49 +234,32 @@ struct SimulationInput {
     c:            Option<f64>,
     kt:           Option<f64>,
     #[serde(default)]
-    bike:         Option<BikeModelInput>,
-    #[serde(default)]
-    front_travel_mm: Option<f64>,
-    #[serde(default)]
-    rear_travel_mm: Option<f64>,
+    travel_limit_mm: Option<f64>,
     #[serde(default)]
     preload_mm: Option<f64>,
     road_profile: RoadProfileInput,
+    vehicle_mode: Option<String>,
+    is_sae_derived: Option<bool>,
 }
 
 impl SimulationInput {
-    fn resolve_params(&self) -> Result<(ResolvedQuarterParams, Option<BikeResolvedSummary>), &'static str> {
-        if let Some(bike) = &self.bike {
-            let resolved = resolve_bike_to_quarter(bike, self.kt)?;
-            return Ok((resolved.equivalent.clone(), Some(resolved)));
-        }
+    fn resolve_params(&self, schema: &ValidationSchema) -> Result<ResolvedQuarterParams, &'static str> {
+        let ms = self.ms.ok_or("ms is required")?;
+        let mu = self.mu.ok_or("mu is required")?;
+        let k  = self.k.ok_or("k is required")?;
+        let c  = self.c.ok_or("c is required")?;
+        let kt = self.kt.ok_or("kt is required")?;
 
-        let ms = self.ms.ok_or("ms is required unless bike model is provided")?;
-        let mu = self.mu.ok_or("mu is required unless bike model is provided")?;
-        let k  = self.k.ok_or("k is required unless bike model is provided")?;
-        let c  = self.c.ok_or("c is required unless bike model is provided")?;
-        let kt = self.kt.ok_or("kt is required unless bike model is provided")?;
+        schema.validate_params(self.vehicle_mode.as_deref(), self.is_sae_derived, ms, mu, k, c, kt)?;
 
-        if ms  <= 0.0  { return Err("ms must be positive"); }
-        if mu  <= 0.0  { return Err("mu must be positive"); }
-        if k   <= 0.0  { return Err("k must be positive"); }
-        if c   <  0.0  { return Err("c must be non-negative"); }
-        if kt  <= 0.0  { return Err("kt must be positive"); }
-        if mu  >= ms { return Err("unsprung mass must be less than sprung mass"); }
-
-        Ok((ResolvedQuarterParams { ms, mu, k, c, kt }, None))
+        Ok(ResolvedQuarterParams { ms, mu, k, c, kt })
     }
 
-    fn validate(&self) -> Result<(), &'static str> {
-        self.resolve_params()?;
-        if let Some(front_travel) = self.front_travel_mm {
-            if front_travel <= 0.0 {
-                return Err("front_travel_mm must be positive");
-            }
-        }
-        if let Some(rear_travel) = self.rear_travel_mm {
-            if rear_travel <= 0.0 {
-                return Err("rear_travel_mm must be positive");
+    fn validate(&self, schema: &ValidationSchema) -> Result<(), &'static str> {
+        self.resolve_params(schema)?;
+        if let Some(travel) = self.travel_limit_mm {
+            if travel <= 0.0 {
+                return Err("travel_limit_mm must be positive");
             }
         }
         if let Some(preload) = self.preload_mm {
@@ -354,8 +291,6 @@ struct SimulationOutput {
     max_suspension_travel: f64,
     iso2631_weighted_rms:  f64,
     model_type:            String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    bike_front_rear:       Option<BikeResolvedSummary>,
     bottom_out:            bool,
     static_sag_mm:         f64,
     sag_percent:           f64,
@@ -369,43 +304,38 @@ async fn simulate_api(
     db:    &State<PgPool>,
 ) -> ApiResult<SimulationOutput> {
 
-    input.validate().map_err(bad_request)?;
+    let schema = ValidationSchema::default();
 
-    let profile_label = input.road_profile.label();
-
-    let (resolved_params, bike_front_rear) = input.resolve_params().map_err(bad_request)?;
+    // Validate first (borrows input), then resolve params, then consume
+    input.validate(&schema).map_err(bad_request)?;
+    let resolved_params = input.resolve_params(&schema).map_err(bad_request)?;
     let ms = resolved_params.ms;
     let mu = resolved_params.mu;
     let k  = resolved_params.k;
     let c  = resolved_params.c;
     let kt = resolved_params.kt;
 
+    // Capture label before consuming input
+    let profile_label = input.road_profile.label();
+
     let sim_in = input.into_inner();
     let static_sag_m = (ms * 9.81) / k;
     let static_sag_mm = static_sag_m * 1000.0;
     let preload_mm = sim_in.preload_mm.unwrap_or(0.0);
     let effective_sag_mm = (static_sag_mm - preload_mm).max(0.0);
-    let fn_sprung = bike_natural_frequency_hz(k, ms);
+    let fn_sprung = natural_frequency_hz(k, ms);
     let fn_unsprung = ((k + kt) / mu).sqrt() / (2.0 * std::f64::consts::PI);
 
-    let travel_limit_mm = match (sim_in.front_travel_mm, sim_in.rear_travel_mm, &sim_in.bike) {
-        (Some(front), Some(rear), Some(b)) => {
-            let wf = b.front_weight_distribution_pct.unwrap_or(50.0) / 100.0;
-            Some(wf * front + (1.0 - wf) * rear)
-        }
-        (Some(front), Some(rear), None) => Some(0.5 * (front + rear)),
-        (Some(front), None, _) => Some(front),
-        (None, Some(rear), _) => Some(rear),
-        (None, None, _) => None,
-    };
+    let travel_limit_mm = sim_in.travel_limit_mm;
 
     let profile = sim_in.road_profile.into_core();
     let result  = run_simulation(ms, mu, k, c, kt, &profile);
     let max_travel_mm = result.max_suspension_travel * 1000.0;
     let bottom_out = travel_limit_mm.map(|limit| max_travel_mm > limit).unwrap_or(false);
-    let sag_percent = travel_limit_mm
-        .map(|limit| if limit > 0.0 { (effective_sag_mm / limit) * 100.0 } else { 0.0 })
-        .unwrap_or(0.0);
+    // Use actual travel limit when provided; fall back to 120 mm (typical shock stroke)
+    // so sag_percent is always a meaningful, non-zero value for the diagnostics panel.
+    let sag_reference_mm = travel_limit_mm.unwrap_or(120.0).max(1.0);
+    let sag_percent = (effective_sag_mm / sag_reference_mm * 100.0).clamp(0.0, 200.0);
 
     // Persist to DB
     sqlx::query(
@@ -446,8 +376,7 @@ async fn simulate_api(
         rms_tire_force:        result.rms_tire_force,
         max_suspension_travel: result.max_suspension_travel,
         iso2631_weighted_rms:  result.iso2631_weighted_rms,
-        model_type:            if bike_front_rear.is_some() { "bike".into() } else { "quarter_car".into() },
-        bike_front_rear,
+        model_type:            "quarter_car".into(),
         bottom_out,
         static_sag_mm:         effective_sag_mm,
         sag_percent,
@@ -513,11 +442,7 @@ struct FrfInput {
     c:       Option<f64>,
     kt:      Option<f64>,
     #[serde(default)]
-    bike:    Option<BikeModelInput>,
-    #[serde(default)]
-    front_travel_mm: Option<f64>,
-    #[serde(default)]
-    rear_travel_mm: Option<f64>,
+    travel_limit_mm: Option<f64>,
     #[serde(default)]
     preload_mm: Option<f64>,
     /// Start frequency for sweep [Hz] — default 0.5
@@ -526,6 +451,8 @@ struct FrfInput {
     f_max:   Option<f64>,
     /// Number of frequency points — default 100
     n_points: Option<usize>,
+    vehicle_mode: Option<String>,
+    is_sae_derived: Option<bool>,
 }
 
 /// One point in the FRF response.
@@ -540,26 +467,20 @@ struct FrfPoint {
 #[post("/frf", format = "json", data = "<input>")]
 async fn frf_api(input: Json<FrfInput>) -> ApiResult<Vec<FrfPoint>> {
     let inp = input.into_inner();
-    let _front_travel_mm = inp.front_travel_mm.unwrap_or(120.0);
-    let _rear_travel_mm = inp.rear_travel_mm.unwrap_or(120.0);
+    let _travel_limit_mm = inp.travel_limit_mm.unwrap_or(120.0);
     let _preload_mm = inp.preload_mm.unwrap_or(0.0);
 
-    let resolved = if let Some(bike) = &inp.bike {
-        resolve_bike_to_quarter(bike, inp.kt).map_err(bad_request)?.equivalent
-    } else {
-        let ms = inp.ms.ok_or_else(|| bad_request("ms is required unless bike model is provided"))?;
-        let mu = inp.mu.ok_or_else(|| bad_request("mu is required unless bike model is provided"))?;
-        let k = inp.k.ok_or_else(|| bad_request("k is required unless bike model is provided"))?;
-        let c = inp.c.ok_or_else(|| bad_request("c is required unless bike model is provided"))?;
-        let kt = inp.kt.ok_or_else(|| bad_request("kt is required unless bike model is provided"))?;
-        if ms <= 0.0 { return Err(bad_request("ms must be positive")); }
-        if mu <= 0.0 { return Err(bad_request("mu must be positive")); }
-        if k  <= 0.0 { return Err(bad_request("k must be positive")); }
-        if c  <  0.0 { return Err(bad_request("c must be non-negative")); }
-        if kt <= 0.0 { return Err(bad_request("kt must be positive")); }
-        if mu >= ms { return Err(bad_request("unsprung mass must be less than sprung mass")); }
-        ResolvedQuarterParams { ms, mu, k, c, kt }
-    };
+    let ms = inp.ms.ok_or_else(|| bad_request("ms is required"))?;
+    let mu = inp.mu.ok_or_else(|| bad_request("mu is required"))?;
+    let k = inp.k.ok_or_else(|| bad_request("k is required"))?;
+    let c = inp.c.ok_or_else(|| bad_request("c is required"))?;
+    let kt = inp.kt.ok_or_else(|| bad_request("kt is required"))?;
+    
+    let schema = ValidationSchema::default();
+    schema.validate_params(inp.vehicle_mode.as_deref(), inp.is_sae_derived, ms, mu, k, c, kt)
+        .map_err(bad_request)?;
+    
+    let resolved = ResolvedQuarterParams { ms, mu, k, c, kt };
 
     let f_min    = inp.f_min.unwrap_or(0.5).max(0.01);
     let f_max    = inp.f_max.unwrap_or(25.0);
@@ -592,11 +513,7 @@ struct SweepInput {
     mu:           Option<f64>,
     kt:           Option<f64>,
     #[serde(default)]
-    bike:         Option<BikeModelInput>,
-    #[serde(default)]
-    front_travel_mm: Option<f64>,
-    #[serde(default)]
-    rear_travel_mm: Option<f64>,
+    travel_limit_mm: Option<f64>,
     #[serde(default)]
     preload_mm: Option<f64>,
     /// Spring rate range [N/m]: [min, max]
@@ -606,6 +523,8 @@ struct SweepInput {
     /// Grid steps for each axis — default 10, max 20
     steps:        Option<usize>,
     road_profile: RoadProfileInput,
+    vehicle_mode: Option<String>,
+    is_sae_derived: Option<bool>,
 }
 
 /// One point on the Pareto front, returned by /sweep.
@@ -624,23 +543,20 @@ struct ParetoOutput {
 #[post("/sweep", format = "json", data = "<input>")]
 async fn sweep_api(input: Json<SweepInput>) -> ApiResult<Vec<ParetoOutput>> {
     let inp = input.into_inner();
-    let _front_travel_mm = inp.front_travel_mm.unwrap_or(120.0);
-    let _rear_travel_mm = inp.rear_travel_mm.unwrap_or(120.0);
+    let _travel_limit_mm = inp.travel_limit_mm.unwrap_or(120.0);
     let _preload_mm = inp.preload_mm.unwrap_or(0.0);
 
-    // Validate fixed parameters
-    let resolved = if let Some(bike) = &inp.bike {
-        resolve_bike_to_quarter(bike, inp.kt).map_err(bad_request)?.equivalent
-    } else {
-        let ms = inp.ms.ok_or_else(|| bad_request("ms is required unless bike model is provided"))?;
-        let mu = inp.mu.ok_or_else(|| bad_request("mu is required unless bike model is provided"))?;
-        let kt = inp.kt.ok_or_else(|| bad_request("kt is required unless bike model is provided"))?;
-        if ms <= 0.0 { return Err(bad_request("ms must be positive")); }
-        if mu <= 0.0 { return Err(bad_request("mu must be positive")); }
-        if kt <= 0.0 { return Err(bad_request("kt must be positive")); }
-        if mu >= ms { return Err(bad_request("unsprung mass must be less than sprung mass")); }
-        ResolvedQuarterParams { ms, mu, k: 0.0, c: 0.0, kt }
-    };
+    let ms = inp.ms.ok_or_else(|| bad_request("ms is required"))?;
+    let mu = inp.mu.ok_or_else(|| bad_request("mu is required"))?;
+    let kt = inp.kt.ok_or_else(|| bad_request("kt is required"))?;
+    
+    let schema = ValidationSchema::default();
+    schema.validate_params(inp.vehicle_mode.as_deref(), inp.is_sae_derived, ms, mu, inp.k_range[0], inp.c_range[0], kt)
+        .map_err(|e| bad_request(&format!("sweep min range validation: {}", e)))?;
+    schema.validate_params(inp.vehicle_mode.as_deref(), inp.is_sae_derived, ms, mu, inp.k_range[1], inp.c_range[1], kt)
+        .map_err(|e| bad_request(&format!("sweep max range validation: {}", e)))?;
+    
+    let resolved = ResolvedQuarterParams { ms, mu, k: 0.0, c: 0.0, kt };
 
     // Validate ranges
     if inp.k_range[0] <= 0.0 || inp.k_range[1] <= 0.0 {
@@ -1473,20 +1389,26 @@ async fn main() -> Result<(), rocket::Error> {
     dotenv().ok();
 
     let database_url = env::var("DATABASE_URL")
-        .expect("DATABASE_URL must be set");
+        .unwrap_or_else(|_| {
+            eprintln!("ERROR: DATABASE_URL env var not set");
+            std::process::exit(1);
+        });
 
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .connect(&database_url)
         .await
-        .expect("Failed to connect to Postgres");
+        .unwrap_or_else(|e| {
+            eprintln!("ERROR: Failed to connect to Postgres: {e}");
+            std::process::exit(1);
+        });
 
     println!("Connected to PostgreSQL.");
 
     rocket::build()
         .attach(Cors)
         .manage(pool)
-        .mount("/", routes![index, options, simulate_api, history, frf_api, sweep_api, vehicle_params_api, moto_params_api])
+        .mount("/", routes![index, options, simulate_api, history, frf_api, sweep_api, vehicle_params_api, moto_params_api, validation_schema_api])
         .launch()
         .await?;
 
