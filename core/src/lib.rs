@@ -46,6 +46,7 @@ pub enum RoadProfile {
     Iso8608 {
         roughness_coefficient: f64,
         vehicle_speed_mps: f64,
+        seed: u64,
     },
 }
 
@@ -66,7 +67,7 @@ impl RoadProfile {
                     .collect()
             }
 
-            RoadProfile::Iso8608 { roughness_coefficient, vehicle_speed_mps } => {
+            RoadProfile::Iso8608 { roughness_coefficient, vehicle_speed_mps, seed } => {
                 // Discretise PSD via inverse DFT method (deterministic seed via LCG).
                 // Gd(n0) is the roughness coefficient at reference spatial freq n0 = 0.1 cycle/m.
                 // PSD: Gd(n) = Gd(n0) · (n/n0)^-2   [m²/(cycle/m)]
@@ -74,8 +75,8 @@ impl RoadProfile {
                 //
                 // We synthesise by summing N_FREQ sinusoids with random phases
                 // and amplitudes derived from the PSD.
-                let v  = vehicle_speed_mps;
-                let gd = roughness_coefficient;
+                let v  = *vehicle_speed_mps;
+                let gd = *roughness_coefficient;
                 let n0 = 0.1_f64; // reference spatial frequency [cycle/m]
 
                 let n_freq   = 512usize;
@@ -83,7 +84,7 @@ impl RoadProfile {
                 let df       = f_max / n_freq as f64;
 
                 // LCG pseudo-random phases (no external crate needed)
-                let mut seed: u64 = 0xDEAD_BEEF_1234_5678;
+                let mut current_seed: u64 = *seed;
                 let lcg = |s: &mut u64| -> f64 {
                     *s = s.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
                     (*s >> 33) as f64 / (u64::MAX >> 33) as f64
@@ -97,7 +98,7 @@ impl RoadProfile {
                         // PSD in time domain [m²/Hz]
                         let sd = gd * (n_spatial / n0).powi(-2) / v;
                         let amplitude = (2.0 * sd * df).sqrt();
-                        let phase     = 2.0 * PI * lcg(&mut seed);
+                        let phase     = 2.0 * PI * lcg(&mut current_seed);
                         (f, amplitude, phase)
                     })
                     .collect();
@@ -139,19 +140,12 @@ const PI: f64 = std::f64::consts::PI;
 ///
 /// Returns the weighted gain W(f) for a given frequency f [Hz].
 fn wk_gain(f: f64) -> f64 {
-    // ISO 2631-1 Table B.2 — Wk vertical weighting
+    // ISO 2631-1:1997 Table B.2 — Wk vertical weighting
     // Piecewise defined (simplified continuous approximation):
-    //   f < 0.5  Hz  : rising  at +3 dB/oct
-    //   0.5–2 Hz     : flat plateau ~ 0.5
-    //   2–12.5 Hz    : rising to peak ~1.0 at 6–8 Hz then flat
-    //   12.5–80 Hz   : falling at -6 dB/oct
-    //   > 80 Hz      : negligible
-    //
-    // The values below match ISO 2631-1:1997 Table B.2 within ~1 dB.
     match f {
         f if f < 0.5   => 0.0,          // below measurement band
-        f if f < 2.0   => 0.5,
-        f if f < 4.0   => 0.5 + 0.5 * (f - 2.0) / 2.0,   // ramp up
+        f if f < 1.0   => 0.5,
+        f if f < 4.0   => 0.5 + 0.5 * (f - 1.0) / 3.0,   // ramp up
         f if f < 12.5  => 1.0,          // peak sensitivity band
         f if f < 80.0  => 12.5 / f,     // -6 dB/oct rolloff
         _              => 0.0,
@@ -271,11 +265,19 @@ fn derivatives(
     ms: f64, mu: f64,
     k:  f64, c:  f64, kt: f64,
     r:  f64,
+    travel_limit_m: f64,
 ) -> (f64, f64, f64, f64) {
+    let travel = x1 - x3;
+    let mut bump_force = 0.0;
+    if travel.abs() > travel_limit_m {
+        bump_force = 1e6 * (travel.abs() - travel_limit_m) * travel.signum();
+    }
     let dx1 = x2;
-    let dx2 = (-c*(x2-x4) - k*(x1-x3)) / ms;
+    let spring_force = k * travel + bump_force;
+    let damper_force = c * (x2 - x4);
+    let dx2 = (-damper_force - spring_force) / ms;
     let dx3 = x4;
-    let dx4 = ( c*(x2-x4) + k*(x1-x3) - kt*(x3-r)) / mu;
+    let dx4 = ( damper_force + spring_force - kt*(x3-r)) / mu;
     (dx1, dx2, dx3, dx4)
 }
 
@@ -298,6 +300,7 @@ pub fn run_simulation(
     k:  f64,
     c:  f64,
     kt: f64,
+    travel_limit_m: f64,
     profile: &RoadProfile,
 ) -> SimulationResult {
 
@@ -327,8 +330,15 @@ pub fn run_simulation(
         body_vec.push(x1);
         wheel_vec.push(x3);
 
+        // Suspension travel
+        let travel = x1 - x3;
+        let mut bump_force = 0.0;
+        if travel.abs() > travel_limit_m {
+            bump_force = 1e6 * (travel.abs() - travel_limit_m) * travel.signum();
+        }
+
         // Body acceleration at current state
-        let a_s = (-c*(x2-x4) - k*(x1-x3)) / ms;
+        let a_s = (-c*(x2-x4) - k*travel - bump_force) / ms;
         acc_vec.push(a_s);
         sum_acc_sq += a_s * a_s;
 
@@ -336,28 +346,26 @@ pub fn run_simulation(
         let f_t = kt * (x3 - r);
         sum_tire_sq += f_t * f_t;
 
-        // Suspension travel
-        let travel = (x1 - x3).abs();
-        if travel > max_travel { max_travel = travel; }
+        if travel.abs() > max_travel { max_travel = travel.abs(); }
 
         // ── RK4 ────────────────────────────────────────────────────────
         if step < n_steps - 1 {
             let r_mid  = (r + road[step + 1]) / 2.0;
             let r_next = road[step + 1];
 
-            let (k1_1,k1_2,k1_3,k1_4) = derivatives(x1,x2,x3,x4,ms,mu,k,c,kt,r);
+            let (k1_1,k1_2,k1_3,k1_4) = derivatives(x1,x2,x3,x4,ms,mu,k,c,kt,r,travel_limit_m);
             let (k2_1,k2_2,k2_3,k2_4) = derivatives(
                 x1+dt*k1_1/2.0, x2+dt*k1_2/2.0,
                 x3+dt*k1_3/2.0, x4+dt*k1_4/2.0,
-                ms,mu,k,c,kt,r_mid);
+                ms,mu,k,c,kt,r_mid,travel_limit_m);
             let (k3_1,k3_2,k3_3,k3_4) = derivatives(
                 x1+dt*k2_1/2.0, x2+dt*k2_2/2.0,
                 x3+dt*k2_3/2.0, x4+dt*k2_4/2.0,
-                ms,mu,k,c,kt,r_mid);
+                ms,mu,k,c,kt,r_mid,travel_limit_m);
             let (k4_1,k4_2,k4_3,k4_4) = derivatives(
                 x1+dt*k3_1, x2+dt*k3_2,
                 x3+dt*k3_3, x4+dt*k3_4,
-                ms,mu,k,c,kt,r_next);
+                ms,mu,k,c,kt,r_next,travel_limit_m);
 
             x1 += dt/6.0*(k1_1+2.0*k2_1+2.0*k3_1+k4_1);
             x2 += dt/6.0*(k1_2+2.0*k2_2+2.0*k3_2+k4_2);
@@ -367,12 +375,15 @@ pub fn run_simulation(
     }
 
     let n_f              = n_steps as f64;
+    // Note: time-averaged RMS (divided by n_steps), not energy-normalised.
     let rms_body_acc     = (sum_acc_sq  / n_f).sqrt();
     let rms_tire_force   = (sum_tire_sq / n_f).sqrt();
     let iso_wrms         = iso2631_weighted_rms(&acc_vec, dt);
 
     let zeta           = c / (2.0 * (k * ms).sqrt());
     let mass_ratio     = mu / ms;
+    // Recommended unsprung mass rule of thumb (~12% of sprung mass)
+    // Ref: Gillespie, T.D. (1992). Fundamentals of Vehicle Dynamics. Table 5.1.
     let recommended_mu = 0.12 * ms;
 
     SimulationResult {
@@ -437,7 +448,7 @@ impl From<f64> for Complex {
 ///
 /// Body acc transmissibility = ω²·|X1/R|   [m/s² per m of road]
 /// Tire force transmissibility = kt·|X3/R - 1|  [N per m of road]
-fn frf_at_freq(ms: f64, mu: f64, k: f64, c: f64, kt: f64, freq_hz: f64) -> FrfPoint {
+fn frf_at_freq(ms: f64, mu: f64, k: f64, c: f64, kt: f64, freq_hz: f64, amplitude: f64) -> FrfPoint {
     let omega = 2.0 * PI * freq_hz;
     let jw    = Complex::new(0.0, omega);   // s = jω
     let jw2   = jw * jw;                    // s² = -ω²
@@ -448,14 +459,14 @@ fn frf_at_freq(ms: f64, mu: f64, k: f64, c: f64, kt: f64, freq_hz: f64) -> FrfPo
     let m22   = jw2 * Complex::from(mu) + cs_k + Complex::from(kt);
 
     let det      = m11 * m22 - m12 * m12;
-    let kt_c     = Complex::from(kt);
+    let kt_c     = Complex::from(kt) * Complex::from(amplitude);
     let x1_r     = (kt_c * cs_k) / det;
     let x3_r     = (kt_c * m11)  / det;
 
     FrfPoint {
         freq_hz,
         body_acc_transmissibility:   omega * omega * x1_r.abs(),
-        tire_force_transmissibility: kt * (x3_r - Complex::from(1.0)).abs(),
+        tire_force_transmissibility: kt * (x3_r - Complex::from(amplitude)).abs(),
     }
 }
 
@@ -474,10 +485,10 @@ pub fn compute_frf(
     c:  f64,
     kt: f64,
     freq_range: &[f64],
-    _amplitude: f64,   // kept for API compatibility
+    amplitude: f64,
 ) -> Vec<FrfPoint> {
     freq_range.iter()
-        .map(|&freq| frf_at_freq(ms, mu, k, c, kt, freq))
+        .map(|&freq| frf_at_freq(ms, mu, k, c, kt, freq, amplitude))
         .collect()
 }
 
@@ -519,7 +530,7 @@ pub fn parameter_sweep(
 
     for &k in k_values {
         for &c in c_values {
-            let r = run_simulation(ms, mu, k, c, kt, profile);
+            let r = run_simulation(ms, mu, k, c, kt, 0.120, profile);
             results.push(ParetoPoint {
                 k,
                 c,
@@ -589,7 +600,7 @@ mod tests {
     #[test]
     fn step_simulation_runs_and_lengths_match() {
         let (ms, mu, k, c, kt) = params();
-        let res = run_simulation(ms, mu, k, c, kt, &RoadProfile::Step { height: 0.05 });
+        let res = run_simulation(ms, mu, k, c, kt, 0.120, &RoadProfile::Step { height: 0.05 });
         assert_eq!(res.time.len(), N_STEPS);
         assert_eq!(res.body_user.len(), N_STEPS);
         assert_eq!(res.wheel_user.len(), N_STEPS);
@@ -598,7 +609,7 @@ mod tests {
     #[test]
     fn all_metrics_positive_for_step() {
         let (ms, mu, k, c, kt) = params();
-        let res = run_simulation(ms, mu, k, c, kt, &RoadProfile::Step { height: 0.05 });
+        let res = run_simulation(ms, mu, k, c, kt, 0.120, &RoadProfile::Step { height: 0.05 });
         assert!(res.rms_body_acc          > 0.0);
         assert!(res.rms_tire_force        > 0.0);
         assert!(res.max_suspension_travel > 0.0);
@@ -609,7 +620,7 @@ mod tests {
     fn iso2631_is_less_than_unweighted_rms() {
         // Wk weights are ≤ 1.0, so weighted RMS ≤ unweighted RMS
         let (ms, mu, k, c, kt) = params();
-        let res = run_simulation(ms, mu, k, c, kt, &RoadProfile::Step { height: 0.05 });
+        let res = run_simulation(ms, mu, k, c, kt, 0.120, &RoadProfile::Step { height: 0.05 });
         assert!(
             res.iso2631_weighted_rms <= res.rms_body_acc + 1e-10,
             "weighted {} > unweighted {}",
@@ -631,11 +642,12 @@ mod tests {
         let profile = RoadProfile::Iso8608 {
             roughness_coefficient: 1024e-6, // Class C road — excites full Wk band
             vehicle_speed_mps:     30.0,
+            seed:                  12345,
         };
         // c=200 → zeta≈0.04: very underdamped, sprung resonance dominates
         // c=500 → zeta≈0.10: near optimal comfort damping
-        let resonant = run_simulation(ms, mu, k, 200.0, kt, &profile);
-        let optimal  = run_simulation(ms, mu, k, 500.0, kt, &profile);
+        let resonant = run_simulation(ms, mu, k, 200.0, kt, 0.120, &profile);
+        let optimal  = run_simulation(ms, mu, k, 500.0, kt, 0.120, &profile);
         assert!(
             resonant.iso2631_weighted_rms > optimal.iso2631_weighted_rms,
             "resonance-dominated ISO2631 ({:.4}) should exceed near-optimal ({:.4})",
@@ -652,11 +664,12 @@ mod tests {
         let profile = RoadProfile::Iso8608 {
             roughness_coefficient: 1024e-6,
             vehicle_speed_mps:     30.0,
+            seed:                  12345,
         };
         let c_crit = 2.0 * (k * ms).sqrt();
         let c_candidates = [100.0, 200.0, 300.0, 500.0, 700.0, 1000.0, 1500.0, 2000.0];
         let (best_c, best_iso) = c_candidates.iter().fold((0.0_f64, f64::MAX), |best, &c| {
-            let iso = run_simulation(ms, mu, k, c, kt, &profile).iso2631_weighted_rms;
+            let iso = run_simulation(ms, mu, k, c, kt, 0.120, &profile).iso2631_weighted_rms;
             if iso < best.1 { (c, iso) } else { best }
         });
         let best_zeta = best_c / c_crit;
@@ -670,7 +683,7 @@ mod tests {
     #[test]
     fn sine_profile_produces_nonzero_response() {
         let (ms, mu, k, c, kt) = params();
-        let res = run_simulation(ms, mu, k, c, kt,
+        let res = run_simulation(ms, mu, k, c, kt, 0.120,
                                  &RoadProfile::Sine { amplitude: 0.01, freq_hz: 1.5 });
         assert!(res.rms_body_acc > 0.0);
     }
@@ -678,8 +691,8 @@ mod tests {
     #[test]
     fn iso8608_produces_nonzero_response() {
         let (ms, mu, k, c, kt) = params();
-        let res = run_simulation(ms, mu, k, c, kt,
-                                 &RoadProfile::Iso8608 { roughness_coefficient: 256e-6, vehicle_speed_mps: 30.0 });
+        let res = run_simulation(ms, mu, k, c, kt, 0.120,
+                                 &RoadProfile::Iso8608 { roughness_coefficient: 256e-6, vehicle_speed_mps: 30.0, seed: 12345 });
         assert!(res.rms_body_acc > 0.0);
     }
 

@@ -181,32 +181,6 @@
                 </svg>
                 <span class="hidden lg:block">Dashboard</span>
             </a>
-            <a href="#"
-                class="flex items-center gap-3 px-3 py-3 rounded-xl text-text-muted hover:text-white hover:bg-white/5 font-mono text-xs uppercase tracking-wider transition-colors">
-                <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4">
-                    </path>
-                </svg>
-                <span class="hidden lg:block">Tyre</span>
-            </a>
-            <a href="#"
-                class="flex items-center gap-3 px-3 py-3 rounded-xl text-text-muted hover:text-white hover:bg-white/5 font-mono text-xs uppercase tracking-wider transition-colors">
-                <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-                </svg>
-                <span class="hidden lg:block">Spring</span>
-            </a>
-            <a href="#"
-                class="flex items-center gap-3 px-3 py-3 rounded-xl text-text-muted hover:text-white hover:bg-white/5 font-mono text-xs uppercase tracking-wider transition-colors">
-                <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
-                    </path>
-                </svg>
-                <span class="hidden lg:block">Data Logger</span>
-            </a>
             <a href="#" id="navVehicle" onclick="switchScreen('vehicle'); return false;"
                 class="flex items-center gap-3 px-3 py-3 rounded-xl text-text-muted hover:text-white hover:bg-white/5 font-mono text-xs uppercase tracking-wider transition-colors">
                 <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -215,19 +189,15 @@
                 </svg>
                 <span class="hidden lg:block">Vehicle Config</span>
             </a>
-            <div class="mt-auto">
-                <a href="#"
-                    class="flex items-center gap-3 px-3 py-3 rounded-xl text-text-muted hover:text-white hover:bg-white/5 font-mono text-xs uppercase tracking-wider transition-colors">
-                    <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
-                        </path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    <span class="hidden lg:block">Settings</span>
-                </a>
-            </div>
+            <a href="#" id="navDiagnostics" onclick="switchScreen('diagnostics'); return false;"
+                class="flex items-center gap-3 px-3 py-3 rounded-xl text-text-muted hover:text-white hover:bg-white/5 font-mono text-xs uppercase tracking-wider transition-colors">
+                <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                    </path>
+                </svg>
+                <span class="hidden lg:block">Diagnostics</span>
+            </a>
         </div>
     </aside>
 
@@ -246,12 +216,6 @@
                 <div id="navTopDiagnostics" onclick="switchScreen('diagnostics')"
                     class="pb-[18px] font-mono text-[11px] uppercase tracking-widest text-text-muted hover:text-white border-b-2 border-transparent cursor-pointer transition-colors">
                     Diagnostics</div>
-                <div
-                    class="pb-[18px] font-mono text-[11px] uppercase tracking-widest text-text-muted hover:text-white border-b-2 border-transparent cursor-pointer transition-colors">
-                    Mapping</div>
-                <div
-                    class="pb-[18px] font-mono text-[11px] uppercase tracking-widest text-text-muted hover:text-white border-b-2 border-transparent cursor-pointer transition-colors">
-                    Library</div>
             </div>
 
             <div class="flex items-center gap-5">
@@ -288,8 +252,10 @@
                 <div class="font-mono text-[10px] uppercase tracking-widest text-text-muted mb-3">Vehicle Tuning Deck
                 </div>
 
-                <!-- Sliders -->
-                <div class="flex flex-col gap-4">
+                <!-- Section A: Vehicle Parameters -->
+                <div class="font-mono text-[11px] uppercase tracking-widest text-text-muted mb-2">Vehicle Parameters
+                </div>
+                <div class="flex flex-col gap-3 mb-2">
                     <div class="bg-[#111] border border-white/5 rounded-xl p-4 shadow-sm">
                         <div class="flex justify-between items-center mb-3">
                             <span class="text-xs uppercase tracking-wider text-text-muted">ms — Sprung Mass</span>
@@ -311,7 +277,12 @@
                         <input type="range" id="mu" min="15" max="80" value="40" step="1"
                             oninput="updateSlider('mu','muVal',this.value,'kg')">
                     </div>
+                </div>
 
+                <!-- Section B: Suspension Componentry -->
+                <div class="font-mono text-[11px] uppercase tracking-widest text-text-muted mb-2">Suspension Componentry
+                </div>
+                <div class="flex flex-col gap-3 mb-2">
                     <div class="bg-[#111] border border-white/5 rounded-xl p-4 shadow-sm">
                         <div class="flex justify-between items-center mb-3">
                             <span class="text-xs uppercase tracking-wider text-text-muted">k — Spring Rate</span>
@@ -344,9 +315,33 @@
                         <input type="range" id="kt" min="80000" max="300000" value="190000" step="5000"
                             oninput="updateSlider('kt','ktVal',this.value,'N/m')">
                     </div>
+
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-4 shadow-sm">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs uppercase tracking-wider text-text-muted">Travel Limit</span>
+                            <span
+                                class="font-mono text-xs text-red-main bg-red-main/10 border border-red-main/20 px-2 py-0.5 rounded-full"
+                                id="travelLimitVal">120 mm</span>
+                        </div>
+                        <input type="range" id="travelLimit" min="40" max="250" value="120" step="5"
+                            oninput="updateSlider('travelLimit','travelLimitVal',this.value,'mm')">
+                    </div>
+
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-4 shadow-sm">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs uppercase tracking-wider text-text-muted">Preload</span>
+                            <span
+                                class="font-mono text-xs text-red-main bg-red-main/10 border border-red-main/20 px-2 py-0.5 rounded-full"
+                                id="preloadVal">0 mm</span>
+                        </div>
+                        <input type="range" id="preload" min="0" max="50" value="0" step="1"
+                            oninput="updateSlider('preload','preloadVal',this.value,'mm')">
+                    </div>
                 </div>
 
-                <div class="font-mono text-xs uppercase tracking-widest text-text-muted mt-4 mb-2">Road Generator</div>
+                <!-- Section C: Road Generator -->
+                <div class="font-mono text-[11px] uppercase tracking-widest text-text-muted mb-2 mt-2">Road Profile
+                </div>
 
                 <div class="flex gap-2">
                     <button
@@ -396,13 +391,22 @@
                             <input type="range" id="roadClass" min="0" max="4" value="1" step="1"
                                 oninput="updateRoadClass(this.value)">
                         </div>
-                        <div>
+                        <div class="mb-4">
                             <div class="flex justify-between items-center mb-3">
                                 <span class="text-xs uppercase tracking-wider text-text-muted">Vehicle Speed</span>
                                 <span class="font-mono text-xs text-red-main" id="speedVal">30 m/s</span>
                             </div>
                             <input type="range" id="speed" min="5" max="60" value="30" step="5"
                                 oninput="updateSlider('speed','speedVal',this.value,'m/s')">
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-xs uppercase tracking-wider text-text-muted">RNG Seed
+                                    (0=Random)</span>
+                                <span class="font-mono text-xs text-red-main" id="seedVal">42</span>
+                            </div>
+                            <input type="range" id="seed" min="0" max="100" value="42" step="1"
+                                oninput="updateSlider('seed','seedVal',this.value,'')">
                         </div>
                     </div>
                 </div>
@@ -438,6 +442,71 @@
                             id="sweepBtn" onclick="runSweep()">
                             <span id="sweepBtnText">⬡ Run Pareto Sweep</span>
                         </button>
+                    </div>
+                </div>
+
+                <!-- Metric Strip -->
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-2">
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-3 shadow-md flex flex-col justify-between"
+                        id="mc-zeta">
+                        <div class="font-mono text-[9px] uppercase tracking-widest text-text-muted mb-1">Damping Ratio ζ
+                        </div>
+                        <div class="font-sans text-xl" id="mv-zeta">—</div>
+                        <div class="h-1 bg-white/10 rounded-full mt-2 overflow-hidden">
+                            <div id="zetaFill" class="h-full bg-red-main transition-all duration-300" style="width:0%">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-3 shadow-md flex flex-col justify-between relative overflow-hidden"
+                        id="mc-iso">
+                        <div class="font-mono text-[9px] uppercase tracking-widest text-text-muted mb-1">ISO 2631</div>
+                        <div class="flex items-baseline gap-1">
+                            <div class="font-sans text-xl" id="mv-iso">—</div>
+                            <div class="font-mono text-[9px] text-text-muted">m/s²</div>
+                        </div>
+                        <div class="font-mono text-[8px] text-white/50 uppercase tracking-widest mt-1" id="comfortBand">
+                            WAITING</div>
+                    </div>
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-3 shadow-md flex flex-col justify-between"
+                        id="mc-rms">
+                        <div class="font-mono text-[9px] uppercase tracking-widest text-text-muted mb-1">RMS Body Acc
+                        </div>
+                        <div class="flex items-baseline gap-1">
+                            <div class="font-sans text-xl" id="mv-rms">—</div>
+                            <div class="font-mono text-[9px] text-text-muted">m/s²</div>
+                        </div>
+                    </div>
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-3 shadow-md flex flex-col justify-between"
+                        id="mc-tire">
+                        <div class="font-mono text-[9px] uppercase tracking-widest text-text-muted mb-1">RMS Tyre Force
+                        </div>
+                        <div class="flex items-baseline gap-1">
+                            <div class="font-sans text-xl" id="mv-tire">—</div>
+                            <div class="font-mono text-[9px] text-text-muted">N</div>
+                        </div>
+                    </div>
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-3 shadow-md flex flex-col justify-between"
+                        id="mc-travel">
+                        <div class="font-mono text-[9px] uppercase tracking-widest text-text-muted mb-1">Max Travel
+                        </div>
+                        <div class="flex items-baseline gap-1">
+                            <div class="font-sans text-xl" id="mv-travel">—</div>
+                            <div class="font-mono text-[9px] text-text-muted">mm</div>
+                        </div>
+                    </div>
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-3 shadow-md flex flex-col justify-between"
+                        id="mc-sag">
+                        <div class="font-mono text-[9px] uppercase tracking-widest text-text-muted mb-1">Sag %</div>
+                        <div class="flex items-baseline gap-1">
+                            <div class="font-sans text-xl" id="mv-sag">—</div>
+                            <div class="font-mono text-[9px] text-text-muted">%</div>
+                        </div>
+                    </div>
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-3 shadow-md flex flex-col justify-between"
+                        id="mc-bottomout">
+                        <div class="font-mono text-[9px] uppercase tracking-widest text-text-muted mb-1">Bottom-out
+                        </div>
+                        <div class="font-sans font-medium text-xl tracking-tight" id="mv-bottomout">—</div>
                     </div>
                 </div>
 
@@ -543,18 +612,15 @@
                             </div>
                         </div>
                         <div
-                            class="bg-black/40 border border-white/5 rounded-xl hover:bg-[#1f1f1f] transition-colors-xl p-6 flex flex-col">
-                            <div class="font-mono text-sm uppercase text-red-main mb-4">Analysis Guidance</div>
-                            <p class="text-sm text-text-muted leading-relaxed mb-6">
-                                Use this tab to inspect transmissibility behavior and resonance trends as you tune
-                                spring rate and damping.
-                            </p>
-                            <div class="bg-dark-bg border border-dark-border rounded-lg p-4 mb-4 text-sm text-gray-300">
-                                <strong class="text-white">Tip:</strong> if peak transmissibility is too high, increase
-                                damping first before increasing stiffness.
+                            class="bg-[#111] border border-white/5 rounded-2xl shadow-lg flex flex-col overflow-hidden min-h-0">
+                            <div class="px-4 py-3 border-b border-dark-border flex justify-between items-center">
+                                <span class="font-mono text-xs uppercase tracking-widest text-white">Tyre Force
+                                    Transmissibility</span>
+                                <span
+                                    class="font-mono text-[10px] bg-red-main/10 text-red-main px-2 py-0.5 rounded-full border border-red-main/20">FORCE/DISP</span>
                             </div>
-                            <div class="bg-dark-bg border border-dark-border rounded-lg p-4 text-sm text-gray-300">
-                                Keep an eye on ISO comfort in the metric strip while balancing tyre force trade-offs.
+                            <div class="p-4 flex-1 min-h-[250px]">
+                                <canvas id="tyreFrfChart"></canvas>
                             </div>
                         </div>
                     </div>
@@ -636,9 +702,465 @@
 
     </div><!-- /screen-dashboard -->
 
-    <!-- DIAGNOSTICS SCREEN -->
+    <!-- DIAGNOSTICS SCREEN — enhanced interactive version -->
+    <style>
+        /* ── Diagnostics screen styles ─────────────────────────────── */
+        #screen-diagnostics .diag-page-body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        #screen-diagnostics .diag-sidebar {
+            width: 232px;
+            flex-shrink: 0;
+            background: #111111;
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 20px 14px;
+            gap: 14px;
+        }
+
+        #screen-diagnostics .diag-sidebar-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: #a3a3a3;
+            margin-bottom: 4px;
+        }
+
+        #screen-diagnostics .diag-limit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 9px 11px;
+            background: #161616;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-left: 2px solid #E84045;
+            border-radius: 10px;
+            font-size: 11px;
+            color: #c4c4c4;
+            line-height: 1.5;
+        }
+
+        #screen-diagnostics .diag-limit-icon {
+            color: #E84045;
+            margin-top: 1px;
+            flex-shrink: 0;
+            font-size: 11px;
+        }
+
+        #screen-diagnostics .diag-sidebar-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        /* Tweak sliders */
+        #screen-diagnostics .diag-tweak-panel {
+            padding: 14px 12px;
+            background: #161616;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+        }
+
+        #screen-diagnostics .diag-tweak-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 7px;
+        }
+
+        #screen-diagnostics .diag-tweak-name {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: #a3a3a3;
+        }
+
+        #screen-diagnostics .diag-tweak-val {
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            color: #E84045;
+            background: rgba(232, 64, 69, 0.10);
+            border: 1px solid rgba(232, 64, 69, 0.22);
+            padding: 2px 7px;
+            border-radius: 20px;
+        }
+
+        /* Main content area */
+        #screen-diagnostics .diag-main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 24px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            min-width: 0;
+        }
+
+        #screen-diagnostics .diag-section-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: #E84045;
+            margin-bottom: 14px;
+        }
+
+        /* Metric cards grid */
+        #screen-diagnostics .diag-metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(176px, 1fr));
+            gap: 14px;
+        }
+
+        #screen-diagnostics .diag-metric-card {
+            background: #121212;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 18px;
+            padding: 18px 18px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+            overflow: visible;
+            cursor: default;
+            transition: border-color .2s, background .2s;
+        }
+
+        #screen-diagnostics .diag-metric-card:hover {
+            border-color: rgba(255, 255, 255, .13);
+            background: #161616;
+        }
+
+        #screen-diagnostics .diag-metric-card:hover .diag-tooltip {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        #screen-diagnostics .diag-metric-card.diag-critical {
+            animation: diagSagPulse 2.4s ease-in-out infinite;
+        }
+
+        @keyframes diagSagPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 transparent;
+                border-color: rgba(255, 255, 255, .06);
+            }
+
+            50% {
+                box-shadow: 0 0 22px 4px rgba(232, 64, 69, .22);
+                border-color: rgba(232, 64, 69, .45);
+            }
+        }
+
+        #screen-diagnostics .diag-metric-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: #a3a3a3;
+        }
+
+        #screen-diagnostics .diag-metric-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 40px;
+            font-weight: 600;
+            line-height: 1;
+            letter-spacing: -.02em;
+        }
+
+        #screen-diagnostics .diag-metric-unit {
+            font-size: 12px;
+            color: #a3a3a3;
+            margin-left: 4px;
+            font-weight: 400;
+        }
+
+        #screen-diagnostics .diag-metric-badge {
+            display: inline-block;
+            font-family: 'Space Mono', monospace;
+            font-size: 8px;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 20px;
+            width: fit-content;
+        }
+
+        #screen-diagnostics .diag-badge-ok {
+            background: rgba(34, 197, 94, 0.08);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, .22);
+        }
+
+        #screen-diagnostics .diag-badge-warn {
+            background: rgba(234, 179, 8, 0.08);
+            color: #eab308;
+            border: 1px solid rgba(234, 179, 8, .22);
+        }
+
+        #screen-diagnostics .diag-badge-crit {
+            background: rgba(232, 64, 69, 0.10);
+            color: #E84045;
+            border: 1px solid rgba(232, 64, 69, .28);
+        }
+
+        /* Tooltip */
+        #screen-diagnostics .diag-tooltip {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: #1c1c1c;
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            color: #e0e0e0;
+            line-height: 1.6;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(6px);
+            transition: opacity .22s, transform .22s;
+            z-index: 30;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .6);
+            min-width: 220px;
+        }
+
+        #screen-diagnostics .diag-tooltip .diag-formula {
+            color: #7dd3fc;
+            font-size: 10px;
+            display: block;
+            margin-top: 4px;
+        }
+
+        /* Zeta bar */
+        #screen-diagnostics .diag-zeta-track {
+            width: 100%;
+            height: 4px;
+            background: #222;
+            border-radius: 99px;
+            position: relative;
+            margin-top: 2px;
+        }
+
+        #screen-diagnostics .diag-zeta-zone {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 20%;
+            width: 40%;
+            background: rgba(34, 197, 94, .18);
+            border-radius: 99px;
+        }
+
+        #screen-diagnostics .diag-zeta-marker {
+            position: absolute;
+            top: -3px;
+            width: 2px;
+            height: 10px;
+            background: #fff;
+            border-radius: 1px;
+            transform: translateX(-50%);
+            transition: left .4s cubic-bezier(.34, 1.56, .64, 1);
+        }
+
+        #screen-diagnostics .diag-zeta-ticks {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'Space Mono', monospace;
+            font-size: 8px;
+            color: #a3a3a3;
+            margin-top: 3px;
+        }
+
+        /* Diagnostic stack rows */
+        #screen-diagnostics .diag-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        #screen-diagnostics .diag-row {
+            background: #121212;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-left: 3px solid transparent;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: border-color .15s, background .15s;
+        }
+
+        #screen-diagnostics .diag-row:hover {
+            background: #161616;
+        }
+
+        #screen-diagnostics .diag-row.diag-ok {
+            border-left-color: #22c55e;
+        }
+
+        #screen-diagnostics .diag-row.diag-warn {
+            border-left-color: #eab308;
+        }
+
+        #screen-diagnostics .diag-row.diag-crit {
+            border-left-color: #E84045;
+        }
+
+        #screen-diagnostics .diag-row-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            gap: 10px;
+            user-select: none;
+        }
+
+        #screen-diagnostics .diag-row-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+
+        #screen-diagnostics .diag-row-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #screen-diagnostics .diag-row-number {
+            font-family: 'Outfit', sans-serif;
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        #screen-diagnostics .diag-flag {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+
+        #screen-diagnostics .diag-flag-ok {
+            color: #22c55e;
+        }
+
+        #screen-diagnostics .diag-flag-warn {
+            color: #eab308;
+        }
+
+        #screen-diagnostics .diag-flag-crit {
+            color: #E84045;
+        }
+
+        #screen-diagnostics .diag-chevron {
+            color: #a3a3a3;
+            font-size: 11px;
+            transition: transform .2s;
+            margin-left: 2px;
+        }
+
+        #screen-diagnostics .diag-row.diag-open .diag-chevron {
+            transform: rotate(180deg);
+        }
+
+        #screen-diagnostics .diag-accordion {
+            display: none;
+            padding: 0 16px 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        #screen-diagnostics .diag-row.diag-open .diag-accordion {
+            display: block;
+        }
+
+        #screen-diagnostics .diag-accordion-inner {
+            padding: 10px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        #screen-diagnostics .diag-acc-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 10px;
+            background: #161616;
+            border-radius: 7px;
+        }
+
+        #screen-diagnostics .diag-acc-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: #a3a3a3;
+        }
+
+        #screen-diagnostics .diag-acc-val {
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+        }
+
+        #screen-diagnostics .diag-acc-ok {
+            color: #22c55e;
+        }
+
+        #screen-diagnostics .diag-acc-warn {
+            color: #eab308;
+        }
+
+        #screen-diagnostics .diag-acc-crit {
+            color: #E84045;
+        }
+
+        /* Flash animation for slider focus */
+        @keyframes diagSliderFlash {
+            0% {
+                box-shadow: 0 0 0 0 rgba(232, 64, 69, 0);
+            }
+
+            30% {
+                box-shadow: 0 0 0 5px rgba(232, 64, 69, 0.4);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(232, 64, 69, 0);
+            }
+        }
+
+        .diag-slider-flash {
+            animation: diagSliderFlash .7s ease;
+            border-radius: 8px;
+        }
+
+        /* No-data placeholder */
+        #screen-diagnostics .diag-no-data {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 64px 0;
+            gap: 10px;
+            text-align: center;
+        }
+    </style>
+
     <div id="screen-diagnostics" data-screen class="flex-1 flex flex-col min-w-0 bg-[#0A0A0A]" style="display:none">
 
+        <!-- Header -->
         <header
             class="h-[64px] shrink-0 border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-md px-6 flex items-center justify-between z-10 w-full">
             <div class="flex gap-8 h-full items-end pb-0">
@@ -660,11 +1182,85 @@
             </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto p-6">
-            <div class="font-mono text-sm uppercase text-red-main mb-5 tracking-widest px-1">Engineering Diagnostics
-            </div>
-            <div id="dashDiagMetrics" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6"></div>
-            <div id="dashDiagStack" class="flex flex-col gap-3"></div>
+        <!-- Page body: sidebar + main -->
+        <div class="diag-page-body">
+
+            <!-- Sidebar: Quick Tweaks + Model Limitations -->
+            <aside class="diag-sidebar">
+                <!-- Quick Tweaks -->
+                <div>
+                    <div class="diag-sidebar-label">Quick Tweak</div>
+                    <div class="diag-tweak-panel">
+                        <div class="diag-tweak-row">
+                            <span class="diag-tweak-name">k — Stiffness</span>
+                            <span class="diag-tweak-val" id="diag-tw-k-val">22000 N/m</span>
+                        </div>
+                        <input type="range" id="diag-tw-k" min="5000" max="60000" value="22000" step="500"
+                            oninput="diagUpdateTweak('k', this.value)">
+                        <div class="diag-tweak-row" style="margin-top:14px">
+                            <span class="diag-tweak-name">c — Damping</span>
+                            <span class="diag-tweak-val" id="diag-tw-c-val">1500 N·s/m</span>
+                        </div>
+                        <input type="range" id="diag-tw-c" min="100" max="6000" value="1500" step="50"
+                            oninput="diagUpdateTweak('c', this.value)">
+                    </div>
+                    <div class="font-mono text-[9px] uppercase tracking-widest text-text-muted mt-3 px-1"
+                        style="opacity:.5">
+                        Preview only — does not affect simulation
+                    </div>
+                </div>
+
+                <div class="diag-sidebar-divider"></div>
+
+                <!-- Model Limitations -->
+                <div>
+                    <div class="diag-sidebar-label">Model Limitations</div>
+                    <div style="display:flex;flex-direction:column;gap:7px">
+                        <div class="diag-limit-item">
+                            <span class="diag-limit-icon">⚠</span>
+                            <span><strong style="color:#fff">Linear damper only.</strong> 2:1 blow-off bypass not
+                                modelled.</span>
+                        </div>
+                        <div class="diag-limit-item">
+                            <span class="diag-limit-icon">⚠</span>
+                            <span><strong style="color:#fff">3-piece constant W<sub>k</sub> gain.</strong> ISO 2631
+                                approximation above 4 Hz.</span>
+                        </div>
+                        <div class="diag-limit-item">
+                            <span class="diag-limit-icon">⚠</span>
+                            <span><strong style="color:#fff">Quarter-car model.</strong> Roll, pitch and lateral
+                                coupling ignored.</span>
+                        </div>
+                        <div class="diag-limit-item">
+                            <span class="diag-limit-icon">⚠</span>
+                            <span><strong style="color:#fff">Static preload only.</strong> Dynamic tyre contact patch
+                                area fixed.</span>
+                        </div>
+                        <div class="diag-limit-item">
+                            <span class="diag-limit-icon">⚠</span>
+                            <span><strong style="color:#fff">Linear spring.</strong> Bumpstop &amp; progressive-rate
+                                effects omitted.</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main content -->
+            <main class="diag-main">
+
+                <!-- Metric cards -->
+                <div>
+                    <div class="diag-section-label">Engineering Diagnostics</div>
+                    <div class="diag-metric-grid" id="dashDiagMetrics"></div>
+                </div>
+
+                <!-- Diagnostic stack -->
+                <div>
+                    <div class="diag-section-label">Status &amp; Margins</div>
+                    <div class="diag-stack" id="dashDiagStack"></div>
+                </div>
+
+            </main>
         </div>
 
     </div><!-- /screen-diagnostics -->
@@ -1463,6 +2059,20 @@
         // ── Helpers ─────────────────────────────────────────────────
         function updateSlider(id, valId, val, unit) {
             document.getElementById(valId).textContent = `${val} ${unit}`.trim();
+            // Mirror k / c into diagnostics quick-tweak sliders for live preview coherence
+            if (id === 'k') {
+                const el = document.getElementById('diag-tw-k');
+                const valEl = document.getElementById('diag-tw-k-val');
+                if (el) el.value = val;
+                if (valEl) valEl.textContent = Number(val).toLocaleString() + ' N/m';
+                if (window.diagTweakState) window.diagTweakState.k = +val;
+            } else if (id === 'c') {
+                const el = document.getElementById('diag-tw-c');
+                const valEl = document.getElementById('diag-tw-c-val');
+                if (el) el.value = val;
+                if (valEl) valEl.textContent = Number(val).toLocaleString() + ' N·s/m';
+                if (window.diagTweakState) window.diagTweakState.c = +val;
+            }
         }
 
         function updateRoadClass(idx) {
@@ -1578,10 +2188,12 @@
                 };
             } else {
                 const cls = +document.getElementById('roadClass').value;
+                const seedVal = +document.getElementById('seed').value;
                 return {
                     type: 'Iso8608',
                     roughness_coefficient: ROAD_CLASSES[cls].gd,
-                    vehicle_speed_mps: +document.getElementById('speed').value
+                    vehicle_speed_mps: +document.getElementById('speed').value,
+                    seed: seedVal === 0 ? null : seedVal
                 };
             }
         }
@@ -1593,6 +2205,8 @@
                 k: +document.getElementById('k').value,
                 c: +document.getElementById('c').value,
                 kt: +document.getElementById('kt').value,
+                travel_limit_mm: +document.getElementById('travelLimit').value,
+                preload_mm: +document.getElementById('preload').value,
             };
         }
 
@@ -1820,94 +2434,341 @@
             });
         }
 
-        // ── Diagnostics System ─────────────────────────────────────
+        // ══════════════════════════════════════════════════════════
+        // ENHANCED DIAGNOSTICS SYSTEM
+        // ══════════════════════════════════════════════════════════
+
+        // Separate tweak-state that overlays on real sim data for preview
+        window.diagTweakState = window.diagTweakState || { k: 22000, c: 1500 };
+        window.diagOpenRows = window.diagOpenRows || {};
+
+        // Metric definitions: formula tooltips, limits, extras
+        const DIAG_METRICS_DEF = [
+            {
+                id: 'fn',
+                title: 'Ride Frequency',
+                unit: 'Hz',
+                decimals: 2,
+                status(v) { if (v == null) return 'OK'; return (v < 0.8 || v > 2.5) ? 'WARNING' : 'OK'; },
+                formula: 'f_n = (1/2π)·√(k/m_s)',
+                formulaDesc: 'Body resonant frequency. Target: 0.8–2.5 Hz for ride comfort.',
+                extra: null,
+                isCritical: false,
+            },
+            {
+                id: 'zeta',
+                title: 'Damping Ratio',
+                unit: 'ζ',
+                decimals: 3,
+                status(v) { if (v == null) return 'OK'; if (v < 0.2) return 'CRITICAL'; if (v > 0.6) return 'WARNING'; return 'OK'; },
+                formula: 'ζ = c / (2·√(k·m_s))',
+                formulaDesc: 'Fraction of critical damping. Ideal range: 0.25–0.45.',
+                extra: 'zetaBar',
+                isCritical: false,
+            },
+            {
+                id: 'sag_pct',
+                title: 'Sag %',
+                unit: '%',
+                decimals: 1,
+                status(v) { if (v == null) return 'OK'; if (v > 50) return 'CRITICAL'; if (v < 15 || v > 35) return 'WARNING'; return 'OK'; },
+                formula: 'Sag = (m_s·g / k) / L_travel · 100',
+                formulaDesc: 'Static deflection as % of total travel. Safe window: 15–35%.',
+                extra: null,
+                isCritical: true,   // sag card gets ambient red pulse when critical
+            },
+            {
+                id: 'bottom_out',
+                title: 'Bottom-out',
+                unit: '',
+                decimals: 0,
+                status(v) { return v ? 'CRITICAL' : 'OK'; },
+                formula: 'δ_static > L_travel',
+                formulaDesc: 'True when static + dynamic deflection exceeds travel limit.',
+                extra: null,
+                isCritical: false,
+                bool: true,
+            },
+            {
+                id: 'iso',
+                title: 'ISO 2631',
+                unit: 'm/s²',
+                decimals: 3,
+                status(v) { if (v == null) return 'OK'; if (v > 1.6) return 'CRITICAL'; if (v > 0.8) return 'WARNING'; return 'OK'; },
+                formula: 'a_w = √(∫|H(f)|²·W_k²·S_x df)',
+                formulaDesc: 'Freq-weighted RMS body acceleration per ISO 2631-1:1997.',
+                extra: null,
+                isCritical: false,
+            },
+        ];
+
+        // Compute derived diag values from a data blob + optional k/c overrides
+        function diagDerive(data, tweakK, tweakC) {
+            const k = tweakK ?? (data ? data.spring_rate ?? 22000 : 22000);
+            const c = tweakC ?? (data ? data.damping ?? 1500 : 1500);
+            const ms = data ? (data.sprung_mass ?? 290) : 290;
+            const travel = data ? (data.travel_limit_mm ?? 120) : 120;
+
+            // fn from backend if available, else compute
+            const fn = data && data.fn_sprung != null
+                ? data.fn_sprung
+                : (1 / (2 * Math.PI)) * Math.sqrt(k / ms);
+
+            // zeta from backend if available, else compute
+            const cc = 2 * Math.sqrt(k * ms);
+            const zeta = data && data.zeta != null ? data.zeta : (c / cc);
+
+            // sag
+            const sag_pct = data && data.sag_percent != null
+                ? data.sag_percent
+                : (ms * 9.81 / k) / (travel / 1000) * 100;
+
+            const bottom_out = data && data.bottom_out != null
+                ? data.bottom_out
+                : sag_pct > 100;
+
+            const iso = data && data.iso2631_weighted_rms != null
+                ? data.iso2631_weighted_rms
+                : null;
+
+            return { fn, zeta, sag_pct, bottom_out, iso };
+        }
+
+        function diagGetVal(def, derived) {
+            return derived[def.id] ?? null;
+        }
+
+        function diagFormatVal(def, raw) {
+            if (def.bool) return raw ? 'YES' : 'NO';
+            if (raw == null) return '—';
+            return Number(raw).toFixed(def.decimals);
+        }
+
+        function diagStatusClass(s) { return s === 'OK' ? 'diag-ok' : s === 'WARNING' ? 'diag-warn' : 'diag-crit'; }
+        function diagBadgeClass(s) { return s === 'OK' ? 'diag-badge-ok' : s === 'WARNING' ? 'diag-badge-warn' : 'diag-badge-crit'; }
+        function diagFlagClass(s) { return s === 'OK' ? 'diag-flag-ok' : s === 'WARNING' ? 'diag-flag-warn' : 'diag-flag-crit'; }
+
+        function diagAccRows(def, data, derived) {
+            const ms = data ? (data.sprung_mass ?? 290) : 290;
+            const k = diagTweakState.k;
+            const c = diagTweakState.c;
+            const travel = data ? (data.travel_limit_mm ?? 120) : 120;
+            const cc = 2 * Math.sqrt(k * ms);
+
+            const r = (label, val, cls) => ({ label, val, cls: cls || '' });
+            const ok = v => v ? 'diag-acc-ok' : 'diag-acc-crit';
+            const okN = (v, lo, hi) => (v >= lo && v <= hi) ? 'diag-acc-ok' : 'diag-acc-crit';
+
+            switch (def.id) {
+                case 'fn': {
+                    const v = derived.fn;
+                    return [
+                        r('Current', v != null ? v.toFixed(3) + ' Hz' : '—', okN(v, 0.8, 2.5)),
+                        r('Target min', '0.800 Hz', 'diag-acc-ok'),
+                        r('Target max', '2.500 Hz', 'diag-acc-ok'),
+                        r('Margin lo', v != null ? (v - 0.8).toFixed(3) + ' Hz' : '—', ok(v >= 0.8)),
+                        r('Margin hi', v != null ? (2.5 - v).toFixed(3) + ' Hz' : '—', ok(v <= 2.5)),
+                        r('k (tweak)', k.toLocaleString() + ' N/m', ''),
+                        r('m_s', ms + ' kg', ''),
+                    ];
+                }
+                case 'zeta': {
+                    const v = derived.zeta;
+                    return [
+                        r('Current ζ', v != null ? v.toFixed(4) : '—', okN(v, 0.2, 0.6)),
+                        r('c_critical', Math.round(cc) + ' N·s/m', ''),
+                        r('c (tweak)', c + ' N·s/m', ''),
+                        r('Lower bound', '0.200 ζ', 'diag-acc-ok'),
+                        r('Upper bound', '0.600 ζ', 'diag-acc-ok'),
+                        r('Margin lo', v != null ? (v - 0.2).toFixed(3) : '—', ok(v >= 0.2)),
+                        r('Margin hi', v != null ? (0.6 - v).toFixed(3) : '—', ok(v <= 0.6)),
+                    ];
+                }
+                case 'sag_pct': {
+                    const v = derived.sag_pct;
+                    const deltaStatic = ms * 9.81 / k * 1000;
+                    return [
+                        r('Sag %', v != null ? v.toFixed(2) + '%' : '—',
+                            v > 50 ? 'diag-acc-crit' : (v < 15 || v > 35) ? 'diag-acc-warn' : 'diag-acc-ok'),
+                        r('δ_static', deltaStatic.toFixed(1) + ' mm', ''),
+                        r('Travel limit', travel + ' mm', ''),
+                        r('Safe range', '15 – 35 %', 'diag-acc-ok'),
+                        r('Critical >', '50 %', 'diag-acc-crit'),
+                        r('Margin lo', v != null ? (v - 15).toFixed(1) + '%' : '—', ok(v >= 15)),
+                        r('Margin hi', v != null ? (35 - v).toFixed(1) + '%' : '—', ok(v <= 35)),
+                    ];
+                }
+                case 'bottom_out': {
+                    const deltaStatic = ms * 9.81 / k * 1000;
+                    const margin = travel - deltaStatic;
+                    return [
+                        r('Status', derived.bottom_out ? 'BOTTOMED OUT' : 'CLEAR', ok(!derived.bottom_out)),
+                        r('δ_static', deltaStatic.toFixed(1) + ' mm', ''),
+                        r('Travel', travel + ' mm', ''),
+                        r('Margin', margin.toFixed(1) + ' mm', ok(margin > 0)),
+                    ];
+                }
+                case 'iso': {
+                    const v = derived.iso;
+                    return [
+                        r('a_w', v != null ? v.toFixed(3) + ' m/s²' : '—',
+                            v > 1.6 ? 'diag-acc-crit' : v > 0.8 ? 'diag-acc-warn' : 'diag-acc-ok'),
+                        r('Not uncomfortable', '< 0.315', 'diag-acc-ok'),
+                        r('Little uncomfortable', '0.315–0.63', 'diag-acc-ok'),
+                        r('Fairly uncomfortable', '0.63–1.0', 'diag-acc-warn'),
+                        r('Uncomfortable', '1.0–1.6', 'diag-acc-warn'),
+                        r('Very uncomfortable', '> 1.6', 'diag-acc-crit'),
+                        r('Margin to 0.8', v != null ? (0.8 - v).toFixed(3) + ' m/s²' : '—', ok(v < 0.8)),
+                    ];
+                }
+            }
+            return [];
+        }
+
+        function diagRenderMetrics(data, derived) {
+            const grid = document.getElementById('dashDiagMetrics');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            DIAG_METRICS_DEF.forEach(def => {
+                const raw = diagGetVal(def, derived);
+                const val = diagFormatVal(def, raw);
+                const stat = def.status(raw);
+                const isCrit = def.isCritical && stat === 'CRITICAL';
+
+                const card = document.createElement('div');
+                card.className = 'diag-metric-card' + (isCrit ? ' diag-critical' : '');
+
+                // Zeta bar extra
+                let extraHtml = '';
+                if (def.extra === 'zetaBar') {
+                    const pct = Math.min(((typeof raw === 'number' ? raw : 0.3)) / 1.0 * 100, 100);
+                    extraHtml = `
+                        <div class="diag-zeta-track">
+                            <div class="diag-zeta-zone"></div>
+                            <div class="diag-zeta-marker" id="diag-zeta-marker" style="left:${pct.toFixed(1)}%"></div>
+                        </div>
+                        <div class="diag-zeta-ticks">
+                            <span>0</span><span>0.2</span><span>0.4</span><span>0.6</span><span>0.8</span><span>1.0</span>
+                        </div>`;
+                }
+
+                card.innerHTML = `
+                    <div class="diag-tooltip">
+                        ${def.formulaDesc}
+                        <span class="diag-formula">${def.formula}</span>
+                    </div>
+                    <div class="diag-metric-title">${def.title}</div>
+                    <div class="diag-metric-value">${val}<span class="diag-metric-unit">${def.unit}</span></div>
+                    ${extraHtml}
+                    <div class="diag-metric-badge ${diagBadgeClass(stat)}">${stat}</div>`;
+
+                grid.appendChild(card);
+            });
+        }
+
+        function diagRenderStack(data, derived) {
+            const stack = document.getElementById('dashDiagStack');
+            if (!stack) return;
+            stack.innerHTML = '';
+
+            DIAG_METRICS_DEF.forEach(def => {
+                const raw = diagGetVal(def, derived);
+                const val = diagFormatVal(def, raw);
+                const stat = def.status(raw);
+                const sc = diagStatusClass(stat);
+
+                const row = document.createElement('div');
+                row.className = 'diag-row ' + sc + (diagOpenRows[def.id] ? ' diag-open' : '');
+                row.id = 'diag-dr-' + def.id;
+
+                const accRows = diagAccRows(def, data, derived);
+                const accHtml = accRows.map(ar => `
+                    <div class="diag-acc-row">
+                        <span class="diag-acc-label">${ar.label}</span>
+                        <span class="diag-acc-val ${ar.cls}">${ar.val}</span>
+                    </div>`).join('');
+
+                row.innerHTML = `
+                    <div class="diag-row-header" onclick="diagToggleRow('${def.id}')">
+                        <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
+                            <span class="diag-row-title">${def.title}</span>
+                            <span class="diag-flag ${diagFlagClass(stat)}">[${stat}]</span>
+                        </div>
+                        <div class="diag-row-right">
+                            <span class="diag-row-number">${val}<span style="font-size:11px;color:#a3a3a3;margin-left:3px">${def.unit}</span></span>
+                            <span class="diag-chevron">▾</span>
+                        </div>
+                    </div>
+                    <div class="diag-accordion">
+                        <div class="diag-accordion-inner">${accHtml}</div>
+                    </div>`;
+
+                stack.appendChild(row);
+            });
+        }
+
+        function diagToggleRow(id) {
+            diagOpenRows[id] = !diagOpenRows[id];
+            const row = document.getElementById('diag-dr-' + id);
+            if (!row) return;
+            row.classList.toggle('diag-open', !!diagOpenRows[id]);
+            // Flash the relevant tweak slider
+            const map = { fn: 'diag-tw-k', zeta: 'diag-tw-c', sag_pct: 'diag-tw-k', bottom_out: 'diag-tw-k', iso: 'diag-tw-c' };
+            const sliderId = map[id];
+            if (sliderId) {
+                const el = document.getElementById(sliderId);
+                if (el) {
+                    el.classList.remove('diag-slider-flash');
+                    void el.offsetWidth;
+                    el.classList.add('diag-slider-flash');
+                    setTimeout(() => el.classList.remove('diag-slider-flash'), 700);
+                }
+            }
+        }
+
+        function diagUpdateTweak(param, raw) {
+            const v = +raw;
+            diagTweakState[param] = v;
+            if (param === 'k') document.getElementById('diag-tw-k-val').textContent = v.toLocaleString() + ' N/m';
+            if (param === 'c') document.getElementById('diag-tw-c-val').textContent = v.toLocaleString() + ' N·s/m';
+            // Re-render with current sim data + new tweak values
+            const derived = diagDerive(lastSimData, diagTweakState.k, diagTweakState.c);
+            diagRenderMetrics(lastSimData, derived);
+            diagRenderStack(lastSimData, derived);
+        }
+
+        // Main entry point — called from switchScreen and after each simulation
         function renderDiagnostics(data) {
             const grid = document.getElementById('dashDiagMetrics');
             const stack = document.getElementById('dashDiagStack');
-            if (!grid || !stack) return;   // containers must exist
+            if (!grid || !stack) return;
 
-            // No data yet — show placeholder
             if (!data || data.error) {
                 grid.innerHTML = '';
                 stack.innerHTML = `
-                  <div class="flex flex-col items-center justify-center py-20 gap-3 text-center">
-                    <div class="font-mono text-xs uppercase tracking-widest text-text-muted">No Data Yet</div>
-                    <div class="font-mono text-[11px] text-white/20">Run simulation to view diagnostics</div>
-                  </div>`;
+                    <div class="diag-no-data">
+                        <div class="font-mono text-xs uppercase tracking-widest text-text-muted">No Data Yet</div>
+                        <div class="font-mono text-[11px] text-white/20">Run a simulation to populate diagnostics</div>
+                    </div>`;
                 return;
             }
 
-            const metrics = [];
-            const logs = [];
-            const addDiag = (title, val, unit, status, msg) => {
-                metrics.push({ title, val, unit });
-                logs.push({ title, val, unit, status, msg });
-            };
-
-            // Ride frequency — backend sends fn_sprung
-            const fn = data.fn_sprung ?? null;
-            let fnStatus = 'OK', fnMsg = 'within target range (0.8–2.5 Hz)';
-            if (fn !== null) {
-                if (fn < 0.8) { fnStatus = 'WARNING'; fnMsg = 'below recommended min (0.8 Hz)'; }
-                if (fn > 2.5) { fnStatus = 'WARNING'; fnMsg = 'above comfort maximum (2.5 Hz)'; }
+            // Sync tweak sliders to last sim params when entering screen
+            if (data.spring_rate != null) {
+                diagTweakState.k = data.spring_rate;
+                const kEl = document.getElementById('diag-tw-k');
+                if (kEl) { kEl.value = diagTweakState.k; document.getElementById('diag-tw-k-val').textContent = diagTweakState.k.toLocaleString() + ' N/m'; }
             }
-            addDiag('Ride Frequency', fn !== null ? fn.toFixed(2) : '--', 'Hz', fnStatus, fnMsg);
-
-            // Damping ratio
-            let zStatus = 'OK', zMsg = 'stable nominal damping';
-            if (data.zeta != null) {
-                if (data.zeta < 0.2) { zStatus = 'CRITICAL'; zMsg = 'severely underdamped'; }
-                else if (data.zeta > 0.6) { zStatus = 'WARNING'; zMsg = 'overdamped response'; }
-            }
-            addDiag('Damping Ratio', data.zeta != null ? data.zeta.toFixed(3) : '--', 'ζ', zStatus, zMsg);
-
-            // Sag percent
-            let sagStatus = 'OK', sagMsg = 'optimal static travel';
-            if (data.sag_percent != null) {
-                if (data.sag_percent < 15 || data.sag_percent > 35) { sagStatus = 'WARNING'; sagMsg = 'outside optimal bounds (15–35%)'; }
-                if (data.sag_percent > 50) { sagStatus = 'CRITICAL'; sagMsg = 'excessive droop — bottom risk'; }
-            }
-            addDiag('Sag %', data.sag_percent != null ? data.sag_percent.toFixed(1) : '--', '%', sagStatus, sagMsg);
-
-            // Bottom-out
-            const bo = data.bottom_out === true;
-            addDiag('Bottom-out', bo ? 'YES' : 'NO', '', bo ? 'CRITICAL' : 'OK',
-                bo ? 'suspension travel exceeded!' : 'sufficient travel margin');
-
-            // ISO 2631 comfort
-            if (data.iso2631_weighted_rms != null) {
-                let isoStatus = 'OK', isoMsg = 'comfortable ride profile';
-                if (data.iso2631_weighted_rms > 0.8) { isoStatus = 'WARNING'; isoMsg = 'approaching uncomfortable'; }
-                if (data.iso2631_weighted_rms > 1.6) { isoStatus = 'CRITICAL'; isoMsg = 'severe vibration levels'; }
-                addDiag('ISO 2631', data.iso2631_weighted_rms.toFixed(3), 'm/s²', isoStatus, isoMsg);
+            if (data.damping != null) {
+                diagTweakState.c = data.damping;
+                const cEl = document.getElementById('diag-tw-c');
+                if (cEl) { cEl.value = diagTweakState.c; document.getElementById('diag-tw-c-val').textContent = diagTweakState.c.toLocaleString() + ' N·s/m'; }
             }
 
-            // Render metric grid (large cards)
-            grid.innerHTML = metrics.map(m => `
-              <div class="bg-dark-card border border-white/5 rounded-2xl p-6 shadow-lg min-w-0 min-h-[120px] flex flex-col justify-between">
-                <div class="font-mono text-[9px] uppercase tracking-widest text-text-muted">${m.title}</div>
-                <div class="font-sans font-semibold text-4xl sm:text-5xl mt-2 tracking-tight">
-                  ${m.val}<span class="text-sm text-text-muted font-mono ml-2">${m.unit}</span>
-                </div>
-              </div>`).join('');
-
-            // Render diagnostic stack
-            stack.innerHTML = logs.map(l => {
-                const isOk = l.status === 'OK';
-                const isWarn = l.status === 'WARNING';
-                const border = isOk ? 'border-l-[#22c55e]' : isWarn ? 'border-l-[#eab308]' : 'border-l-red-main';
-                const bg = isOk ? 'bg-[#22c55e]/5' : isWarn ? 'bg-[#eab308]/5' : 'bg-red-main/5';
-                const badge = isOk ? 'text-[#22c55e]' : isWarn ? 'text-[#eab308]' : 'text-red-main';
-                return `
-                  <div class="${bg} border-y border-r border-white/5 border-l-2 ${border} rounded-2xl p-4 flex flex-col gap-1.5 shadow-sm hover:bg-white/[0.02] transition-colors">
-                    <div class="font-mono text-xs tracking-widest text-white uppercase">${l.title}</div>
-                    <div class="text-xs text-text-muted">
-                      <strong class="${badge} font-mono tracking-widest mr-2">[${l.status}]</strong>
-                      <span class="font-sans text-white mr-1">${l.val}${l.unit ? ' ' + l.unit : ''}</span>
-                      <span class="text-white/40 font-mono">—</span> ${l.msg}
-                    </div>
-                  </div>`;
-            }).join('');
+            const derived = diagDerive(data, diagTweakState.k, diagTweakState.c);
+            diagRenderMetrics(data, derived);
+            diagRenderStack(data, derived);
         }
 
         // ── Chart: FRF ───────────────────────────────────────────────
