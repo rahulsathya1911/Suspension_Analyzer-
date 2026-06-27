@@ -173,7 +173,7 @@ fn validation_schema_api() -> Json<ValidationSchema> {
 enum RoadProfileInput {
     Step    { height: f64 },
     Sine    { amplitude: f64, freq_hz: f64 },
-    Iso8608 { roughness_coefficient: f64, vehicle_speed_mps: f64 },
+    Iso8608 { roughness_coefficient: f64, vehicle_speed_mps: f64, seed: Option<u64> },
 }
 
 impl RoadProfileInput {
@@ -183,8 +183,8 @@ impl RoadProfileInput {
             => RoadProfile::Step { height },
             RoadProfileInput::Sine    { amplitude, freq_hz }
             => RoadProfile::Sine { amplitude, freq_hz },
-            RoadProfileInput::Iso8608 { roughness_coefficient, vehicle_speed_mps }
-            => RoadProfile::Iso8608 { roughness_coefficient, vehicle_speed_mps },
+            RoadProfileInput::Iso8608 { roughness_coefficient, vehicle_speed_mps, seed }
+            => RoadProfile::Iso8608 { roughness_coefficient, vehicle_speed_mps, seed: seed.unwrap_or(0) },
         }
     }
 
@@ -199,7 +199,7 @@ impl RoadProfileInput {
                 if *amplitude <= 0.0 { return Err("amplitude must be positive"); }
                 if *freq_hz   <= 0.0 { return Err("freq_hz must be positive"); }
             }
-            RoadProfileInput::Iso8608 { roughness_coefficient, vehicle_speed_mps } => {
+            RoadProfileInput::Iso8608 { roughness_coefficient, vehicle_speed_mps, .. } => {
                 if *roughness_coefficient <= 0.0 {
                     return Err("roughness_coefficient must be positive");
                 }
@@ -233,8 +233,7 @@ struct SimulationInput {
     k:            Option<f64>,
     c:            Option<f64>,
     kt:           Option<f64>,
-    #[serde(default)]
-    travel_limit_mm: Option<f64>,
+    travel_limit_mm: f64,
     #[serde(default)]
     preload_mm: Option<f64>,
     road_profile: RoadProfileInput,
@@ -257,10 +256,8 @@ impl SimulationInput {
 
     fn validate(&self, schema: &ValidationSchema) -> Result<(), &'static str> {
         self.resolve_params(schema)?;
-        if let Some(travel) = self.travel_limit_mm {
-            if travel <= 0.0 {
-                return Err("travel_limit_mm must be positive");
-            }
+        if self.travel_limit_mm <= 0.0 {
+            return Err("travel_limit_mm must be positive");
         }
         if let Some(preload) = self.preload_mm {
             if preload < 0.0 {
@@ -290,6 +287,10 @@ struct SimulationOutput {
     rms_tire_force:        f64,
     max_suspension_travel: f64,
     iso2631_weighted_rms:  f64,
+    iso2631_mean:          Option<f64>,
+    iso2631_std:           Option<f64>,
+    rms_body_acc_mean:     Option<f64>,
+    rms_body_acc_std:      Option<f64>,
     model_type:            String,
     bottom_out:            bool,
     static_sag_mm:         f64,
@@ -327,14 +328,44 @@ async fn simulate_api(
     let fn_unsprung = ((k + kt) / mu).sqrt() / (2.0 * std::f64::consts::PI);
 
     let travel_limit_mm = sim_in.travel_limit_mm;
+    let travel_limit_m = travel_limit_mm / 1000.0;
 
     let profile = sim_in.road_profile.into_core();
-    let result  = run_simulation(ms, mu, k, c, kt, &profile);
+    let is_iso = matches!(profile, RoadProfile::Iso8608 { .. });
+    
+    let result  = run_simulation(ms, mu, k, c, kt, travel_limit_m, &profile);
+
+    let mut iso2631_mean = None;
+    let mut iso2631_std = None;
+    let mut rms_body_acc_mean = None;
+    let mut rms_body_acc_std = None;
+    
+    if is_iso {
+        let mut iso_vals = Vec::new();
+        let mut rms_vals = Vec::new();
+        for s in 0..30 {
+            let mut p = profile.clone();
+            if let RoadProfile::Iso8608 { ref mut seed, .. } = p {
+                *seed = s as u64;
+            }
+            let r = run_simulation(ms, mu, k, c, kt, travel_limit_m, &p);
+            iso_vals.push(r.iso2631_weighted_rms);
+            rms_vals.push(r.rms_body_acc);
+        }
+        let iso_m = iso_vals.iter().sum::<f64>() / 30.0;
+        let iso_v = iso_vals.iter().map(|v| (v - iso_m).powi(2)).sum::<f64>() / 30.0;
+        iso2631_mean = Some(iso_m);
+        iso2631_std = Some(iso_v.sqrt());
+        
+        let rms_m = rms_vals.iter().sum::<f64>() / 30.0;
+        let rms_v = rms_vals.iter().map(|v| (v - rms_m).powi(2)).sum::<f64>() / 30.0;
+        rms_body_acc_mean = Some(rms_m);
+        rms_body_acc_std = Some(rms_v.sqrt());
+    }
+
     let max_travel_mm = result.max_suspension_travel * 1000.0;
-    let bottom_out = travel_limit_mm.map(|limit| max_travel_mm > limit).unwrap_or(false);
-    // Use actual travel limit when provided; fall back to 120 mm (typical shock stroke)
-    // so sag_percent is always a meaningful, non-zero value for the diagnostics panel.
-    let sag_reference_mm = travel_limit_mm.unwrap_or(120.0).max(1.0);
+    let bottom_out = max_travel_mm > travel_limit_mm;
+    let sag_reference_mm = travel_limit_mm.max(1.0);
     let sag_percent = (effective_sag_mm / sag_reference_mm * 100.0).clamp(0.0, 200.0);
 
     // Persist to DB
@@ -376,6 +407,10 @@ async fn simulate_api(
         rms_tire_force:        result.rms_tire_force,
         max_suspension_travel: result.max_suspension_travel,
         iso2631_weighted_rms:  result.iso2631_weighted_rms,
+        iso2631_mean,
+        iso2631_std,
+        rms_body_acc_mean,
+        rms_body_acc_std,
         model_type:            "quarter_car".into(),
         bottom_out,
         static_sag_mm:         effective_sag_mm,
@@ -441,8 +476,7 @@ struct FrfInput {
     k:       Option<f64>,
     c:       Option<f64>,
     kt:      Option<f64>,
-    #[serde(default)]
-    travel_limit_mm: Option<f64>,
+    travel_limit_mm: f64,
     #[serde(default)]
     preload_mm: Option<f64>,
     /// Start frequency for sweep [Hz] — default 0.5
@@ -456,7 +490,7 @@ struct FrfInput {
 }
 
 /// One point in the FRF response.
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 #[serde(crate = "rocket::serde")]
 struct FrfPoint {
     freq_hz:                     f64,
@@ -467,7 +501,7 @@ struct FrfPoint {
 #[post("/frf", format = "json", data = "<input>")]
 async fn frf_api(input: Json<FrfInput>) -> ApiResult<Vec<FrfPoint>> {
     let inp = input.into_inner();
-    let _travel_limit_mm = inp.travel_limit_mm.unwrap_or(120.0);
+    let _travel_limit_mm = inp.travel_limit_mm;
     let _preload_mm = inp.preload_mm.unwrap_or(0.0);
 
     let ms = inp.ms.ok_or_else(|| bad_request("ms is required"))?;
@@ -512,8 +546,7 @@ struct SweepInput {
     ms:           Option<f64>,
     mu:           Option<f64>,
     kt:           Option<f64>,
-    #[serde(default)]
-    travel_limit_mm: Option<f64>,
+    travel_limit_mm: f64,
     #[serde(default)]
     preload_mm: Option<f64>,
     /// Spring rate range [N/m]: [min, max]
@@ -543,7 +576,7 @@ struct ParetoOutput {
 #[post("/sweep", format = "json", data = "<input>")]
 async fn sweep_api(input: Json<SweepInput>) -> ApiResult<Vec<ParetoOutput>> {
     let inp = input.into_inner();
-    let _travel_limit_mm = inp.travel_limit_mm.unwrap_or(120.0);
+    let _travel_limit_mm = inp.travel_limit_mm;
     let _preload_mm = inp.preload_mm.unwrap_or(0.0);
 
     let ms = inp.ms.ok_or_else(|| bad_request("ms is required"))?;
@@ -579,6 +612,14 @@ async fn sweep_api(input: Json<SweepInput>) -> ApiResult<Vec<ParetoOutput>> {
     let k_values = linspace(inp.k_range[0], inp.k_range[1], steps);
     let c_values = linspace(inp.c_range[0], inp.c_range[1], steps);
     let profile  = inp.road_profile.into_core();
+
+    // Validate intermediate points
+    for &k_val in &k_values {
+        for &c_val in &c_values {
+            schema.validate_params(inp.vehicle_mode.as_deref(), inp.is_sae_derived, ms, mu, k_val, c_val, kt)
+                .map_err(|e| bad_request(&format!("sweep parameter validation failed at k={}, c={}: {}", k_val, c_val, e)))?;
+        }
+    }
 
     let all_points = parameter_sweep(resolved.ms, resolved.mu, resolved.kt, &k_values, &c_values, &profile);
     let pareto     = extract_pareto_front(&all_points);
@@ -1366,6 +1407,121 @@ fn moto_params_api(input: Json<MotoConfig>) -> ApiResult<DerivedParams> {
 }
 
 // ═══════════════════════════════════════════════════════════
+// SECTION 7.5 — /speed_sweep and /frf_compare
+// ═══════════════════════════════════════════════════════════
+
+#[derive(Deserialize)]
+#[serde(crate = "rocket::serde")]
+struct SpeedSweepInput {
+    ms: f64,
+    mu: f64,
+    k: f64,
+    c: f64,
+    kt: f64,
+    roughness_coefficient: f64,
+    speeds_mps: Vec<f64>,
+    travel_limit_mm: f64,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(crate = "rocket::serde")]
+struct SpeedSweepPoint {
+    speed_mps: f64,
+    iso2631_mean: f64,
+    iso2631_std: f64,
+    rms_body_acc_mean: f64,
+    rms_tire_force_mean: f64,
+}
+
+#[post("/speed_sweep", format = "json", data = "<input>")]
+async fn speed_sweep_api(input: Json<SpeedSweepInput>) -> ApiResult<Vec<SpeedSweepPoint>> {
+    let inp = input.into_inner();
+    let ms = inp.ms;
+    let mu = inp.mu;
+    let k = inp.k;
+    let c = inp.c;
+    let kt = inp.kt;
+    let travel_limit_m = inp.travel_limit_mm / 1000.0;
+    
+    let mut results = Vec::new();
+    for &speed in &inp.speeds_mps {
+        let mut iso_vals = Vec::new();
+        let mut rms_acc = Vec::new();
+        let mut rms_tire = Vec::new();
+        
+        for s in 0..30 {
+            let profile = RoadProfile::Iso8608 {
+                roughness_coefficient: inp.roughness_coefficient,
+                vehicle_speed_mps: speed,
+                seed: s as u64,
+            };
+            let r = run_simulation(ms, mu, k, c, kt, travel_limit_m, &profile);
+            iso_vals.push(r.iso2631_weighted_rms);
+            rms_acc.push(r.rms_body_acc);
+            rms_tire.push(r.rms_tire_force);
+        }
+        
+        let iso_m = iso_vals.iter().sum::<f64>() / 30.0;
+        let iso_v = iso_vals.iter().map(|v| (v - iso_m).powi(2)).sum::<f64>() / 30.0;
+        
+        let rms_m = rms_acc.iter().sum::<f64>() / 30.0;
+        let tire_m = rms_tire.iter().sum::<f64>() / 30.0;
+        
+        results.push(SpeedSweepPoint {
+            speed_mps: speed,
+            iso2631_mean: iso_m,
+            iso2631_std: iso_v.sqrt(),
+            rms_body_acc_mean: rms_m,
+            rms_tire_force_mean: tire_m,
+        });
+    }
+    Ok(Json(results))
+}
+
+#[derive(Deserialize)]
+#[serde(crate = "rocket::serde")]
+struct FrfCompareInput {
+    car: FrfInput,
+    bike: FrfInput,
+    freq_range_hz: Vec<f64>,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(crate = "rocket::serde")]
+struct FrfCompareOutput {
+    car: Vec<FrfPoint>,
+    bike: Vec<FrfPoint>,
+}
+
+#[post("/frf_compare", format = "json", data = "<input>")]
+async fn frf_compare_api(input: Json<FrfCompareInput>) -> ApiResult<FrfCompareOutput> {
+    let inp = input.into_inner();
+    
+    let compute = |config: FrfInput| -> Result<Vec<FrfPoint>, Custom<Json<ApiError>>> {
+        let ms = config.ms.ok_or_else(|| bad_request("ms is required"))?;
+        let mu = config.mu.ok_or_else(|| bad_request("mu is required"))?;
+        let k = config.k.ok_or_else(|| bad_request("k is required"))?;
+        let c = config.c.ok_or_else(|| bad_request("c is required"))?;
+        let kt = config.kt.ok_or_else(|| bad_request("kt is required"))?;
+        
+        let points = compute_frf(ms, mu, k, c, kt, &inp.freq_range_hz, 0.01);
+        Ok(points.into_iter().map(|p| FrfPoint {
+            freq_hz: p.freq_hz,
+            body_acc_transmissibility: p.body_acc_transmissibility,
+            tire_force_transmissibility: p.tire_force_transmissibility,
+        }).collect())
+    };
+    
+    let car_res = compute(inp.car)?;
+    let bike_res = compute(inp.bike)?;
+    
+    Ok(Json(FrfCompareOutput {
+        car: car_res,
+        bike: bike_res,
+    }))
+}
+
+// ═══════════════════════════════════════════════════════════
 // SECTION 8 — Index + main
 // ═══════════════════════════════════════════════════════════
 
@@ -1408,9 +1564,66 @@ async fn main() -> Result<(), rocket::Error> {
     rocket::build()
         .attach(Cors)
         .manage(pool)
-        .mount("/", routes![index, options, simulate_api, history, frf_api, sweep_api, vehicle_params_api, moto_params_api, validation_schema_api])
+        .mount("/", routes![index, options, simulate_api, history, frf_api, sweep_api, vehicle_params_api, moto_params_api, validation_schema_api, speed_sweep_api, frf_compare_api])
         .launch()
         .await?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rocket::local::blocking::Client;
+    use rocket::http::{ContentType, Status};
+
+    fn rocket_instance() -> rocket::Rocket<rocket::Build> {
+        rocket::build().mount("/", routes![speed_sweep_api, frf_compare_api])
+    }
+
+    #[test]
+    fn test_speed_sweep_endpoint() {
+        let client = Client::tracked(rocket_instance()).expect("valid rocket instance");
+        let payload = r#"{
+            "ms": 290.0,
+            "mu": 40.0,
+            "k": 22000.0,
+            "c": 1500.0,
+            "kt": 190000.0,
+            "roughness_coefficient": 0.000001,
+            "speeds_mps": [10.0, 20.0],
+            "travel_limit_mm": 120.0
+        }"#;
+        let response = client.post("/speed_sweep")
+            .header(ContentType::JSON)
+            .body(payload)
+            .dispatch();
+
+        assert_eq!(response.status(), Status::Ok);
+        let results: Vec<SpeedSweepPoint> = response.into_json().unwrap();
+        assert_eq!(results.len(), 2);
+    }
+
+    #[test]
+    fn test_frf_compare_endpoint() {
+        let client = Client::tracked(rocket_instance()).expect("valid rocket instance");
+        let payload = r#"{
+            "car": {
+                "ms": 300.0, "mu": 40.0, "k": 20000.0, "c": 1500.0, "kt": 200000.0, "travel_limit_mm": 120.0
+            },
+            "bike": {
+                "ms": 150.0, "mu": 20.0, "k": 10000.0, "c": 750.0, "kt": 100000.0, "travel_limit_mm": 120.0
+            },
+            "freq_range_hz": [1.0, 10.0]
+        }"#;
+        let response = client.post("/frf_compare")
+            .header(ContentType::JSON)
+            .body(payload)
+            .dispatch();
+
+        assert_eq!(response.status(), Status::Ok);
+        let results: FrfCompareOutput = response.into_json().unwrap();
+        assert_eq!(results.car.len(), 2);
+        assert_eq!(results.bike.len(), 2);
+    }
 }
