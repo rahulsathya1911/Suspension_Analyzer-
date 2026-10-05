@@ -1,0 +1,3663 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TUNE SUSPENSION</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #0a0a0a;
+            color: #ffffff;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .font-mono {
+            font-family: 'Space Mono', monospace;
+        }
+
+        /* Enhanced Custom ranges with smoother animations */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to right, #333 0%, #444 100%);
+            border-radius: 999px;
+            outline: none;
+            position: relative;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+            border: 2px solid #E84045;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: scale(1.25);
+            box-shadow: 0 0 12px rgba(232, 64, 69, 0.6), 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        input[type=range]::-webkit-slider-thumb:active {
+            transform: scale(1.15);
+        }
+
+        /* Enhanced Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #171717;
+            border-radius: 999px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #444 0%, #333 100%);
+            border-radius: 999px;
+            transition: background 0.2s;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #555 0%, #444 100%);
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .toast {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            max-width: 380px;
+            background: rgba(23, 23, 23, 0.98);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 14px 18px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: #fff;
+            opacity: 0;
+            transform: translateX(400px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .toast.error {
+            border-color: #E84045;
+            color: #ffb3b5;
+            background: rgba(232, 64, 69, 0.1);
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+            position: relative;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid rgba(232, 64, 69, 0.3);
+            border-top-color: #E84045;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .updated {
+            animation: flashGlow 1s ease;
+        }
+
+        @keyframes flash {
+            0% {
+                background-color: rgba(232, 64, 69, 0.2);
+                border-color: #E84045;
+            }
+
+            100% {
+                background-color: transparent;
+                border-color: #333;
+            }
+        }
+
+        @keyframes flashGlow {
+            0% {
+                background-color: rgba(232, 64, 69, 0.25);
+                border-color: #E84045;
+                box-shadow: 0 0 20px rgba(232, 64, 69, 0.4);
+            }
+            100% {
+                background-color: transparent;
+                border-color: rgba(255, 255, 255, 0.06);
+                box-shadow: none;
+            }
+        }
+
+
+
+        button:disabled#vcSendBtn {
+            box-shadow: none !important;
+            border-color: rgba(255, 255, 255, 0.05) !important;
+        }
+
+        button:not(:disabled)#vcSendBtn {
+            border-color: #E84045;
+            box-shadow: 0 0 20px rgba(232, 64, 69, 0.25);
+            background: rgba(232, 64, 69, 0.08);
+        }
+
+        button:not(:disabled)#vcSendBtn:hover {
+            box-shadow: 0 0 25px rgba(232, 64, 69, 0.35);
+            background: rgba(232, 64, 69, 0.12);
+        }
+
+        button:not(:disabled)#vcSendBtn span,
+        button:not(:disabled)#vcSendBtn .icon-arrow {
+            color: #E84045;
+            opacity: 1;
+        }
+
+        /* Micro-interactions: Enhanced button effects */
+        .btn-shimmer {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-shimmer::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(232, 64, 69, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn-shimmer:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        /* Card hover enhancements */
+        .card-hover-lift {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card-hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Smooth page transitions */
+        [data-screen] {
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Progress bar for sliders */
+        input[type=range]::-webkit-slider-runnable-track {
+            background: linear-gradient(to right, #E84045 0%, #E84045 var(--value, 50%), #333 var(--value, 50%), #333 100%);
+        }
+
+        /* Improved focus states for accessibility */
+        input:focus-visible, button:focus-visible, select:focus-visible {
+            outline: 2px solid rgba(232, 64, 69, 0.5);
+            outline-offset: 2px;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        red: { main: '#E84045', hover: '#ff4d52' },
+                        dark: { bg: '#0a0a0a', card: '#121212', border: '#262626', hover: '#1f1f1f' },
+                        text: { main: '#ffffff', muted: '#a3a3a3' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="flex flex-row bg-[#0A0A0A] text-white">
+
+    <!-- Left Sidebar (New) -->
+    <aside
+        class="w-[80px] lg:w-[220px] flex flex-col bg-[#111111] border-r border-white/5 shadow-2xl shrink-0 z-20 transition-all">
+        <div class="h-[64px] border-b border-white/5 flex items-center justify-center lg:justify-start lg:px-6">
+            <div class="font-mono text-xl font-bold uppercase tracking-wider text-red-main">TUNE SUSPENSION</div>
+        </div>
+
+        <div class="flex-1 py-6 flex flex-col gap-2 px-3 lg:px-4">
+            <a href="#" id="navDashboard" onclick="switchScreen('dashboard'); return false;"
+                class="flex items-center gap-3 px-3 py-3 rounded-xl bg-red-main/10 text-red-main font-mono text-xs uppercase tracking-wider border border-red-main/20">
+                <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
+                    </path>
+                </svg>
+                <span class="hidden lg:block">Dashboard</span>
+            </a>
+            <a href="#" id="navVehicle" onclick="switchScreen('vehicle'); return false;"
+                class="flex items-center gap-3 px-3 py-3 rounded-xl text-text-muted hover:text-white hover:bg-white/5 font-mono text-xs uppercase tracking-wider transition-colors">
+                <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 16l-4-4m0 0l4-4m-4 4h16m-5 4l4-4m0 0l-4-4"></path>
+                </svg>
+                <span class="hidden lg:block">Vehicle Config</span>
+            </a>
+            <a href="#" id="navDiagnostics" onclick="switchScreen('diagnostics'); return false;"
+                class="flex items-center gap-3 px-3 py-3 rounded-xl text-text-muted hover:text-white hover:bg-white/5 font-mono text-xs uppercase tracking-wider transition-colors">
+                <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                    </path>
+                </svg>
+                <span class="hidden lg:block">Diagnostics</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN DASHBOARD WRAPPER -->
+    <div id="screen-dashboard" data-screen class="flex-1 flex flex-col min-w-0 bg-[#0A0A0A]">
+
+
+        <!-- Header -->
+        <header
+            class="h-[64px] shrink-0 border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-md px-6 flex items-center justify-between z-10 w-full">
+            <!-- Top Horizontal Tabs -->
+            <div class="flex gap-8 h-full items-end pb-0">
+                <div
+                    class="pb-[18px] font-mono text-[11px] uppercase tracking-widest text-red-main border-b-2 border-red-main">
+                    Telemetry</div>
+                <div id="navTopDiagnostics" onclick="switchScreen('diagnostics')"
+                    class="pb-[18px] font-mono text-[11px] uppercase tracking-widest text-text-muted hover:text-white border-b-2 border-transparent cursor-pointer transition-colors">
+                    Diagnostics</div>
+            </div>
+
+            <div class="flex items-center gap-5">
+                <div class="text-[11px] font-mono tracking-widest text-text-muted uppercase hidden md:block">Suspension
+                    Analysis Engine v2.0</div>
+                <div class="h-4 w-px bg-white/10 hidden md:block"></div>
+                <div class="flex items-center gap-4 font-mono text-[10px] text-text-muted tracking-widest">
+                    <div class="flex items-center gap-2">
+                        <div class="w-1.5 h-1.5 rounded-full bg-red-main shadow-[0_0_8px_rgba(232,64,69,0.6)]"
+                            id="statusDot"></div>
+                        <span id="statusText" class="text-white">READY</span>
+                    </div>
+                    <span>|</span>
+                    <span id="runCount">0 RUNS</span>
+
+                    <!-- Hidden dropdowns -->
+                    <select id="designTheme" class="hidden">
+                        <option value="aurora"></option>
+                    </select>
+                    <select id="layoutMode" class="hidden">
+                        <option value="layout-v3"></option>
+                    </select>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main App Layout -->
+        <div class="flex-1 overflow-hidden p-4 flex gap-4">
+
+            <!-- Left Panel: Tuning Inputs -->
+            <aside
+                class="w-[340px] flex flex-col gap-4 bg-dark-card border border-white/5 rounded-2xl p-6 shadow-lg overflow-y-auto">
+
+                <div class="font-mono text-[10px] uppercase tracking-widest text-text-muted mb-3">Vehicle Tuning Deck
+                </div>
+
+                <!-- Section A: Vehicle Parameters -->
+                <div class="font-mono text-[11px] uppercase tracking-widest text-text-muted mb-2">Vehicle Parameters
+                </div>
+                <div class="flex flex-col gap-3 mb-2">
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-4 shadow-sm">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs uppercase tracking-wider text-text-muted">ms — Sprung Mass</span>
+                            <span
+                                class="font-mono text-xs text-red-main bg-red-main/10 border border-red-main/20 px-2 py-0.5 rounded-full"
+                                id="msVal">290 kg</span>
+                        </div>
+                        <input type="range" id="ms" min="150" max="500" value="290" step="5"
+                            oninput="updateSlider('ms','msVal',this.value,'kg')">
+                    </div>
+
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-4 shadow-sm">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs uppercase tracking-wider text-text-muted">mu — Unsprung Mass</span>
+                            <span
+                                class="font-mono text-xs text-red-main bg-red-main/10 border border-red-main/20 px-2 py-0.5 rounded-full"
+                                id="muVal">40 kg</span>
+                        </div>
+                        <input type="range" id="mu" min="15" max="80" value="40" step="1"
+                            oninput="updateSlider('mu','muVal',this.value,'kg')">
+                    </div>
+                </div>
+
+                <!-- Section B: Suspension Componentry -->
+                <div class="font-mono text-[11px] uppercase tracking-widest text-text-muted mb-2">Suspension Componentry
+                </div>
+                <div class="flex flex-col gap-3 mb-2">
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-4 shadow-sm">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs uppercase tracking-wider text-text-muted">k — Spring Rate</span>
+                            <span
+                                class="font-mono text-xs text-red-main bg-red-main/10 border border-red-main/20 px-2 py-0.5 rounded-full"
+                                id="kVal">22000 N/m</span>
+                        </div>
+                        <input type="range" id="k" min="5000" max="60000" value="22000" step="500"
+                            oninput="updateSlider('k','kVal',this.value,'N/m')">
+                    </div>
+
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-4 shadow-sm">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs uppercase tracking-wider text-text-muted">c — Damping</span>
+                            <span
+                                class="font-mono text-xs text-red-main bg-red-main/10 border border-red-main/20 px-2 py-0.5 rounded-full"
+                                id="cVal">1500 N·s/m</span>
+                        </div>
+                        <input type="range" id="c" min="100" max="6000" value="1500" step="50"
+                            oninput="updateSlider('c','cVal',this.value,'N·s/m')">
+                    </div>
+
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-4 shadow-sm">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs uppercase tracking-wider text-text-muted">kt — Tyre Stiffness</span>
+                            <span
+                                class="font-mono text-xs text-red-main bg-red-main/10 border border-red-main/20 px-2 py-0.5 rounded-full"
+                                id="ktVal">190000 N/m</span>
+                        </div>
+                        <input type="range" id="kt" min="80000" max="300000" value="190000" step="5000"
+                            oninput="updateSlider('kt','ktVal',this.value,'N/m')">
+                    </div>
+
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-4 shadow-sm">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs uppercase tracking-wider text-text-muted">Travel Limit</span>
+                            <span
+                                class="font-mono text-xs text-red-main bg-red-main/10 border border-red-main/20 px-2 py-0.5 rounded-full"
+                                id="travelLimitVal">120 mm</span>
+                        </div>
+                        <input type="range" id="travelLimit" min="40" max="250" value="120" step="5"
+                            oninput="updateSlider('travelLimit','travelLimitVal',this.value,'mm')">
+                    </div>
+
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-4 shadow-sm">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs uppercase tracking-wider text-text-muted">Preload</span>
+                            <span
+                                class="font-mono text-xs text-red-main bg-red-main/10 border border-red-main/20 px-2 py-0.5 rounded-full"
+                                id="preloadVal">0 mm</span>
+                        </div>
+                        <input type="range" id="preload" min="0" max="50" value="0" step="1"
+                            oninput="updateSlider('preload','preloadVal',this.value,'mm')">
+                    </div>
+                </div>
+
+                <!-- Section C: Road Generator -->
+                <div class="font-mono text-[11px] uppercase tracking-widest text-text-muted mb-2 mt-2">Road Profile
+                </div>
+
+                <div class="flex gap-2">
+                    <button
+                        class="profile-tab active flex-1 py-2 rounded-lg border border-red-main bg-red-main/10 text-white font-mono text-xs tracking-wider transition-colors"
+                        onclick="setProfile('Step')">STEP</button>
+                    <button
+                        class="profile-tab flex-1 py-2 rounded-lg border border-dark-border bg-dark-bg text-text-muted hover:text-white font-mono text-xs tracking-wider transition-colors"
+                        onclick="setProfile('Sine')">SINE</button>
+                    <button
+                        class="profile-tab flex-1 py-2 rounded-lg border border-dark-border bg-dark-bg text-text-muted hover:text-white font-mono text-xs tracking-wider transition-colors"
+                        onclick="setProfile('Iso8608')">ISO 8608</button>
+                </div>
+
+                <div class="bg-[#111] border border-white/5 rounded-xl p-5 mt-3 shadow-inner" id="profileParams">
+                    <div id="stepParams">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs uppercase tracking-wider text-text-muted">Bump Height</span>
+                            <span class="font-mono text-xs text-red-main" id="heightVal">50 mm</span>
+                        </div>
+                        <input type="range" id="height" min="10" max="150" value="50" step="5"
+                            oninput="updateSlider('height','heightVal',this.value,'mm')">
+                    </div>
+                    <div id="sineParams" class="hidden">
+                        <div class="mb-4">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-xs uppercase tracking-wider text-text-muted">Amplitude</span>
+                                <span class="font-mono text-xs text-red-main" id="ampVal">10 mm</span>
+                            </div>
+                            <input type="range" id="amp" min="1" max="50" value="10" step="1"
+                                oninput="updateSlider('amp','ampVal',this.value,'mm')">
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-xs uppercase tracking-wider text-text-muted">Frequency</span>
+                                <span class="font-mono text-xs text-red-main" id="freqVal">2.0 Hz</span>
+                            </div>
+                            <input type="range" id="freq" min="0.5" max="20" value="2" step="0.5"
+                                oninput="updateSlider('freq','freqVal',this.value,'Hz')">
+                        </div>
+                    </div>
+                    <div id="isoParams" class="hidden">
+                        <div class="mb-4">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-xs uppercase tracking-wider text-text-muted">Road Class</span>
+                                <span class="font-mono text-xs text-red-main" id="classVal">B — Good</span>
+                            </div>
+                            <input type="range" id="roadClass" min="0" max="4" value="1" step="1"
+                                oninput="updateRoadClass(this.value)">
+                        </div>
+                        <div class="mb-4">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-xs uppercase tracking-wider text-text-muted">Vehicle Speed</span>
+                                <span class="font-mono text-xs text-red-main" id="speedVal">30 m/s</span>
+                            </div>
+                            <input type="range" id="speed" min="5" max="60" value="30" step="5"
+                                oninput="updateSlider('speed','speedVal',this.value,'m/s')">
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-xs uppercase tracking-wider text-text-muted">RNG Seed
+                                    (0=Random)</span>
+                                <span class="font-mono text-xs text-red-main" id="seedVal">42</span>
+                            </div>
+                            <input type="range" id="seed" min="0" max="100" value="42" step="1"
+                                oninput="updateSlider('seed','seedVal',this.value,'')">
+                        </div>
+                    </div>
+                </div>
+
+            </aside>
+
+            <!-- Center Panel: Metrics & Charts -->
+            <main class="flex-1 flex flex-col min-w-0 bg-dark-bg gap-4">
+
+                <!-- Action Dock -->
+                <div
+                    class="flex justify-between items-center bg-[#111] border border-white/5 rounded-2xl p-3 px-5 shadow-lg">
+                    <div class="flex gap-2">
+                        <button
+                            class="main-tab active px-4 py-2 font-mono text-xs uppercase tracking-widest rounded-lg border border-red-main bg-red-main/10 text-white"
+                            data-tab="overview" onclick="setMainTab('overview')">Overview</button>
+                        <button
+                            class="main-tab px-4 py-2 font-mono text-xs uppercase tracking-widest rounded-lg border border-transparent text-text-muted hover:text-white"
+                            data-tab="dynamics" onclick="setMainTab('dynamics')">Dynamics</button>
+                        <button
+                            class="main-tab px-4 py-2 font-mono text-xs uppercase tracking-widest rounded-lg border border-transparent text-text-muted hover:text-white"
+                            data-tab="optimization" onclick="setMainTab('optimization')">Optimization</button>
+
+                    </div>
+                    <div class="flex gap-3">
+                        <button
+                            class="bg-red-main hover:bg-red-hover text-white font-mono text-xs px-6 py-3 rounded-full uppercase tracking-wider transition-all hover:scale-105 shadow-[0_4px_14px_rgba(232,64,69,0.4)]"
+                            id="runBtn" onclick="runSimulation()">
+                            <span id="runBtnText">▶ Run Simulation</span>
+                        </button>
+                        <button
+                            class="bg-[#1a1a1a] border border-white/5 text-white hover:bg-[#262626] font-mono text-xs px-6 py-3 rounded-full uppercase tracking-wider transition-all hover:scale-105 shadow-md"
+                            id="sweepBtn" onclick="runSweep()">
+                            <span id="sweepBtnText">⬡ Run Pareto Sweep</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Metric Strip -->
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-2">
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-3 shadow-md flex flex-col justify-between"
+                        id="mc-zeta">
+                        <div class="font-mono text-[9px] uppercase tracking-widest text-text-muted mb-1">Damping Ratio ζ
+                        </div>
+                        <div class="font-sans text-xl" id="mv-zeta">—</div>
+                        <div class="h-1 bg-white/10 rounded-full mt-2 overflow-hidden">
+                            <div id="zetaFill" class="h-full bg-red-main transition-all duration-300" style="width:0%">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-3 shadow-md flex flex-col justify-between relative overflow-hidden"
+                        id="mc-iso">
+                        <div class="font-mono text-[9px] uppercase tracking-widest text-text-muted mb-1">ISO 2631</div>
+                        <div class="flex items-baseline gap-1">
+                            <div class="font-sans text-xl" id="mv-iso">—</div>
+                            <div class="font-mono text-[9px] text-text-muted">m/s²</div>
+                        </div>
+                        <div class="font-mono text-[8px] text-white/50 uppercase tracking-widest mt-1" id="comfortBand">
+                            WAITING</div>
+                    </div>
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-3 shadow-md flex flex-col justify-between"
+                        id="mc-rms">
+                        <div class="font-mono text-[9px] uppercase tracking-widest text-text-muted mb-1">RMS Body Acc
+                        </div>
+                        <div class="flex items-baseline gap-1">
+                            <div class="font-sans text-xl" id="mv-rms">—</div>
+                            <div class="font-mono text-[9px] text-text-muted">m/s²</div>
+                        </div>
+                    </div>
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-3 shadow-md flex flex-col justify-between"
+                        id="mc-tire">
+                        <div class="font-mono text-[9px] uppercase tracking-widest text-text-muted mb-1">RMS Tyre Force
+                        </div>
+                        <div class="flex items-baseline gap-1">
+                            <div class="font-sans text-xl" id="mv-tire">—</div>
+                            <div class="font-mono text-[9px] text-text-muted">N</div>
+                        </div>
+                    </div>
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-3 shadow-md flex flex-col justify-between"
+                        id="mc-travel">
+                        <div class="font-mono text-[9px] uppercase tracking-widest text-text-muted mb-1">Max Travel
+                        </div>
+                        <div class="flex items-baseline gap-1">
+                            <div class="font-sans text-xl" id="mv-travel">—</div>
+                            <div class="font-mono text-[9px] text-text-muted">mm</div>
+                        </div>
+                    </div>
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-3 shadow-md flex flex-col justify-between"
+                        id="mc-sag">
+                        <div class="font-mono text-[9px] uppercase tracking-widest text-text-muted mb-1">Sag %</div>
+                        <div class="flex items-baseline gap-1">
+                            <div class="font-sans text-xl" id="mv-sag">—</div>
+                            <div class="font-mono text-[9px] text-text-muted">%</div>
+                        </div>
+                    </div>
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-3 shadow-md flex flex-col justify-between"
+                        id="mc-bottomout">
+                        <div class="font-mono text-[9px] uppercase tracking-widest text-text-muted mb-1">Bottom-out
+                        </div>
+                        <div class="font-sans font-medium text-xl tracking-tight" id="mv-bottomout">—</div>
+                    </div>
+                </div>
+
+                <!-- Bike Summary Card -->
+                <div id="bikeSummaryCard"
+                    class="hidden bg-[#111] border border-white/5 rounded-2xl p-6 shadow-lg relative overflow-hidden mt-2">
+                    <div
+                        class="absolute top-0 right-0 py-1.5 px-4 bg-red-main/10 border-b border-l border-red-main/20 text-red-main font-mono text-[9px] tracking-widest uppercase rounded-bl-xl">
+                        Bike Front/Rear Summary</div>
+                    <div class="grid grid-cols-2 gap-8">
+                        <!-- Front -->
+                        <div>
+                            <div
+                                class="font-mono text-xs uppercase tracking-widest text-text-muted mb-3 border-b border-white/5 pb-2">
+                                Front</div>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <div class="text-[9px] text-text-muted font-mono uppercase tracking-widest">Sprung
+                                    </div>
+                                    <div class="font-sans text-xl" id="bs-ms-f">—</div>
+                                </div>
+                                <div>
+                                    <div class="text-[9px] text-text-muted font-mono uppercase tracking-widest">Spring
+                                        Rate</div>
+                                    <div class="font-sans text-xl" id="bs-k-f">—</div>
+                                </div>
+                                <div>
+                                    <div class="text-[9px] text-text-muted font-mono uppercase tracking-widest">Damping
+                                    </div>
+                                    <div class="font-sans text-xl" id="bs-c-f">—</div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Rear -->
+                        <div>
+                            <div
+                                class="font-mono text-xs uppercase tracking-widest text-text-muted mb-3 border-b border-white/5 pb-2">
+                                Rear</div>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <div class="text-[9px] text-text-muted font-mono uppercase tracking-widest">Sprung
+                                    </div>
+                                    <div class="font-sans text-xl" id="bs-ms-r">—</div>
+                                </div>
+                                <div>
+                                    <div class="text-[9px] text-text-muted font-mono uppercase tracking-widest">Spring
+                                        Rate</div>
+                                    <div class="font-sans text-xl" id="bs-k-r">—</div>
+                                </div>
+                                <div>
+                                    <div class="text-[9px] text-text-muted font-mono uppercase tracking-widest">Damping
+                                    </div>
+                                    <div class="font-sans text-xl" id="bs-c-r">—</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Area -->
+                <div class="tab-pane active" id="tab-overview">
+                    <div class="grid grid-cols-2 gap-4 flex-1 min-h-0">
+                        <div
+                            class="bg-[#111] border border-white/5 rounded-2xl shadow-lg flex flex-col overflow-hidden min-h-0">
+                            <div class="px-4 py-3 border-b border-dark-border flex justify-between items-center">
+                                <span class="font-mono text-xs uppercase tracking-widest text-white">Time Domain
+                                    Response</span>
+                                <span
+                                    class="font-mono text-[10px] bg-red-main/10 text-red-main px-2 py-0.5 rounded-full border border-red-main/20">BODY
+                                    + WHEEL DISP</span>
+                            </div>
+                            <div class="p-4 flex-1 min-h-[250px]">
+                                <canvas id="timeChart"></canvas>
+                            </div>
+                        </div>
+                        <div
+                            class="bg-[#111] border border-white/5 rounded-2xl shadow-lg flex flex-col overflow-hidden min-h-0">
+                            <div class="px-4 py-3 border-b border-dark-border flex justify-between items-center">
+                                <span class="font-mono text-xs uppercase tracking-widest text-white">Body
+                                    Acceleration</span>
+                                <span
+                                    class="font-mono text-[10px] bg-red-main/10 text-red-main px-2 py-0.5 rounded-full border border-red-main/20">m/s²</span>
+                            </div>
+                            <div class="p-4 flex-1 min-h-[250px]">
+                                <canvas id="accChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane" id="tab-dynamics">
+                    <div class="grid grid-cols-2 gap-4 flex-1 min-h-0">
+                        <div
+                            class="bg-[#111] border border-white/5 rounded-2xl shadow-lg flex flex-col overflow-hidden min-h-0">
+                            <div class="px-4 py-3 border-b border-dark-border flex justify-between items-center">
+                                <span class="font-mono text-xs uppercase tracking-widest text-white">Frequency Response
+                                    Function</span>
+                                <span
+                                    class="font-mono text-[10px] bg-red-main/10 text-red-main px-2 py-0.5 rounded-full border border-red-main/20">ANALYTICAL</span>
+                            </div>
+                            <div class="p-4 flex-1 min-h-[250px]">
+                                <canvas id="frfChart"></canvas>
+                            </div>
+                        </div>
+                        <div
+                            class="bg-[#111] border border-white/5 rounded-2xl shadow-lg flex flex-col overflow-hidden min-h-0">
+                            <div class="px-4 py-3 border-b border-dark-border flex justify-between items-center">
+                                <span class="font-mono text-xs uppercase tracking-widest text-white">Tyre Force
+                                    Transmissibility</span>
+                                <span
+                                    class="font-mono text-[10px] bg-red-main/10 text-red-main px-2 py-0.5 rounded-full border border-red-main/20">FORCE/DISP</span>
+                            </div>
+                            <div class="p-4 flex-1 min-h-[250px]">
+                                <canvas id="tyreFrfChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane" id="tab-optimization">
+                    <div
+                        class="bg-[#111] border border-white/5 rounded-2xl shadow-lg flex flex-col overflow-hidden flex-1 min-h-0">
+                        <div class="px-4 py-3 border-b border-dark-border flex justify-between items-center">
+                            <span class="font-mono text-xs uppercase tracking-widest text-white">Pareto Front</span>
+                            <span
+                                class="font-mono text-[10px] bg-red-main/10 text-red-main px-2 py-0.5 rounded-full border border-red-main/20">ISO2631
+                                vs TYRE FORCE</span>
+                        </div>
+                        <div class="p-4 flex-1 flex items-center justify-center relative min-h-[250px]">
+                            <div id="paretoEmpty"
+                                class="absolute inset-0 flex flex-col items-center justify-center text-text-muted font-mono text-sm">
+                                NO SWEEP DATA
+                                <div class="text-xs text-dark-border mt-2">Run a parameter sweep to populate</div>
+                            </div>
+                            <canvas id="paretoChart" style="display:none"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+
+            <!-- Right Panel: Sweep Planner -->
+            <aside
+                class="w-[300px] flex flex-col gap-4 bg-dark-card border border-white/5 rounded-2xl p-6 shadow-lg overflow-y-auto">
+                <div class="font-mono text-[10px] uppercase tracking-widest text-text-muted mb-3">Sweep Planner</div>
+
+                <div class="flex flex-col gap-4">
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-4 shadow-sm">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs uppercase tracking-wider text-text-muted">k min</span>
+                            <span class="font-mono text-xs text-red-main" id="kMinVal">10000</span>
+                        </div>
+                        <input type="range" id="kMin" min="5000" max="40000" value="10000" step="1000"
+                            oninput="updateSlider('kMin','kMinVal',this.value,'')">
+                    </div>
+
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-4 shadow-sm">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs uppercase tracking-wider text-text-muted">k max</span>
+                            <span class="font-mono text-xs text-red-main" id="kMaxVal">35000</span>
+                        </div>
+                        <input type="range" id="kMax" min="10000" max="60000" value="35000" step="1000"
+                            oninput="updateSlider('kMax','kMaxVal',this.value,'')">
+                    </div>
+
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-4 shadow-sm">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs uppercase tracking-wider text-text-muted">c min</span>
+                            <span class="font-mono text-xs text-red-main" id="cMinVal">300</span>
+                        </div>
+                        <input type="range" id="cMin" min="100" max="3000" value="300" step="100"
+                            oninput="updateSlider('cMin','cMinVal',this.value,'')">
+                    </div>
+
+                    <div class="bg-[#111] border border-white/5 rounded-xl p-4 shadow-sm">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs uppercase tracking-wider text-text-muted">c max</span>
+                            <span class="font-mono text-xs text-red-main" id="cMaxVal">4000</span>
+                        </div>
+                        <input type="range" id="cMax" min="500" max="8000" value="4000" step="100"
+                            oninput="updateSlider('cMax','cMaxVal',this.value,'')">
+                    </div>
+                </div>
+
+                <div class="font-mono text-xs uppercase tracking-widest text-text-muted mt-6 mb-2">Recent Runs</div>
+                <div class="flex-1 overflow-y-auto bg-[#111] border border-white/5 rounded-xl p-4 shadow-sm relative min-h-0"
+                    id="historyList">
+                    <div class="font-mono text-xs text-text-muted">No runs yet</div>
+                </div>
+            </aside>
+
+        </div>
+
+    </div><!-- /screen-dashboard -->
+
+    <!-- DIAGNOSTICS SCREEN — enhanced interactive version -->
+    <style>
+        /* ── Diagnostics screen styles ─────────────────────────────── */
+        #screen-diagnostics .diag-page-body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        #screen-diagnostics .diag-sidebar {
+            width: 232px;
+            flex-shrink: 0;
+            background: #111111;
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 20px 14px;
+            gap: 14px;
+        }
+
+        #screen-diagnostics .diag-sidebar-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: #a3a3a3;
+            margin-bottom: 4px;
+        }
+
+        #screen-diagnostics .diag-limit-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 9px 11px;
+            background: #161616;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-left: 2px solid #E84045;
+            border-radius: 10px;
+            font-size: 11px;
+            color: #c4c4c4;
+            line-height: 1.5;
+        }
+
+        #screen-diagnostics .diag-limit-icon {
+            color: #E84045;
+            margin-top: 1px;
+            flex-shrink: 0;
+            font-size: 11px;
+        }
+
+        #screen-diagnostics .diag-sidebar-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        /* Tweak sliders */
+        #screen-diagnostics .diag-tweak-panel {
+            padding: 14px 12px;
+            background: #161616;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+        }
+
+        #screen-diagnostics .diag-tweak-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 7px;
+        }
+
+        #screen-diagnostics .diag-tweak-name {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: #a3a3a3;
+        }
+
+        #screen-diagnostics .diag-tweak-val {
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            color: #E84045;
+            background: rgba(232, 64, 69, 0.10);
+            border: 1px solid rgba(232, 64, 69, 0.22);
+            padding: 2px 7px;
+            border-radius: 20px;
+        }
+
+        /* Main content area */
+        #screen-diagnostics .diag-main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 24px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            min-width: 0;
+        }
+
+        #screen-diagnostics .diag-section-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: #E84045;
+            margin-bottom: 14px;
+        }
+
+        /* Metric cards grid */
+        #screen-diagnostics .diag-metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(176px, 1fr));
+            gap: 14px;
+        }
+
+        #screen-diagnostics .diag-metric-card {
+            background: #121212;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 18px;
+            padding: 18px 18px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+            overflow: visible;
+            cursor: default;
+            transition: border-color .2s, background .2s;
+        }
+
+        #screen-diagnostics .diag-metric-card:hover {
+            border-color: rgba(255, 255, 255, .13);
+            background: #161616;
+        }
+
+        #screen-diagnostics .diag-metric-card:hover .diag-tooltip {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        #screen-diagnostics .diag-metric-card.diag-critical {
+            animation: diagSagPulse 2.4s ease-in-out infinite;
+        }
+
+        @keyframes diagSagPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 transparent;
+                border-color: rgba(255, 255, 255, .06);
+            }
+
+            50% {
+                box-shadow: 0 0 22px 4px rgba(232, 64, 69, .22);
+                border-color: rgba(232, 64, 69, .45);
+            }
+        }
+
+        #screen-diagnostics .diag-metric-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: #a3a3a3;
+        }
+
+        #screen-diagnostics .diag-metric-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 40px;
+            font-weight: 600;
+            line-height: 1;
+            letter-spacing: -.02em;
+        }
+
+        #screen-diagnostics .diag-metric-unit {
+            font-size: 12px;
+            color: #a3a3a3;
+            margin-left: 4px;
+            font-weight: 400;
+        }
+
+        #screen-diagnostics .diag-metric-badge {
+            display: inline-block;
+            font-family: 'Space Mono', monospace;
+            font-size: 8px;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 20px;
+            width: fit-content;
+        }
+
+        #screen-diagnostics .diag-badge-ok {
+            background: rgba(34, 197, 94, 0.08);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, .22);
+        }
+
+        #screen-diagnostics .diag-badge-warn {
+            background: rgba(234, 179, 8, 0.08);
+            color: #eab308;
+            border: 1px solid rgba(234, 179, 8, .22);
+        }
+
+        #screen-diagnostics .diag-badge-crit {
+            background: rgba(232, 64, 69, 0.10);
+            color: #E84045;
+            border: 1px solid rgba(232, 64, 69, .28);
+        }
+
+        /* Tooltip */
+        #screen-diagnostics .diag-tooltip {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: #1c1c1c;
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            color: #e0e0e0;
+            line-height: 1.6;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(6px);
+            transition: opacity .22s, transform .22s;
+            z-index: 30;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .6);
+            min-width: 220px;
+        }
+
+        #screen-diagnostics .diag-tooltip .diag-formula {
+            color: #7dd3fc;
+            font-size: 10px;
+            display: block;
+            margin-top: 4px;
+        }
+
+        /* Zeta bar */
+        #screen-diagnostics .diag-zeta-track {
+            width: 100%;
+            height: 4px;
+            background: #222;
+            border-radius: 99px;
+            position: relative;
+            margin-top: 2px;
+        }
+
+        #screen-diagnostics .diag-zeta-zone {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 20%;
+            width: 40%;
+            background: rgba(34, 197, 94, .18);
+            border-radius: 99px;
+        }
+
+        #screen-diagnostics .diag-zeta-marker {
+            position: absolute;
+            top: -3px;
+            width: 2px;
+            height: 10px;
+            background: #fff;
+            border-radius: 1px;
+            transform: translateX(-50%);
+            transition: left .4s cubic-bezier(.34, 1.56, .64, 1);
+        }
+
+        #screen-diagnostics .diag-zeta-ticks {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'Space Mono', monospace;
+            font-size: 8px;
+            color: #a3a3a3;
+            margin-top: 3px;
+        }
+
+        /* Diagnostic stack rows */
+        #screen-diagnostics .diag-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        #screen-diagnostics .diag-row {
+            background: #121212;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-left: 3px solid transparent;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: border-color .15s, background .15s;
+        }
+
+        #screen-diagnostics .diag-row:hover {
+            background: #161616;
+        }
+
+        #screen-diagnostics .diag-row.diag-ok {
+            border-left-color: #22c55e;
+        }
+
+        #screen-diagnostics .diag-row.diag-warn {
+            border-left-color: #eab308;
+        }
+
+        #screen-diagnostics .diag-row.diag-crit {
+            border-left-color: #E84045;
+        }
+
+        #screen-diagnostics .diag-row-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            gap: 10px;
+            user-select: none;
+        }
+
+        #screen-diagnostics .diag-row-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+
+        #screen-diagnostics .diag-row-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #screen-diagnostics .diag-row-number {
+            font-family: 'Outfit', sans-serif;
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        #screen-diagnostics .diag-flag {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+        }
+
+        #screen-diagnostics .diag-flag-ok {
+            color: #22c55e;
+        }
+
+        #screen-diagnostics .diag-flag-warn {
+            color: #eab308;
+        }
+
+        #screen-diagnostics .diag-flag-crit {
+            color: #E84045;
+        }
+
+        #screen-diagnostics .diag-chevron {
+            color: #a3a3a3;
+            font-size: 11px;
+            transition: transform .2s;
+            margin-left: 2px;
+        }
+
+        #screen-diagnostics .diag-row.diag-open .diag-chevron {
+            transform: rotate(180deg);
+        }
+
+        #screen-diagnostics .diag-accordion {
+            display: none;
+            padding: 0 16px 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        #screen-diagnostics .diag-row.diag-open .diag-accordion {
+            display: block;
+        }
+
+        #screen-diagnostics .diag-accordion-inner {
+            padding: 10px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        #screen-diagnostics .diag-acc-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 10px;
+            background: #161616;
+            border-radius: 7px;
+        }
+
+        #screen-diagnostics .diag-acc-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 9px;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: #a3a3a3;
+        }
+
+        #screen-diagnostics .diag-acc-val {
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+        }
+
+        #screen-diagnostics .diag-acc-ok {
+            color: #22c55e;
+        }
+
+        #screen-diagnostics .diag-acc-warn {
+            color: #eab308;
+        }
+
+        #screen-diagnostics .diag-acc-crit {
+            color: #E84045;
+        }
+
+        /* Flash animation for slider focus */
+        @keyframes diagSliderFlash {
+            0% {
+                box-shadow: 0 0 0 0 rgba(232, 64, 69, 0);
+            }
+
+            30% {
+                box-shadow: 0 0 0 5px rgba(232, 64, 69, 0.4);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(232, 64, 69, 0);
+            }
+        }
+
+        .diag-slider-flash {
+            animation: diagSliderFlash .7s ease;
+            border-radius: 8px;
+        }
+
+        /* No-data placeholder */
+        #screen-diagnostics .diag-no-data {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 64px 0;
+            gap: 10px;
+            text-align: center;
+        }
+    </style>
+
+    <div id="screen-diagnostics" data-screen class="flex-1 flex flex-col min-w-0 bg-[#0A0A0A]" style="display:none">
+
+        <!-- Header -->
+        <header
+            class="h-[64px] shrink-0 border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-md px-6 flex items-center justify-between z-10 w-full">
+            <div class="flex gap-8 h-full items-end pb-0">
+                <div onclick="switchScreen('dashboard')"
+                    class="pb-[18px] font-mono text-[11px] uppercase tracking-widest text-text-muted hover:text-white border-b-2 border-transparent cursor-pointer transition-colors">
+                    Telemetry</div>
+                <div
+                    class="pb-[18px] font-mono text-[11px] uppercase tracking-widest text-red-main border-b-2 border-red-main">
+                    Diagnostics</div>
+            </div>
+            <div class="flex items-center gap-5">
+                <div class="text-[11px] font-mono tracking-widest text-text-muted uppercase hidden md:block">Suspension
+                    Analysis Engine v2.0</div>
+                <div class="h-4 w-px bg-white/10 hidden md:block"></div>
+                <div class="flex items-center gap-2 font-mono text-[10px] text-text-muted tracking-widest">
+                    <div class="w-1.5 h-1.5 rounded-full bg-red-main shadow-[0_0_8px_rgba(232,64,69,0.6)]"></div>
+                    <span class="text-white">DIAGNOSTICS</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page body: sidebar + main -->
+        <div class="diag-page-body">
+
+            <!-- Sidebar: Quick Tweaks + Model Limitations -->
+            <aside class="diag-sidebar">
+                <!-- Quick Tweaks -->
+                <div>
+                    <div class="diag-sidebar-label">Quick Tweak</div>
+                    <div class="diag-tweak-panel">
+                        <div class="diag-tweak-row">
+                            <span class="diag-tweak-name">k — Stiffness</span>
+                            <span class="diag-tweak-val" id="diag-tw-k-val">22000 N/m</span>
+                        </div>
+                        <input type="range" id="diag-tw-k" min="5000" max="60000" value="22000" step="500"
+                            oninput="diagUpdateTweak('k', this.value)">
+                        <div class="diag-tweak-row" style="margin-top:14px">
+                            <span class="diag-tweak-name">c — Damping</span>
+                            <span class="diag-tweak-val" id="diag-tw-c-val">1500 N·s/m</span>
+                        </div>
+                        <input type="range" id="diag-tw-c" min="100" max="6000" value="1500" step="50"
+                            oninput="diagUpdateTweak('c', this.value)">
+                    </div>
+                    <div class="font-mono text-[9px] uppercase tracking-widest text-text-muted mt-3 px-1"
+                        style="opacity:.5">
+                        Preview only — does not affect simulation
+                    </div>
+                </div>
+
+                <div class="diag-sidebar-divider"></div>
+
+                <!-- Model Limitations -->
+                <div>
+                    <div class="diag-sidebar-label">Model Limitations</div>
+                    <div style="display:flex;flex-direction:column;gap:7px">
+                        <div class="diag-limit-item">
+                            <span class="diag-limit-icon">⚠</span>
+                            <span><strong style="color:#fff">Linear damper only.</strong> 2:1 blow-off bypass not
+                                modelled.</span>
+                        </div>
+                        <div class="diag-limit-item">
+                            <span class="diag-limit-icon">⚠</span>
+                            <span><strong style="color:#fff">3-piece constant W<sub>k</sub> gain.</strong> ISO 2631
+                                approximation above 4 Hz.</span>
+                        </div>
+                        <div class="diag-limit-item">
+                            <span class="diag-limit-icon">⚠</span>
+                            <span><strong style="color:#fff">Quarter-car model.</strong> Roll, pitch and lateral
+                                coupling ignored.</span>
+                        </div>
+                        <div class="diag-limit-item">
+                            <span class="diag-limit-icon">⚠</span>
+                            <span><strong style="color:#fff">Static preload only.</strong> Dynamic tyre contact patch
+                                area fixed.</span>
+                        </div>
+                        <div class="diag-limit-item">
+                            <span class="diag-limit-icon">⚠</span>
+                            <span><strong style="color:#fff">Linear spring.</strong> Bumpstop &amp; progressive-rate
+                                effects omitted.</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main content -->
+            <main class="diag-main">
+
+                <!-- Metric cards -->
+                <div>
+                    <div class="diag-section-label">Engineering Diagnostics</div>
+                    <div class="diag-metric-grid" id="dashDiagMetrics"></div>
+                </div>
+
+                <!-- Diagnostic stack -->
+                <div>
+                    <div class="diag-section-label">Status &amp; Margins</div>
+                    <div class="diag-stack" id="dashDiagStack"></div>
+                </div>
+
+            </main>
+        </div>
+
+    </div><!-- /screen-diagnostics -->
+
+    <!-- VEHICLE CONFIG SCREEN -->
+    <div id="screen-vehicle" data-screen class="flex-1 flex flex-col min-w-0 bg-[#0A0A0A]" style="display:none">
+
+        <!-- Header -->
+        <header
+            class="h-[64px] shrink-0 border-b border-white/5 bg-[#0a0a0a]/80 backdrop-blur-md px-6 flex items-center justify-between z-10 w-full">
+            <div class="flex gap-8 h-full items-end pb-0">
+                <div
+                    class="pb-[18px] font-mono text-[11px] uppercase tracking-widest text-red-main border-b-2 border-red-main">
+                    Vehicle Config</div>
+                <div class="pb-[18px] font-mono text-[11px] uppercase tracking-widest text-text-muted">SAE-Derived
+                    Parameters</div>
+            </div>
+            <div class="flex items-center gap-5">
+                <div class="text-[11px] font-mono tracking-widest text-text-muted uppercase hidden md:block">Suspension
+                    Analysis Engine v2.0</div>
+                <div class="h-4 w-px bg-white/10 hidden md:block"></div>
+                <div class="flex items-center gap-4 font-mono text-[10px] text-text-muted tracking-widest">
+                    <div class="flex items-center gap-2">
+                        <div class="w-1.5 h-1.5 rounded-full bg-red-main shadow-[0_0_8px_rgba(232,64,69,0.6)]"
+                            id="vcStatusDot"></div>
+                        <span id="vcStatusText" class="text-white">READY</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Layout (3-Column) -->
+        <div class="flex-1 overflow-hidden p-6 flex gap-6">
+
+            <!-- Column 1: Vehicle Profile (w-320px) -->
+            <aside
+                class="w-[320px] shrink-0 flex flex-col gap-5 bg-dark-card border border-white/5 rounded-3xl p-6 shadow-2xl overflow-y-auto">
+
+                <!-- Mode Toggle: Car / Bike -->
+                <div class="flex p-1 bg-black/50 rounded-2xl">
+                    <button id="modeBtnCar" onclick="setVehicleMode('car')"
+                        class="flex-1 py-2.5 rounded-xl font-mono text-[10px] tracking-wider transition-colors bg-red-main text-white shadow-md font-bold">CAR</button>
+                    <button id="modeBtnBike" onclick="setVehicleMode('bike')"
+                        class="flex-1 py-2.5 rounded-xl font-mono text-[10px] tracking-wider transition-colors text-text-muted hover:text-white bg-transparent font-bold">BIKE</button>
+                </div>
+
+                <!-- ══ CAR CONFIG ══ -->
+                <div id="vc-car-panel">
+                    <div class="font-mono text-[11px] uppercase tracking-widest text-text-muted">Foundations</div>
+
+                    <!-- Identity -->
+                    <div class="flex flex-col gap-3">
+                        <div
+                            class="group bg-[#111111] border border-white/5 rounded-2xl p-4 focus-within:border-red-main/50 transition-all shadow-inner">
+                            <div
+                                class="text-[9px] uppercase tracking-widest text-text-muted mb-1 group-focus-within:text-red-main transition-colors">
+                                Vehicle Class</div>
+                            <div class="custom-select-wrapper w-full relative cursor-pointer group/select">
+                                <div
+                                    class="flex justify-between items-center w-full bg-transparent border-none outline-none font-mono text-sm text-white">
+                                    <span
+                                        class="selected-text group-hover/select:text-red-main transition-colors">Select</span>
+                                    <svg class="w-4 h-4 text-text-muted group-hover/select:text-red-main transition-colors"
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
+                                <div
+                                    class="dropdown-menu absolute left-0 right-0 top-full mt-2 bg-[#161616] border border-white/10 rounded-xl shadow-2xl z-50 hidden flex-col overflow-hidden max-h-48 overflow-y-auto">
+                                    <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                        data-value="Subcompact">Subcompact</div>
+                                    <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                        data-value="Compact">Compact</div>
+                                    <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                        data-value="Midsize">Midsize</div>
+                                    <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                        data-value="Fullsize">Fullsize</div>
+                                    <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                        data-value="Suv">SUV</div>
+                                    <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                        data-value="Truck">Truck</div>
+                                    <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                        data-value="Sports">Sports</div>
+
+                                </div>
+                                <select id="vc-vehicle_class" class="hidden">
+                                    <option value="Subcompact">Subcompact</option>
+                                    <option value="Compact">Compact</option>
+                                    <option value="Midsize" selected>Midsize</option>
+                                    <option value="Fullsize">Fullsize</option>
+                                    <option value="Suv">SUV</option>
+                                    <option value="Truck">Truck</option>
+                                    <option value="Sports">Sports</option>
+
+                                </select>
+                            </div>
+                        </div>
+
+                        <div
+                            class="group bg-[#111111] border border-white/5 rounded-2xl p-4 focus-within:border-red-main/50 transition-all shadow-inner">
+                            <div
+                                class="text-[9px] uppercase tracking-widest text-text-muted mb-1 group-focus-within:text-red-main transition-colors">
+                                Powertrain</div>
+                            <div class="custom-select-wrapper w-full relative cursor-pointer group/select">
+                                <div
+                                    class="flex justify-between items-center w-full bg-transparent border-none outline-none font-mono text-sm text-white">
+                                    <span
+                                        class="selected-text group-hover/select:text-red-main transition-colors">Select</span>
+                                    <svg class="w-4 h-4 text-text-muted group-hover/select:text-red-main transition-colors"
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
+                                <div
+                                    class="dropdown-menu absolute left-0 right-0 top-full mt-2 bg-[#161616] border border-white/10 rounded-xl shadow-2xl z-50 hidden flex-col overflow-hidden max-h-48 overflow-y-auto">
+                                    <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                        data-value="Gasoline">Gasoline</div>
+                                    <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                        data-value="Diesel">Diesel</div>
+                                    <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                        data-value="HybridEv">Hybrid EV</div>
+                                    <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                        data-value="BatteryEv">Battery EV</div>
+
+                                </div>
+                                <select id="vc-powertrain" class="hidden">
+                                    <option value="Gasoline" selected>Gasoline</option>
+                                    <option value="Diesel">Diesel</option>
+                                    <option value="HybridEv">Hybrid EV</option>
+                                    <option value="BatteryEv">Battery EV</option>
+
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Geometry & Suspension -->
+                    <div class="font-mono text-[11px] uppercase tracking-widest text-text-muted mt-2">Architecture</div>
+
+                    <div class="flex flex-col gap-3">
+                        <div class="bg-[#111111] border border-white/5 rounded-2xl p-4 shadow-inner">
+                            <div class="text-[9px] uppercase tracking-widest text-text-muted mb-2">Axle Position</div>
+                            <div class="flex p-1 bg-black/50 rounded-xl relative">
+                                <button
+                                    class="vc-axle-btn flex-1 py-2 rounded-lg font-mono text-[10px] tracking-wider transition-colors z-10 bg-red-main text-white shadow-md font-bold"
+                                    data-val="Front"
+                                    onclick="setVcAxle('Front'); updateAxleStyling(this)">FRONT</button>
+                                <button
+                                    class="vc-axle-btn flex-1 py-2 rounded-lg font-mono text-[10px] tracking-wider transition-colors z-10 text-text-muted hover:text-white bg-transparent font-bold"
+                                    data-val="Rear" onclick="setVcAxle('Rear'); updateAxleStyling(this)">REAR</button>
+                            </div>
+                            <input type="hidden" id="vc-axle_position" value="Front">
+                        </div>
+
+                        <div
+                            class="group bg-[#111111] border border-white/5 rounded-2xl p-4 focus-within:border-red-main/50 transition-all shadow-inner">
+                            <div
+                                class="text-[9px] uppercase tracking-widest text-text-muted mb-1 group-focus-within:text-red-main transition-colors">
+                                Suspension Type</div>
+                            <div class="custom-select-wrapper w-full relative cursor-pointer group/select">
+                                <div
+                                    class="flex justify-between items-center w-full bg-transparent border-none outline-none font-mono text-sm text-white">
+                                    <span
+                                        class="selected-text group-hover/select:text-red-main transition-colors">Select</span>
+                                    <svg class="w-4 h-4 text-text-muted group-hover/select:text-red-main transition-colors"
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
+                                <div
+                                    class="dropdown-menu absolute left-0 right-0 top-full mt-2 bg-[#161616] border border-white/10 rounded-xl shadow-2xl z-50 hidden flex-col overflow-hidden max-h-48 overflow-y-auto">
+                                    <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                        data-value="MacPherson">MacPherson</div>
+                                    <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                        data-value="DoubleWishbone">Double Wishbone</div>
+                                    <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                        data-value="MultiLink">Multi-Link</div>
+                                    <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                        data-value="SolidAxle">Solid Axle</div>
+
+                                </div>
+                                <select id="vc-suspension_type" class="hidden">
+                                    <option value="MacPherson" selected>MacPherson</option>
+                                    <option value="DoubleWishbone">Double Wishbone</option>
+                                    <option value="MultiLink">Multi-Link</option>
+                                    <option value="SolidAxle">Solid Axle</option>
+
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Mass -->
+                    <div class="font-mono text-[11px] uppercase tracking-widest text-text-muted mt-2">Inertia</div>
+
+                    <div
+                        class="bg-[#111111] border border-white/5 rounded-2xl p-5 transition-all shadow-inner hover:border-white/10 group">
+                        <div class="flex justify-between items-center mb-4">
+                            <span
+                                class="text-[9px] uppercase tracking-widest text-text-muted group-hover:text-white transition-colors">Gross
+                                Vehicle Mass</span>
+                            <span
+                                class="font-mono text-xs text-white bg-white/5 px-3 py-1 rounded-lg border border-white/10"
+                                id="vcGvmVal">1800 kg</span>
+                        </div>
+                        <input type="range" id="vc-gross_vehicle_mass" min="800" max="5000" value="1800" step="50"
+                            oninput="document.getElementById('vcGvmVal').textContent = this.value + ' kg'"
+                            class="w-full cursor-pointer accent-red-main h-1 bg-white/10 rounded-full appearance-none outline-none">
+                    </div>
+                </div><!-- /vc-car-panel -->
+
+                <!-- ══ BIKE CONFIG ══ -->
+                <div id="vc-bike-panel" class="hidden flex flex-col gap-4">
+
+                    <div class="font-mono text-[11px] uppercase tracking-widest text-text-muted">Bike Profile</div>
+
+                    <!-- Moto Class -->
+                    <div
+                        class="group bg-[#111111] border border-white/5 rounded-2xl p-4 focus-within:border-red-main/50 transition-all shadow-inner">
+                        <div
+                            class="text-[9px] uppercase tracking-widest text-text-muted mb-1 group-focus-within:text-red-main transition-colors">
+                            Bike Class</div>
+                        <div class="custom-select-wrapper w-full relative cursor-pointer group/select">
+                            <div
+                                class="flex justify-between items-center w-full bg-transparent border-none outline-none font-mono text-sm text-white">
+                                <span
+                                    class="selected-text group-hover/select:text-red-main transition-colors">Select</span>
+                                <svg class="w-4 h-4 text-text-muted group-hover/select:text-red-main transition-colors"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                            <div
+                                class="dropdown-menu absolute left-0 right-0 top-full mt-2 bg-[#161616] border border-white/10 rounded-xl shadow-2xl z-50 hidden flex-col overflow-hidden max-h-48 overflow-y-auto">
+                                <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                    data-value="Scooter">Scooter</div>
+                                <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                    data-value="Commuter">Commuter</div>
+                                <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                    data-value="Middleweight">Middleweight</div>
+                                <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                    data-value="Supersport">Supersport</div>
+                                <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                    data-value="Heavyweight">Heavyweight</div>
+                                <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                    data-value="Adventure">Adventure</div>
+                                <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                    data-value="Offroad">Off-Road</div>
+                                <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                    data-value="ElectricMoto">Electric Moto</div>
+                            </div>
+                            <select id="vc-moto_class" class="hidden">
+                                <option value="Commuter" selected>Commuter</option>
+                                <option value="Scooter">Scooter</option>
+                                <option value="Middleweight">Middleweight</option>
+                                <option value="Supersport">Supersport</option>
+                                <option value="Heavyweight">Heavyweight</option>
+                                <option value="Adventure">Adventure</option>
+                                <option value="Offroad">Off-Road</option>
+                                <option value="ElectricMoto">Electric Moto</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Axle -->
+                    <div class="bg-[#111111] border border-white/5 rounded-2xl p-4 shadow-inner">
+                        <div class="text-[9px] uppercase tracking-widest text-text-muted mb-2">Axle</div>
+                        <div class="flex p-1 bg-black/50 rounded-xl relative">
+                            <button
+                                class="moto-axle-btn flex-1 py-2 rounded-lg font-mono text-[10px] tracking-wider transition-colors z-10 bg-red-main text-white shadow-md font-bold"
+                                data-val="Front" onclick="setMotoAxle('Front'); updateMotoAxle(this)">FRONT</button>
+                            <button
+                                class="moto-axle-btn flex-1 py-2 rounded-lg font-mono text-[10px] tracking-wider transition-colors z-10 text-text-muted hover:text-white bg-transparent font-bold"
+                                data-val="Rear" onclick="setMotoAxle('Rear'); updateMotoAxle(this)">REAR</button>
+                        </div>
+                        <input type="hidden" id="vc-moto_axle" value="Front">
+                    </div>
+
+                    <!-- Suspension Type -->
+                    <div
+                        class="group bg-[#111111] border border-white/5 rounded-2xl p-4 focus-within:border-red-main/50 transition-all shadow-inner">
+                        <div
+                            class="text-[9px] uppercase tracking-widest text-text-muted mb-1 group-focus-within:text-red-main transition-colors">
+                            Suspension Type</div>
+                        <div class="custom-select-wrapper w-full relative cursor-pointer group/select">
+                            <div
+                                class="flex justify-between items-center w-full bg-transparent border-none outline-none font-mono text-sm text-white">
+                                <span
+                                    class="selected-text group-hover/select:text-red-main transition-colors">Select</span>
+                                <svg class="w-4 h-4 text-text-muted group-hover/select:text-red-main transition-colors"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                            <div
+                                class="dropdown-menu absolute left-0 right-0 top-full mt-2 bg-[#161616] border border-white/10 rounded-xl shadow-2xl z-50 hidden flex-col overflow-hidden max-h-48 overflow-y-auto">
+                                <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                    data-value="TelescopicFork">Telescopic Fork</div>
+                                <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                    data-value="UsdFork">USD Fork</div>
+                                <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                    data-value="Monoshock">Monoshock</div>
+                                <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                    data-value="DualShock">Dual Shock</div>
+                                <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                    data-value="Telelever">Telelever</div>
+                                <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                    data-value="Paralever">Paralever</div>
+                            </div>
+                            <select id="vc-moto_susp_type" class="hidden">
+                                <option value="TelescopicFork" selected>Telescopic Fork</option>
+                                <option value="UsdFork">USD Fork</option>
+                                <option value="Monoshock">Monoshock</option>
+                                <option value="DualShock">Dual Shock</option>
+                                <option value="Telelever">Telelever</option>
+                                <option value="Paralever">Paralever</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Rear Suspension Type (for bike) -->
+                    <div
+                        class="group bg-[#111111] border border-white/5 rounded-2xl p-4 focus-within:border-red-main/50 transition-all shadow-inner">
+                        <div
+                            class="text-[9px] uppercase tracking-widest text-text-muted mb-1 group-focus-within:text-red-main transition-colors">
+                            Rear Suspension Type</div>
+                        <div class="custom-select-wrapper w-full relative cursor-pointer group/select">
+                            <div
+                                class="flex justify-between items-center w-full bg-transparent border-none outline-none font-mono text-sm text-white">
+                                <span
+                                    class="selected-text group-hover/select:text-red-main transition-colors">Select</span>
+                                <svg class="w-4 h-4 text-text-muted group-hover/select:text-red-main transition-colors"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                            <div
+                                class="dropdown-menu absolute left-0 right-0 top-full mt-2 bg-[#161616] border border-white/10 rounded-xl shadow-2xl z-50 hidden flex-col overflow-hidden max-h-48 overflow-y-auto">
+                                <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                    data-value="Monoshock">Monoshock</div>
+                                <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                    data-value="DualShock">Dual Shock</div>
+                                <div class="dropdown-option px-4 py-3 hover:bg-red-main/10 cursor-pointer font-mono text-sm text-text-muted hover:text-red-main transition-colors"
+                                    data-value="Paralever">Paralever</div>
+                            </div>
+                            <select id="vc-moto_susp_type_rear" class="hidden">
+                                <option value="Monoshock" selected>Monoshock</option>
+                                <option value="DualShock">Dual Shock</option>
+                                <option value="Paralever">Paralever</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="font-mono text-[11px] uppercase tracking-widest text-text-muted mt-1">Mass</div>
+
+                    <!-- Dry Mass -->
+                    <div
+                        class="bg-[#111111] border border-white/5 rounded-2xl p-5 transition-all shadow-inner hover:border-white/10 group">
+                        <div class="flex justify-between items-center mb-4">
+                            <span
+                                class="text-[9px] uppercase tracking-widest text-text-muted group-hover:text-white transition-colors">Dry
+                                Mass (no rider)</span>
+                            <span
+                                class="font-mono text-xs text-white bg-white/5 px-3 py-1 rounded-lg border border-white/10"
+                                id="vcMotoDryVal">170 kg</span>
+                        </div>
+                        <input type="range" id="vc-moto_dry_mass" min="80" max="300" value="170" step="5"
+                            oninput="document.getElementById('vcMotoDryVal').textContent = this.value + ' kg'"
+                            class="w-full cursor-pointer accent-red-main h-1 bg-white/10 rounded-full appearance-none outline-none">
+                    </div>
+
+                    <!-- Rider Mass -->
+                    <div
+                        class="bg-[#111111] border border-white/5 rounded-2xl p-5 transition-all shadow-inner hover:border-white/10 group">
+                        <div class="flex justify-between items-center mb-4">
+                            <span
+                                class="text-[9px] uppercase tracking-widest text-text-muted group-hover:text-white transition-colors">Rider
+                                Mass</span>
+                            <span
+                                class="font-mono text-xs text-white bg-white/5 px-3 py-1 rounded-lg border border-white/10"
+                                id="vcMotoRiderVal">75 kg</span>
+                        </div>
+                        <input type="range" id="vc-moto_rider_mass" min="40" max="130" value="75" step="1"
+                            oninput="document.getElementById('vcMotoRiderVal').textContent = this.value + ' kg'"
+                            class="w-full cursor-pointer accent-red-main h-1 bg-white/10 rounded-full appearance-none outline-none">
+                    </div>
+
+                    <div
+                        class="bg-[#111111] border border-white/5 rounded-2xl p-5 transition-all shadow-inner hover:border-white/10 group">
+                        <div class="flex justify-between items-center mb-4">
+                            <span
+                                class="text-[9px] uppercase tracking-widest text-text-muted group-hover:text-white transition-colors">Front
+                                Weight Distribution</span>
+                            <span
+                                class="font-mono text-xs text-white bg-white/5 px-3 py-1 rounded-lg border border-white/10"
+                                id="vcMotoFrontWeightVal">48%</span>
+                        </div>
+                        <input type="range" id="vc-moto_front_weight_pct" min="35" max="65" value="48" step="1"
+                            oninput="document.getElementById('vcMotoFrontWeightVal').textContent = this.value + '%'"
+                            class="w-full cursor-pointer accent-red-main h-1 bg-white/10 rounded-full appearance-none outline-none">
+                    </div>
+
+                    <!-- Rake Angle (optional) -->
+                    <div class="group relative">
+                        <div
+                            class="absolute left-4 top-[-8px] bg-dark-card px-2 font-mono text-[9px] uppercase tracking-widest text-text-muted z-10 group-focus-within:text-red-main transition-colors">
+                            Rake Angle ° (opt)</div>
+                        <input id="vc-moto_rake" type="number" min="15" max="40" step="0.5" placeholder="Auto"
+                            class="w-full bg-[#111111] border border-white/5 rounded-2xl px-5 py-4 pt-5 font-mono text-sm text-white focus:outline-none focus:border-red-main transition-all shadow-inner placeholder-white/20">
+                    </div>
+
+                    <div class="group relative">
+                        <div
+                            class="absolute left-4 top-[-8px] bg-dark-card px-2 font-mono text-[9px] uppercase tracking-widest text-text-muted z-10 group-focus-within:text-red-main transition-colors">
+                            Front Travel (mm)</div>
+                        <input id="vc-moto_front_travel_mm" type="number" min="40" max="350" step="1" value="120"
+                            class="w-full bg-[#111111] border border-white/5 rounded-2xl px-5 py-4 pt-5 font-mono text-sm text-white focus:outline-none focus:border-red-main transition-all shadow-inner placeholder-white/20">
+                    </div>
+
+                    <div class="group relative">
+                        <div
+                            class="absolute left-4 top-[-8px] bg-dark-card px-2 font-mono text-[9px] uppercase tracking-widest text-text-muted z-10 group-focus-within:text-red-main transition-colors">
+                            Rear Travel (mm)</div>
+                        <input id="vc-moto_rear_travel_mm" type="number" min="40" max="350" step="1" value="120"
+                            class="w-full bg-[#111111] border border-white/5 rounded-2xl px-5 py-4 pt-5 font-mono text-sm text-white focus:outline-none focus:border-red-main transition-all shadow-inner placeholder-white/20">
+                    </div>
+
+                    <div class="group relative">
+                        <div
+                            class="absolute left-4 top-[-8px] bg-dark-card px-2 font-mono text-[9px] uppercase tracking-widest text-text-muted z-10 group-focus-within:text-red-main transition-colors">
+                            Preload (mm)</div>
+                        <input id="vc-moto_preload_mm" type="number" min="0" max="60" step="0.5" value="0"
+                            class="w-full bg-[#111111] border border-white/5 rounded-2xl px-5 py-4 pt-5 font-mono text-sm text-white focus:outline-none focus:border-red-main transition-all shadow-inner placeholder-white/20">
+                    </div>
+
+                </div><!-- /vc-bike-panel -->
+
+            </aside>
+
+            <!-- Column 2: Outputs & Diagnostics (flex-1) -->
+            <main class="flex-1 flex flex-col min-h-0 gap-6 overflow-y-auto pr-2 custom-scrollbar pb-8">
+
+                <!-- Grid output -->
+                <div class="grid grid-cols-2 gap-5">
+                    <!-- Masses -->
+                    <div class="bg-gradient-to-br from-dark-card to-[#0d0d0d] border border-white/5 rounded-3xl p-7 shadow-2xl relative overflow-hidden group"
+                        id="vc-mc-ms">
+                        <div
+                            class="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-bl-full -mr-12 -mt-12 pointer-events-none group-hover:bg-white/10 transition-colors">
+                        </div>
+                        <div class="font-mono text-[10px] text-text-muted uppercase tracking-widest">Sprung Mass</div>
+                        <div class="flex items-baseline gap-2 mt-3">
+                            <div class="font-sans font-medium text-5xl tracking-tight text-white" id="vc-mv-ms">—</div>
+                            <div class="font-mono text-sm text-text-muted">kg</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-dark-card to-[#0d0d0d] border border-white/5 rounded-3xl p-7 shadow-2xl relative overflow-hidden group"
+                        id="vc-mc-mu">
+                        <div
+                            class="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-bl-full -mr-12 -mt-12 pointer-events-none group-hover:bg-white/10 transition-colors">
+                        </div>
+                        <div class="font-mono text-[10px] text-text-muted uppercase tracking-widest">Unsprung Mass</div>
+                        <div class="flex items-baseline gap-2 mt-3">
+                            <div class="font-sans font-medium text-5xl tracking-tight text-white" id="vc-mv-mu">—</div>
+                            <div class="font-mono text-sm text-text-muted">kg</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-5">
+                    <!-- Rigidity -->
+                    <div class="bg-dark-card border border-white/5 rounded-3xl p-6 shadow-xl relative overflow-hidden"
+                        id="vc-mc-k">
+                        <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-red-main"></div>
+                        <div class="font-mono text-[10px] text-text-muted uppercase tracking-widest pl-2">Spring Rate
+                        </div>
+                        <div class="flex items-baseline gap-2 mt-3 pl-2">
+                            <div class="font-sans font-medium text-3xl tracking-tight text-white" id="vc-mv-k">—</div>
+                            <div class="font-mono text-xs text-text-muted">N/m</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-dark-card border border-white/5 rounded-3xl p-6 shadow-xl relative overflow-hidden"
+                        id="vc-mc-c">
+                        <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-red-main"></div>
+                        <div class="font-mono text-[10px] text-text-muted uppercase tracking-widest pl-2">Damping</div>
+                        <div class="flex items-baseline gap-2 mt-3 pl-2">
+                            <div class="font-sans font-medium text-3xl tracking-tight text-white" id="vc-mv-c">—</div>
+                            <div class="font-mono text-xs text-text-muted">N·s/m</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-dark-card border border-white/5 rounded-3xl p-6 shadow-xl relative overflow-hidden"
+                        id="vc-mc-kt">
+                        <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-white/20"></div>
+                        <div class="font-mono text-[10px] text-text-muted uppercase tracking-widest pl-2">Tyre Stiffness
+                        </div>
+                        <div class="flex items-baseline gap-2 mt-3 pl-2">
+                            <div class="font-sans font-medium text-3xl tracking-tight text-text-muted" id="vc-mv-kt">—
+                            </div>
+                            <div class="font-mono text-xs text-text-muted">N/m</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes / Stacked Diagnostics -->
+                <div
+                    class="flex flex-col flex-1 bg-[#050505] border border-white/5 rounded-3xl shadow-inner relative overflow-hidden min-h-0 mt-2">
+                    <div
+                        class="absolute top-0 right-0 bg-white/10 px-4 py-1.5 rounded-bl-xl font-mono text-[10px] text-white tracking-widest z-10">
+                        SAE COMPLIANCE</div>
+                    <div class="px-6 py-4 border-b border-white/5 flex items-center gap-3 bg-white/[0.01]">
+                        <svg class="w-4 h-4 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="font-mono text-xs uppercase tracking-widest text-text-muted">Diagnostics Log</span>
+                    </div>
+                    <div class="p-6 flex-1 overflow-y-auto space-y-3 font-mono text-xs text-text-muted leading-relaxed"
+                        id="vcDiagStack">
+                        <div class="font-mono text-text-muted">> System initialized. Ready for derivation.</div>
+                    </div>
+                </div>
+
+            </main>
+
+            <!-- Column 3: Targets & Action (w-[320px]) -->
+            <aside class="w-[340px] shrink-0 flex flex-col gap-5 h-full overflow-y-auto pr-2 custom-scrollbar pb-8">
+
+                <button onclick="deriveVehicleParams()"
+                    class="bg-red-main hover:bg-red-hover text-white font-mono text-sm px-6 py-5 rounded-3xl uppercase tracking-widest transition-all hover:-translate-y-1 shadow-[0_8px_30px_rgba(232,64,69,0.3)] w-full flex items-center justify-center gap-3"
+                    id="vcDeriveBtn">
+                    <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    <span id="vcDeriveBtnText">Derive Parameters</span>
+                </button>
+
+                <!-- Overrides -->
+                <div class="bg-dark-card border border-white/5 rounded-3xl p-6 shadow-xl relative overflow-hidden">
+                    <div
+                        class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-white/5 to-transparent pointer-events-none">
+                    </div>
+                    <div class="font-mono text-[11px] uppercase tracking-widest text-text-muted mb-5">Target Overrides
+                    </div>
+
+                    <div class="flex flex-col gap-4">
+                        <div class="group relative">
+                            <div
+                                class="absolute left-4 top-[-8px] bg-dark-card px-2 font-mono text-[9px] uppercase tracking-widest text-text-muted z-10 group-focus-within:text-red-main transition-colors">
+                                Sprung fn (Hz)</div>
+                            <input id="vc-fn_target_hz" type="number" min="0.5" max="3" step="0.05" placeholder="Auto"
+                                class="w-full bg-[#111111] border border-white/5 rounded-2xl px-5 py-4 pt-5 font-mono text-sm text-white focus:outline-none focus:border-red-main transition-all shadow-inner placeholder-white/20">
+                        </div>
+                        <div class="group relative">
+                            <div
+                                class="absolute left-4 top-[-8px] bg-dark-card px-2 font-mono text-[9px] uppercase tracking-widest text-text-muted z-10 group-focus-within:text-red-main transition-colors">
+                                Sprung ζ (Zeta)</div>
+                            <input id="vc-zeta_target" type="number" min="0.1" max="0.8" step="0.01" placeholder="Auto"
+                                class="w-full bg-[#111111] border border-white/5 rounded-2xl px-5 py-4 pt-5 font-mono text-sm text-white focus:outline-none focus:border-red-main transition-all shadow-inner placeholder-white/20">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-dark-card border border-white/5 rounded-3xl p-6 shadow-xl flex-1 flex flex-col min-h-0">
+                    <div class="font-mono text-[11px] uppercase tracking-widest text-text-muted mb-5">Calculated Goals
+                    </div>
+
+                    <div class="flex flex-col gap-2.5 overflow-y-auto min-h-0 pr-2">
+                        <div
+                            class="flex justify-between items-center bg-[#111111] rounded-2xl p-4 border border-white/5">
+                            <span class="font-mono text-[10px] text-text-muted uppercase tracking-widest">Sprung
+                                fn</span>
+                            <span class="font-mono text-sm text-white" id="vc-mv-fn_sprung">—</span>
+                        </div>
+                        <div
+                            class="flex justify-between items-center bg-[#111111] rounded-2xl p-4 border border-white/5">
+                            <span class="font-mono text-[10px] text-text-muted uppercase tracking-widest">Wheel-hop
+                                fn</span>
+                            <span class="font-mono text-sm text-white" id="vc-mv-fn_unsprung">—</span>
+                        </div>
+                        <div
+                            class="flex justify-between items-center bg-[#111111] rounded-2xl p-4 border border-white/5">
+                            <span class="font-mono text-[10px] text-text-muted uppercase tracking-widest">Damping
+                                ζ</span>
+                            <span class="font-mono text-sm text-white" id="vc-mv-zeta">—</span>
+                        </div>
+                        <div
+                            class="flex justify-between items-center bg-[#111111] rounded-2xl p-4 border border-white/5">
+                            <span class="font-mono text-[10px] text-text-muted uppercase tracking-widest">Load
+                                Frac.</span>
+                            <span class="font-mono text-sm text-white" id="vc-mv-clf">—</span>
+                        </div>
+                        <div class="bg-[#111111] rounded-2xl p-4 border border-white/5">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-mono text-[10px] text-text-muted uppercase tracking-widest">Sag</span>
+                                <span class="font-mono text-sm text-white" id="vc-mv-sag_percent">—</span>
+                            </div>
+                            <div class="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                <div id="vc-sag-bar" class="h-full bg-red-main/80 transition-all duration-300"
+                                    style="width:0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="sendToTuner()" id="vcSendBtn" disabled
+                    class="bg-[#111111] border border-white/10 text-white font-mono text-sm px-6 py-5 rounded-3xl uppercase tracking-widest transition-all duration-300 w-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/5 group flex items-center justify-center gap-3 shadow-lg">
+                    <svg class="icon-arrow w-5 h-5 shrink-0 opacity-50 group-hover:translate-x-1 transition-all duration-300 group-hover:opacity-100 group-hover:text-red-main"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                    </svg>
+                    <span class="transition-colors group-hover:text-red-main whitespace-nowrap">Send to Tuner</span>
+                </button>
+
+            </aside>
+
+        </div>
+    </div><!-- /screen-vehicle -->
+
+    <script>
+        function updateAxleStyling(clickedBtn) {
+            const container = clickedBtn.parentElement;
+            const btns = container.querySelectorAll('.vc-axle-btn');
+            btns.forEach(b => {
+                b.classList.remove('bg-red-main', 'text-white', 'shadow-md');
+                b.classList.add('text-text-muted', 'bg-transparent');
+            });
+            clickedBtn.classList.remove('text-text-muted', 'bg-transparent');
+            clickedBtn.classList.add('bg-red-main', 'text-white', 'shadow-md');
+        }
+
+        // ── Vehicle mode: car / bike ─────────────────────────────────
+        let currentVehicleMode = 'car';
+
+        function setVehicleMode(mode) {
+            currentVehicleMode = mode;
+            const carPanel = document.getElementById('vc-car-panel');
+            const bikePanel = document.getElementById('vc-bike-panel');
+            const btnCar = document.getElementById('modeBtnCar');
+            const btnBike = document.getElementById('modeBtnBike');
+
+            const activeClass = ['bg-red-main', 'text-white', 'shadow-md', 'font-bold'];
+            const inactiveClass = ['text-text-muted', 'bg-transparent', 'font-bold'];
+
+            if (mode === 'car') {
+                carPanel.classList.remove('hidden');
+                bikePanel.classList.add('hidden');
+                activeClass.forEach(c => btnCar.classList.add(c));
+                inactiveClass.forEach(c => btnCar.classList.remove(c));
+                activeClass.forEach(c => btnBike.classList.remove(c));
+                inactiveClass.forEach(c => btnBike.classList.add(c));
+            } else {
+                carPanel.classList.add('hidden');
+                bikePanel.classList.remove('hidden');
+                activeClass.forEach(c => btnBike.classList.add(c));
+                inactiveClass.forEach(c => btnBike.classList.remove(c));
+                activeClass.forEach(c => btnCar.classList.remove(c));
+                inactiveClass.forEach(c => btnCar.classList.add(c));
+                // Re-init dropdowns for the bike panel
+                // Re-init only the bike panel dropdowns to avoid double-binding
+                if (typeof initCustomDropdowns === 'function') {
+                    document.querySelectorAll('#vc-bike-panel .custom-select-wrapper').forEach(wrapper => {
+                        const selectTag = wrapper.querySelector('select');
+                        const selectedText = wrapper.querySelector('.selected-text');
+                        const opt = selectTag.options[selectTag.selectedIndex];
+                        if (opt) selectedText.textContent = opt.text;
+                    });
+                }
+            }
+
+            // Reset derive button when switching mode
+            const sendBtn = document.getElementById('vcSendBtn');
+            if (sendBtn) sendBtn.disabled = true;
+            document.getElementById('vcStatusText').textContent = 'READY';
+            if (mode !== 'bike') lastBikeModelPayload = null;
+        }
+
+        function setMotoAxle(val) {
+            document.getElementById('vc-moto_axle').value = val;
+        }
+
+        function updateMotoAxle(clickedBtn) {
+            const container = clickedBtn.parentElement;
+            container.querySelectorAll('.moto-axle-btn').forEach(b => {
+                b.classList.remove('bg-red-main', 'text-white', 'shadow-md');
+                b.classList.add('text-text-muted', 'bg-transparent');
+            });
+            clickedBtn.classList.remove('text-text-muted', 'bg-transparent');
+            clickedBtn.classList.add('bg-red-main', 'text-white', 'shadow-md');
+        }
+    </script>
+
+    <div class="toast" id="toast"></div>
+    <div class="toast" id="vcToast"></div>
+
+    <script>
+
+        // ── Config ──────────────────────────────────────────────────
+        const API = 'http://localhost:8000';
+
+        // ── State ───────────────────────────────────────────────────
+        let currentProfile = 'Step';
+        let currentMainTab = 'overview';
+        let currentTheme = 'aurora';
+        let runCount = 0;
+        let charts = {};
+        let lastSimResult = null;
+        let lastSimData = null;   // stored response for diagnostics tab
+        let lastParams = null;
+        let lastParetoPoints = null;
+        let lastBikeModelPayload = null;
+
+        const ROAD_CLASSES = [
+            { label: 'A — Smooth', gd: 64e-6 },
+            { label: 'B — Good', gd: 256e-6 },
+            { label: 'C — Average', gd: 1024e-6 },
+            { label: 'D — Poor', gd: 4096e-6 },
+            { label: 'E — Very Bad', gd: 16384e-6 },
+        ];
+
+        const THEME_PALETTES = {
+            aurora: {
+                chartText: '#a3a3a3',
+                chartBorder: '#333333',
+                chartGrid: 'rgba(255,255,255,0.03)',
+                tooltipBg: '#111111',
+                tooltipTitle: '#E84045',
+                tooltipBody: '#e5e5e5',
+                timeBody: '#ffffff',
+                timeWheel: '#E84045',
+                acc: '#E84045',
+                frfBody: '#ffffff',
+                frfTire: '#E84045',
+                axisPrimary: '#ffffff',
+                axisSecondary: '#E84045',
+                pointBorder: '#171717'
+            }
+        };
+
+        function activePalette() {
+            return THEME_PALETTES[currentTheme] || THEME_PALETTES.aurora;
+        }
+
+        // ── Chart defaults ──────────────────────────────────────────
+        Chart.defaults.color = activePalette().chartText;
+        Chart.defaults.borderColor = activePalette().chartBorder;
+        Chart.defaults.font.family = "'Share Tech Mono', monospace";
+        Chart.defaults.font.size = 10;
+
+        const chartBase = {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 400, easing: 'easeOutQuart' },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: activePalette().chartText,
+                        boxWidth: 10,
+                        padding: 12,
+                        font: { size: 10 }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: activePalette().tooltipBg,
+                    borderColor: activePalette().chartBorder,
+                    borderWidth: 1,
+                    titleColor: activePalette().tooltipTitle,
+                    bodyColor: activePalette().tooltipBody,
+                    titleFont: { family: "'Share Tech Mono', monospace", size: 10 },
+                    bodyFont: { family: "'Share Tech Mono', monospace", size: 10 },
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: activePalette().chartGrid },
+                    ticks: { color: activePalette().chartText, maxTicksLimit: 8 }
+                },
+                y: {
+                    grid: { color: activePalette().chartGrid },
+                    ticks: { color: activePalette().chartText, maxTicksLimit: 6 }
+                }
+            }
+        };
+
+        // ── Helpers ─────────────────────────────────────────────────
+        function updateSlider(id, valId, val, unit) {
+            document.getElementById(valId).textContent = `${val} ${unit}`.trim();
+            // Mirror k / c into diagnostics quick-tweak sliders for live preview coherence
+            if (id === 'k') {
+                const el = document.getElementById('diag-tw-k');
+                const valEl = document.getElementById('diag-tw-k-val');
+                if (el) el.value = val;
+                if (valEl) valEl.textContent = Number(val).toLocaleString() + ' N/m';
+                if (window.diagTweakState) window.diagTweakState.k = +val;
+            } else if (id === 'c') {
+                const el = document.getElementById('diag-tw-c');
+                const valEl = document.getElementById('diag-tw-c-val');
+                if (el) el.value = val;
+                if (valEl) valEl.textContent = Number(val).toLocaleString() + ' N·s/m';
+                if (window.diagTweakState) window.diagTweakState.c = +val;
+            }
+        }
+
+        function updateRoadClass(idx) {
+            document.getElementById('classVal').textContent = ROAD_CLASSES[idx].label;
+        }
+
+        function setProfile(p) {
+            currentProfile = p;
+            document.querySelectorAll('.profile-tab').forEach((t, i) => {
+                t.classList.toggle('active', ['Step', 'Sine', 'Iso8608'][i] === p);
+            });
+            document.getElementById('stepParams').style.display = p === 'Step' ? '' : 'none';
+            document.getElementById('sineParams').style.display = p === 'Sine' ? '' : 'none';
+            document.getElementById('isoParams').style.display = p === 'Iso8608' ? '' : 'none';
+        }
+
+        function setMainTab(tab) {
+            currentMainTab = tab;
+            document.querySelectorAll('.main-tab').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tab);
+            });
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.classList.toggle('active', pane.id === `tab-${tab}`);
+            });
+
+            setTimeout(() => {
+                Object.values(charts).forEach(chart => {
+                    if (chart && typeof chart.resize === 'function') chart.resize();
+                });
+            }, 40);
+        }
+
+        function setTheme(theme) {
+            currentTheme = theme;
+            if (theme === 'aurora') {
+                document.body.removeAttribute('data-theme');
+            } else {
+                document.body.dataset.theme = theme;
+            }
+
+            // Rebuild chart defaults and redraw latest results with theme colors.
+            Chart.defaults.color = activePalette().chartText;
+            Chart.defaults.borderColor = activePalette().chartBorder;
+
+            if (lastSimResult) {
+                updateMetrics(lastSimResult);
+                renderTimeChart(lastSimResult);
+                renderAccChart(lastSimResult);
+                if (lastParams) renderFrfChart(lastParams);
+            }
+            if (lastParetoPoints) {
+                renderParetoChart(lastParetoPoints);
+            }
+        }
+
+        // ── Global Error Handler ─────────────────────────────────────
+        window.onerror = function (msg, src, line, col, err) {
+            console.error('[Global Error]', msg, err);
+            const runBtn = document.getElementById('runBtn');
+            if (runBtn) {
+                runBtn.classList.remove('loading');
+                const runBtnText = document.getElementById('runBtnText');
+                if (runBtnText) runBtnText.textContent = '▶ RUN SIMULATION';
+            }
+            const sweepBtn = document.getElementById('sweepBtn');
+            if (sweepBtn) {
+                sweepBtn.classList.remove('loading');
+                const sweepBtnText = document.getElementById('sweepBtnText');
+                if (sweepBtnText) sweepBtnText.textContent = '⬡ RUN PARETO SWEEP';
+            }
+            const vcBtn = document.getElementById('vcDeriveBtn');
+            if (vcBtn) {
+                vcBtn.classList.remove('loading');
+                const vcBtnText = document.getElementById('vcDeriveBtnText');
+                if (vcBtnText) vcBtnText.textContent = 'DERIVE PARAMS';
+            }
+        };
+
+        const fetchWithTimeout = async (url, options) => {
+            const { timeout = 5000 } = options;
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeout);
+            try {
+                const res = await fetch(url, { ...options, signal: controller.signal });
+                clearTimeout(id);
+                return res;
+            } catch (e) {
+                clearTimeout(id);
+                throw e;
+            }
+        };
+
+        function setLayout(layoutClass) {
+            document.body.classList.remove('layout-v3', 'layout-v4');
+            document.body.classList.add(layoutClass);
+
+            // Allow layout transition to settle, then resize charts.
+            setTimeout(() => {
+                Object.values(charts).forEach(chart => {
+                    if (chart && typeof chart.resize === 'function') chart.resize();
+                });
+            }, 80);
+        }
+
+        function buildRoadProfile() {
+            if (currentProfile === 'Step') {
+                return { type: 'Step', height: +document.getElementById('height').value / 1000 };
+            } else if (currentProfile === 'Sine') {
+                return {
+                    type: 'Sine',
+                    amplitude: +document.getElementById('amp').value / 1000,
+                    freq_hz: +document.getElementById('freq').value
+                };
+            } else {
+                const cls = +document.getElementById('roadClass').value;
+                const seedVal = +document.getElementById('seed').value;
+                return {
+                    type: 'Iso8608',
+                    roughness_coefficient: ROAD_CLASSES[cls].gd,
+                    vehicle_speed_mps: +document.getElementById('speed').value,
+                    seed: seedVal === 0 ? null : seedVal
+                };
+            }
+        }
+
+        function getParams() {
+            return {
+                ms: +document.getElementById('ms').value,
+                mu: +document.getElementById('mu').value,
+                k: +document.getElementById('k').value,
+                c: +document.getElementById('c').value,
+                kt: +document.getElementById('kt').value,
+                travel_limit_mm: +document.getElementById('travelLimit').value,
+                preload_mm: +document.getElementById('preload').value,
+            };
+        }
+
+        function buildModelPayload(params) {
+            const optionalNumber = (id) => {
+                const el = document.getElementById(id);
+                if (!el) return undefined;
+                if (el.value === '' || el.value == null) return undefined;
+                return +el.value;
+            };
+
+            const payload = { ...params };
+
+            // Only include moto-specific fields when in bike mode
+            if (currentVehicleMode === 'bike') {
+                payload.vehicle_mode = 'bike';
+                if (lastBikeModelPayload) {
+                    payload.is_sae_derived = true;
+                    const motoInputs = {};
+                    const rake = optionalNumber('vc-moto_rake');
+                    const fnHz = optionalNumber('vc-fn_target_hz');
+                    const zeta = optionalNumber('vc-zeta_target');
+                    const fTravel = optionalNumber('vc-moto_front_travel_mm');
+                    const rTravel = optionalNumber('vc-moto_rear_travel_mm');
+                    const preload = optionalNumber('vc-moto_preload_mm');
+                    if (rake !== undefined) motoInputs.rake_angle_deg = rake;
+                    if (fnHz !== undefined) motoInputs.fn_target_hz = fnHz;
+                    if (zeta !== undefined) motoInputs.zeta_target = zeta;
+                    if (fTravel !== undefined) motoInputs.front_travel_mm = fTravel;
+                    if (rTravel !== undefined) motoInputs.rear_travel_mm = rTravel;
+                    if (preload !== undefined) motoInputs.preload_mm = preload;
+                    payload.bike = { ...lastBikeModelPayload };
+                    Object.assign(payload, motoInputs);
+                }
+            }
+            return payload;
+        }
+
+        function showToast(msg, error = false) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast show' + (error ? ' error' : '');
+            setTimeout(() => t.className = 'toast', 3000);
+        }
+
+        function setLoading(id, loading, text) {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            btn.classList.toggle('loading', loading);
+            const textEl = document.getElementById(id + 'Text');
+            if (textEl) textEl.textContent = loading ? '...' : text;
+        }
+
+        function comfortLabel(v) {
+            if (v < 0.315) return { text: 'NOT UNCOMFORTABLE', cls: '' };
+            if (v < 0.63) return { text: 'A LITTLE UNCOMFORTABLE', cls: '' };
+            if (v < 1.0) return { text: 'FAIRLY UNCOMFORTABLE', cls: 'warn' };
+            if (v < 1.6) return { text: 'UNCOMFORTABLE', cls: 'bad' };
+            return { text: 'VERY UNCOMFORTABLE', cls: 'bad' };
+        }
+
+        function flashMetric(id) {
+            const el = document.getElementById('mc-' + id);
+            if (!el || !document.body.contains(el)) return;
+            el.classList.remove('updated');
+            void el.offsetWidth;
+            el.classList.add('updated');
+            setTimeout(() => el.classList.remove('updated'), 800);
+        }
+
+        // ── Update metrics display ───────────────────────────────────
+        function updateMetrics(r) {
+            if (!r || r.error) return;
+
+            if (r.zeta !== undefined) {
+                const z = r.zeta.toFixed(3);
+                const mvZeta = document.getElementById('mv-zeta');
+                if (mvZeta) mvZeta.textContent = z;
+                const zFill = document.getElementById('zetaFill');
+                if (zFill) zFill.style.width = Math.min(r.zeta * 100, 100) + '%';
+            }
+
+            const iso = r.iso2631_weighted_rms;
+            if (iso !== undefined) {
+                const comfort = comfortLabel(iso);
+                const isoEl = document.getElementById('mv-iso');
+                if (isoEl) {
+                    isoEl.textContent = iso.toFixed(3);
+                    isoEl.className = 'metric-value ' + comfort.cls;
+                }
+                const comfortBand = document.getElementById('comfortBand');
+                if (comfortBand) comfortBand.textContent = comfort.text;
+            }
+
+            if (r.rms_body_acc !== undefined) {
+                const mvRms = document.getElementById('mv-rms');
+                if (mvRms) mvRms.textContent = r.rms_body_acc.toFixed(3);
+            }
+
+            if (r.rms_tire_force !== undefined) {
+                const mvTire = document.getElementById('mv-tire');
+                if (mvTire) mvTire.textContent = Math.round(r.rms_tire_force);
+            }
+
+            if (r.max_suspension_travel !== undefined) {
+                const mvTravel = document.getElementById('mv-travel');
+                if (mvTravel) mvTravel.textContent = (r.max_suspension_travel * 1000).toFixed(1);
+            }
+
+            const mvSag = document.getElementById('mv-sag');
+            if (mvSag) mvSag.textContent = r.sag_percent != null ? r.sag_percent.toFixed(1) : '—';
+
+            const boEl = document.getElementById('mv-bottomout');
+            if (boEl) {
+                const bottomOut = r.bottom_out === true;
+                boEl.textContent = bottomOut ? 'YES' : 'NO';
+                boEl.className = bottomOut
+                    ? 'font-sans font-medium text-3xl mt-1 tracking-tight text-red-main'
+                    : 'font-sans font-medium text-3xl mt-1 tracking-tight';
+            }
+
+            const bsc = document.getElementById('bikeSummaryCard');
+            if (bsc) {
+                if (r.bike_front_rear && currentVehicleMode === 'bike') {
+                    bsc.classList.remove('hidden');
+                    const bf = r.bike_front_rear.front;
+                    const br = r.bike_front_rear.rear;
+
+                    const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+                    setEl('bs-ms-f', bf.ms.toFixed(1));
+                    setEl('bs-k-f', Math.round(bf.k).toLocaleString());
+                    setEl('bs-c-f', Math.round(bf.c).toLocaleString());
+                    setEl('bs-ms-r', br.ms.toFixed(1));
+                    setEl('bs-k-r', Math.round(br.k).toLocaleString());
+                    setEl('bs-c-r', Math.round(br.c).toLocaleString());
+                } else {
+                    bsc.classList.add('hidden');
+                }
+            }
+
+            ['zeta', 'iso', 'rms', 'tire', 'travel', 'sag', 'bottomout'].forEach(flashMetric);
+        }
+
+        // ── Chart: time series ───────────────────────────────────────
+        function renderTimeChart(r) {
+            const stride = 5; // plot every 5th point for performance
+            const labels = r.time.filter((_, i) => i % stride === 0).map(t => t.toFixed(2));
+            const body = r.body_user.filter((_, i) => i % stride === 0).map(v => (v * 1000).toFixed(2));
+            const wheel = r.wheel_user.filter((_, i) => i % stride === 0).map(v => (v * 1000).toFixed(2));
+
+            if (charts.time) charts.time.destroy();
+            charts.time = new Chart(document.getElementById('timeChart'), {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Body',
+                            data: body,
+                            borderColor: activePalette().timeBody,
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            tension: 0.1,
+                        },
+                        {
+                            label: 'Wheel',
+                            data: wheel,
+                            borderColor: activePalette().timeWheel,
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            tension: 0.1,
+                        }
+                    ]
+                },
+                options: {
+                    ...chartBase,
+                    scales: {
+                        ...chartBase.scales,
+                        x: { ...chartBase.scales.x, title: { display: true, text: 'Time (s)', color: activePalette().chartText } },
+                        y: { ...chartBase.scales.y, title: { display: true, text: 'Displacement (mm)', color: activePalette().chartText } }
+                    }
+                }
+            });
+        }
+
+        // ── Chart: acceleration ──────────────────────────────────────
+        function renderAccChart(r) {
+            // Compute body acceleration from displacement via finite difference
+            const dt = r.time[1] - r.time[0];
+            const stride = 5;
+            const acc = [];
+            for (let i = 1; i < r.body_user.length - 1; i++) {
+                acc.push(((r.body_user[i + 1] - 2 * r.body_user[i] + r.body_user[i - 1]) / (dt * dt)).toFixed(3));
+            }
+            const labels = r.time.slice(1, -1).filter((_, i) => i % stride === 0).map(t => t.toFixed(2));
+            const data = acc.filter((_, i) => i % stride === 0);
+
+            if (charts.acc) charts.acc.destroy();
+            charts.acc = new Chart(document.getElementById('accChart'), {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Body Acceleration',
+                        data,
+                        borderColor: activePalette().acc,
+                        borderWidth: 1,
+                        pointRadius: 0,
+                        tension: 0.1,
+                        fill: {
+                            target: 'origin',
+                            above: activePalette().chartGrid,
+                            below: activePalette().chartGrid
+                        }
+                    }]
+                },
+                options: {
+                    ...chartBase,
+                    scales: {
+                        ...chartBase.scales,
+                        x: { ...chartBase.scales.x, title: { display: true, text: 'Time (s)', color: activePalette().chartText } },
+                        y: { ...chartBase.scales.y, title: { display: true, text: 'Acceleration (m/s²)', color: activePalette().chartText } }
+                    }
+                }
+            });
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // ENHANCED DIAGNOSTICS SYSTEM
+        // ══════════════════════════════════════════════════════════
+
+        // Separate tweak-state that overlays on real sim data for preview
+        window.diagTweakState = window.diagTweakState || { k: 22000, c: 1500 };
+        window.diagOpenRows = window.diagOpenRows || {};
+
+        // Metric definitions: formula tooltips, limits, extras
+        const DIAG_METRICS_DEF = [
+            {
+                id: 'fn',
+                title: 'Ride Frequency',
+                unit: 'Hz',
+                decimals: 2,
+                status(v) { if (v == null) return 'OK'; return (v < 0.8 || v > 2.5) ? 'WARNING' : 'OK'; },
+                formula: 'f_n = (1/2π)·√(k/m_s)',
+                formulaDesc: 'Body resonant frequency. Target: 0.8–2.5 Hz for ride comfort.',
+                extra: null,
+                isCritical: false,
+            },
+            {
+                id: 'zeta',
+                title: 'Damping Ratio',
+                unit: 'ζ',
+                decimals: 3,
+                status(v) { if (v == null) return 'OK'; if (v < 0.2) return 'CRITICAL'; if (v > 0.6) return 'WARNING'; return 'OK'; },
+                formula: 'ζ = c / (2·√(k·m_s))',
+                formulaDesc: 'Fraction of critical damping. Ideal range: 0.25–0.45.',
+                extra: 'zetaBar',
+                isCritical: false,
+            },
+            {
+                id: 'sag_pct',
+                title: 'Sag %',
+                unit: '%',
+                decimals: 1,
+                status(v) { if (v == null) return 'OK'; if (v > 50) return 'CRITICAL'; if (v < 15 || v > 35) return 'WARNING'; return 'OK'; },
+                formula: 'Sag = (m_s·g / k) / L_travel · 100',
+                formulaDesc: 'Static deflection as % of total travel. Safe window: 15–35%.',
+                extra: null,
+                isCritical: true,   // sag card gets ambient red pulse when critical
+            },
+            {
+                id: 'bottom_out',
+                title: 'Bottom-out',
+                unit: '',
+                decimals: 0,
+                status(v) { return v ? 'CRITICAL' : 'OK'; },
+                formula: 'δ_static > L_travel',
+                formulaDesc: 'True when static + dynamic deflection exceeds travel limit.',
+                extra: null,
+                isCritical: false,
+                bool: true,
+            },
+            {
+                id: 'iso',
+                title: 'ISO 2631',
+                unit: 'm/s²',
+                decimals: 3,
+                status(v) { if (v == null) return 'OK'; if (v > 1.6) return 'CRITICAL'; if (v > 0.8) return 'WARNING'; return 'OK'; },
+                formula: 'a_w = √(∫|H(f)|²·W_k²·S_x df)',
+                formulaDesc: 'Freq-weighted RMS body acceleration per ISO 2631-1:1997.',
+                extra: null,
+                isCritical: false,
+            },
+        ];
+
+        // Compute derived diag values from a data blob + optional k/c overrides
+        function diagDerive(data, tweakK, tweakC) {
+            const k = tweakK ?? (data ? data.spring_rate ?? 22000 : 22000);
+            const c = tweakC ?? (data ? data.damping ?? 1500 : 1500);
+            const ms = data ? (data.sprung_mass ?? 290) : 290;
+            const travel = data ? (data.travel_limit_mm ?? 120) : 120;
+
+            // fn from backend if available, else compute
+            const fn = data && data.fn_sprung != null
+                ? data.fn_sprung
+                : (1 / (2 * Math.PI)) * Math.sqrt(k / ms);
+
+            // zeta from backend if available, else compute
+            const cc = 2 * Math.sqrt(k * ms);
+            const zeta = data && data.zeta != null ? data.zeta : (c / cc);
+
+            // sag
+            const sag_pct = data && data.sag_percent != null
+                ? data.sag_percent
+                : (ms * 9.81 / k) / (travel / 1000) * 100;
+
+            const bottom_out = data && data.bottom_out != null
+                ? data.bottom_out
+                : sag_pct > 100;
+
+            const iso = data && data.iso2631_weighted_rms != null
+                ? data.iso2631_weighted_rms
+                : null;
+
+            return { fn, zeta, sag_pct, bottom_out, iso };
+        }
+
+        function diagGetVal(def, derived) {
+            return derived[def.id] ?? null;
+        }
+
+        function diagFormatVal(def, raw) {
+            if (def.bool) return raw ? 'YES' : 'NO';
+            if (raw == null) return '—';
+            return Number(raw).toFixed(def.decimals);
+        }
+
+        function diagStatusClass(s) { return s === 'OK' ? 'diag-ok' : s === 'WARNING' ? 'diag-warn' : 'diag-crit'; }
+        function diagBadgeClass(s) { return s === 'OK' ? 'diag-badge-ok' : s === 'WARNING' ? 'diag-badge-warn' : 'diag-badge-crit'; }
+        function diagFlagClass(s) { return s === 'OK' ? 'diag-flag-ok' : s === 'WARNING' ? 'diag-flag-warn' : 'diag-flag-crit'; }
+
+        function diagAccRows(def, data, derived) {
+            const ms = data ? (data.sprung_mass ?? 290) : 290;
+            const k = diagTweakState.k;
+            const c = diagTweakState.c;
+            const travel = data ? (data.travel_limit_mm ?? 120) : 120;
+            const cc = 2 * Math.sqrt(k * ms);
+
+            const r = (label, val, cls) => ({ label, val, cls: cls || '' });
+            const ok = v => v ? 'diag-acc-ok' : 'diag-acc-crit';
+            const okN = (v, lo, hi) => (v >= lo && v <= hi) ? 'diag-acc-ok' : 'diag-acc-crit';
+
+            switch (def.id) {
+                case 'fn': {
+                    const v = derived.fn;
+                    return [
+                        r('Current', v != null ? v.toFixed(3) + ' Hz' : '—', okN(v, 0.8, 2.5)),
+                        r('Target min', '0.800 Hz', 'diag-acc-ok'),
+                        r('Target max', '2.500 Hz', 'diag-acc-ok'),
+                        r('Margin lo', v != null ? (v - 0.8).toFixed(3) + ' Hz' : '—', ok(v >= 0.8)),
+                        r('Margin hi', v != null ? (2.5 - v).toFixed(3) + ' Hz' : '—', ok(v <= 2.5)),
+                        r('k (tweak)', k.toLocaleString() + ' N/m', ''),
+                        r('m_s', ms + ' kg', ''),
+                    ];
+                }
+                case 'zeta': {
+                    const v = derived.zeta;
+                    return [
+                        r('Current ζ', v != null ? v.toFixed(4) : '—', okN(v, 0.2, 0.6)),
+                        r('c_critical', Math.round(cc) + ' N·s/m', ''),
+                        r('c (tweak)', c + ' N·s/m', ''),
+                        r('Lower bound', '0.200 ζ', 'diag-acc-ok'),
+                        r('Upper bound', '0.600 ζ', 'diag-acc-ok'),
+                        r('Margin lo', v != null ? (v - 0.2).toFixed(3) : '—', ok(v >= 0.2)),
+                        r('Margin hi', v != null ? (0.6 - v).toFixed(3) : '—', ok(v <= 0.6)),
+                    ];
+                }
+                case 'sag_pct': {
+                    const v = derived.sag_pct;
+                    const deltaStatic = ms * 9.81 / k * 1000;
+                    return [
+                        r('Sag %', v != null ? v.toFixed(2) + '%' : '—',
+                            v > 50 ? 'diag-acc-crit' : (v < 15 || v > 35) ? 'diag-acc-warn' : 'diag-acc-ok'),
+                        r('δ_static', deltaStatic.toFixed(1) + ' mm', ''),
+                        r('Travel limit', travel + ' mm', ''),
+                        r('Safe range', '15 – 35 %', 'diag-acc-ok'),
+                        r('Critical >', '50 %', 'diag-acc-crit'),
+                        r('Margin lo', v != null ? (v - 15).toFixed(1) + '%' : '—', ok(v >= 15)),
+                        r('Margin hi', v != null ? (35 - v).toFixed(1) + '%' : '—', ok(v <= 35)),
+                    ];
+                }
+                case 'bottom_out': {
+                    const deltaStatic = ms * 9.81 / k * 1000;
+                    const margin = travel - deltaStatic;
+                    return [
+                        r('Status', derived.bottom_out ? 'BOTTOMED OUT' : 'CLEAR', ok(!derived.bottom_out)),
+                        r('δ_static', deltaStatic.toFixed(1) + ' mm', ''),
+                        r('Travel', travel + ' mm', ''),
+                        r('Margin', margin.toFixed(1) + ' mm', ok(margin > 0)),
+                    ];
+                }
+                case 'iso': {
+                    const v = derived.iso;
+                    return [
+                        r('a_w', v != null ? v.toFixed(3) + ' m/s²' : '—',
+                            v > 1.6 ? 'diag-acc-crit' : v > 0.8 ? 'diag-acc-warn' : 'diag-acc-ok'),
+                        r('Not uncomfortable', '< 0.315', 'diag-acc-ok'),
+                        r('Little uncomfortable', '0.315–0.63', 'diag-acc-ok'),
+                        r('Fairly uncomfortable', '0.63–1.0', 'diag-acc-warn'),
+                        r('Uncomfortable', '1.0–1.6', 'diag-acc-warn'),
+                        r('Very uncomfortable', '> 1.6', 'diag-acc-crit'),
+                        r('Margin to 0.8', v != null ? (0.8 - v).toFixed(3) + ' m/s²' : '—', ok(v < 0.8)),
+                    ];
+                }
+            }
+            return [];
+        }
+
+        function diagRenderMetrics(data, derived) {
+            const grid = document.getElementById('dashDiagMetrics');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            DIAG_METRICS_DEF.forEach(def => {
+                const raw = diagGetVal(def, derived);
+                const val = diagFormatVal(def, raw);
+                const stat = def.status(raw);
+                const isCrit = def.isCritical && stat === 'CRITICAL';
+
+                const card = document.createElement('div');
+                card.className = 'diag-metric-card' + (isCrit ? ' diag-critical' : '');
+
+                // Zeta bar extra
+                let extraHtml = '';
+                if (def.extra === 'zetaBar') {
+                    const pct = Math.min(((typeof raw === 'number' ? raw : 0.3)) / 1.0 * 100, 100);
+                    extraHtml = `
+                        <div class="diag-zeta-track">
+                            <div class="diag-zeta-zone"></div>
+                            <div class="diag-zeta-marker" id="diag-zeta-marker" style="left:${pct.toFixed(1)}%"></div>
+                        </div>
+                        <div class="diag-zeta-ticks">
+                            <span>0</span><span>0.2</span><span>0.4</span><span>0.6</span><span>0.8</span><span>1.0</span>
+                        </div>`;
+                }
+
+                card.innerHTML = `
+                    <div class="diag-tooltip">
+                        ${def.formulaDesc}
+                        <span class="diag-formula">${def.formula}</span>
+                    </div>
+                    <div class="diag-metric-title">${def.title}</div>
+                    <div class="diag-metric-value">${val}<span class="diag-metric-unit">${def.unit}</span></div>
+                    ${extraHtml}
+                    <div class="diag-metric-badge ${diagBadgeClass(stat)}">${stat}</div>`;
+
+                grid.appendChild(card);
+            });
+        }
+
+        function diagRenderStack(data, derived) {
+            const stack = document.getElementById('dashDiagStack');
+            if (!stack) return;
+            stack.innerHTML = '';
+
+            DIAG_METRICS_DEF.forEach(def => {
+                const raw = diagGetVal(def, derived);
+                const val = diagFormatVal(def, raw);
+                const stat = def.status(raw);
+                const sc = diagStatusClass(stat);
+
+                const row = document.createElement('div');
+                row.className = 'diag-row ' + sc + (diagOpenRows[def.id] ? ' diag-open' : '');
+                row.id = 'diag-dr-' + def.id;
+
+                const accRows = diagAccRows(def, data, derived);
+                const accHtml = accRows.map(ar => `
+                    <div class="diag-acc-row">
+                        <span class="diag-acc-label">${ar.label}</span>
+                        <span class="diag-acc-val ${ar.cls}">${ar.val}</span>
+                    </div>`).join('');
+
+                row.innerHTML = `
+                    <div class="diag-row-header" onclick="diagToggleRow('${def.id}')">
+                        <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
+                            <span class="diag-row-title">${def.title}</span>
+                            <span class="diag-flag ${diagFlagClass(stat)}">[${stat}]</span>
+                        </div>
+                        <div class="diag-row-right">
+                            <span class="diag-row-number">${val}<span style="font-size:11px;color:#a3a3a3;margin-left:3px">${def.unit}</span></span>
+                            <span class="diag-chevron">▾</span>
+                        </div>
+                    </div>
+                    <div class="diag-accordion">
+                        <div class="diag-accordion-inner">${accHtml}</div>
+                    </div>`;
+
+                stack.appendChild(row);
+            });
+        }
+
+        function diagToggleRow(id) {
+            diagOpenRows[id] = !diagOpenRows[id];
+            const row = document.getElementById('diag-dr-' + id);
+            if (!row) return;
+            row.classList.toggle('diag-open', !!diagOpenRows[id]);
+            // Flash the relevant tweak slider
+            const map = { fn: 'diag-tw-k', zeta: 'diag-tw-c', sag_pct: 'diag-tw-k', bottom_out: 'diag-tw-k', iso: 'diag-tw-c' };
+            const sliderId = map[id];
+            if (sliderId) {
+                const el = document.getElementById(sliderId);
+                if (el) {
+                    el.classList.remove('diag-slider-flash');
+                    void el.offsetWidth;
+                    el.classList.add('diag-slider-flash');
+                    setTimeout(() => el.classList.remove('diag-slider-flash'), 700);
+                }
+            }
+        }
+
+        function diagUpdateTweak(param, raw) {
+            const v = +raw;
+            diagTweakState[param] = v;
+            if (param === 'k') document.getElementById('diag-tw-k-val').textContent = v.toLocaleString() + ' N/m';
+            if (param === 'c') document.getElementById('diag-tw-c-val').textContent = v.toLocaleString() + ' N·s/m';
+            // Re-render with current sim data + new tweak values
+            const derived = diagDerive(lastSimData, diagTweakState.k, diagTweakState.c);
+            diagRenderMetrics(lastSimData, derived);
+            diagRenderStack(lastSimData, derived);
+        }
+
+        // Main entry point — called from switchScreen and after each simulation
+        function renderDiagnostics(data) {
+            const grid = document.getElementById('dashDiagMetrics');
+            const stack = document.getElementById('dashDiagStack');
+            if (!grid || !stack) return;
+
+            if (!data || data.error) {
+                grid.innerHTML = '';
+                stack.innerHTML = `
+                    <div class="diag-no-data">
+                        <div class="font-mono text-xs uppercase tracking-widest text-text-muted">No Data Yet</div>
+                        <div class="font-mono text-[11px] text-white/20">Run a simulation to populate diagnostics</div>
+                    </div>`;
+                return;
+            }
+
+            // Sync tweak sliders to last sim params when entering screen
+            if (data.spring_rate != null) {
+                diagTweakState.k = data.spring_rate;
+                const kEl = document.getElementById('diag-tw-k');
+                if (kEl) { kEl.value = diagTweakState.k; document.getElementById('diag-tw-k-val').textContent = diagTweakState.k.toLocaleString() + ' N/m'; }
+            }
+            if (data.damping != null) {
+                diagTweakState.c = data.damping;
+                const cEl = document.getElementById('diag-tw-c');
+                if (cEl) { cEl.value = diagTweakState.c; document.getElementById('diag-tw-c-val').textContent = diagTweakState.c.toLocaleString() + ' N·s/m'; }
+            }
+
+            const derived = diagDerive(data, diagTweakState.k, diagTweakState.c);
+            diagRenderMetrics(data, derived);
+            diagRenderStack(data, derived);
+        }
+
+        // ── Chart: FRF ───────────────────────────────────────────────
+        async function renderFrfChart(params) {
+            try {
+                const payload = { ...buildModelPayload(params), f_min: 0.5, f_max: 25, n_points: 80 };
+                console.log('[renderFrfChart] Sending payload:', payload);
+
+                const res = await fetchWithTimeout(`${API}/frf`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || `FRF HTTP ${res.status}`);
+                }
+                const data = await res.json();
+                console.log('[renderFrfChart] Response:', data);
+                if (!Array.isArray(data) || data.length === 0) {
+                    console.warn('[renderFrfChart] Empty or invalid FRF data');
+                    return;
+                }
+
+                const labels = data.map(p => p.freq_hz.toFixed(2));
+                const body = data.map(p => p.body_acc_transmissibility.toFixed(3));
+                const tire = data.map(p => p.tire_force_transmissibility.toFixed(4));
+
+                if (charts.frf) charts.frf.destroy();
+                charts.frf = new Chart(document.getElementById('frfChart'), {
+                    plugins: [{
+                        id: 'frfBands',
+                        beforeDraw(chart) {
+                            const { ctx, chartArea, scales } = chart;
+                            if (!chartArea || !scales?.x) return;
+                            const x = scales.x;
+                            const bands = [
+                                { from: 1.5, to: 3.0, color: 'rgba(232,64,69,0.08)', label: 'Sprung 1.5-3 Hz' },
+                                { from: 12.0, to: 20.0, color: 'rgba(255,255,255,0.05)', label: 'Wheel-hop 12-20 Hz' }
+                            ];
+
+                            ctx.save();
+                            bands.forEach(b => {
+                                const x1 = x.getPixelForValue(b.from.toFixed(2));
+                                const x2 = x.getPixelForValue(b.to.toFixed(2));
+                                const left = Math.max(Math.min(x1, x2), chartArea.left);
+                                const right = Math.min(Math.max(x1, x2), chartArea.right);
+                                if (right <= left) return;
+
+                                ctx.fillStyle = b.color;
+                                ctx.fillRect(left, chartArea.top, right - left, chartArea.bottom - chartArea.top);
+
+                                ctx.fillStyle = 'rgba(255,255,255,0.45)';
+                                ctx.font = "10px 'Share Tech Mono', monospace";
+                                ctx.textAlign = 'left';
+                                ctx.fillText(b.label, left + 4, chartArea.top + 12);
+                            });
+                            ctx.restore();
+                        }
+                    }],
+                    type: 'line',
+                    data: {
+                        labels,
+                        datasets: [
+                            {
+                                label: 'Body Acc Transmissibility',
+                                data: body,
+                                borderColor: activePalette().frfBody,
+                                borderWidth: 1.5,
+                                pointRadius: 0,
+                                yAxisID: 'y',
+                            },
+                            {
+                                label: 'Tyre Force Transmissibility',
+                                data: tire,
+                                borderColor: activePalette().frfTire,
+                                borderWidth: 1.5,
+                                pointRadius: 0,
+                                yAxisID: 'y1',
+                            }
+                        ]
+                    },
+                    options: {
+                        ...chartBase,
+                        scales: {
+                            x: {
+                                ...chartBase.scales.x,
+                                title: { display: true, text: 'Frequency (Hz)', color: activePalette().chartText }
+                            },
+                            y: {
+                                ...chartBase.scales.y,
+                                position: 'left',
+                                title: { display: true, text: 'Transmissibility', color: activePalette().axisPrimary }
+                            },
+                            y1: {
+                                ...chartBase.scales.y,
+                                position: 'right',
+                                grid: { drawOnChartArea: false },
+                                title: { display: true, text: 'Tyre Transmissibility', color: activePalette().axisSecondary }
+                            }
+                        }
+                    }
+                });
+            } catch (e) {
+                console.error('FRF fetch failed:', e);
+                showToast('⚠ FRF chart failed: ' + (e.message || 'network error'), true);
+                // FRF fetch failed — non-critical
+            }
+        }
+
+        // ── Chart: Pareto ────────────────────────────────────────────
+        function renderParetoChart(points) {
+            if (document.getElementById('paretoEmpty')) document.getElementById('paretoEmpty').style.display = 'none';
+            const canvas = document.getElementById('paretoChart');
+            canvas.style.display = '';
+
+            if (charts.pareto) charts.pareto.destroy();
+            charts.pareto = new Chart(canvas, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Pareto Front',
+                        data: points.map(p => ({
+                            x: p.iso2631_weighted_rms.toFixed(4),
+                            y: Math.round(p.rms_tire_force),
+                            k: p.k, c: p.c, zeta: p.zeta.toFixed(3)
+                        })),
+                        backgroundColor: points.map(p => {
+                            // Colour by zeta, blended from primary to secondary accent.
+                            const t = Math.min(p.zeta / 0.8, 1);
+                            const start = currentTheme === 'sunset' ? [234, 88, 12]
+                                : currentTheme === 'midnight' ? [96, 165, 250]
+                                    : currentTheme === 'mono' ? [55, 65, 81]
+                                        : [91, 124, 250];
+                            const end = currentTheme === 'sunset' ? [180, 83, 9]
+                                : currentTheme === 'midnight' ? [34, 211, 238]
+                                    : currentTheme === 'mono' ? [107, 114, 128]
+                                        : [52, 172, 224];
+                            const r = Math.round(start[0] + (end[0] - start[0]) * t);
+                            const g = Math.round(start[1] + (end[1] - start[1]) * t);
+                            const b = Math.round(start[2] + (end[2] - start[2]) * t);
+                            return `rgba(${r},${g},${b},0.85)`;
+                        }),
+                        borderColor: activePalette().pointBorder,
+                        borderWidth: 1,
+                        pointRadius: 8,
+                        pointHoverRadius: 12,
+                    }]
+                },
+                options: {
+                    ...chartBase,
+                    plugins: {
+                        ...chartBase.plugins,
+                        tooltip: {
+                            ...chartBase.plugins.tooltip,
+                            callbacks: {
+                                label: ctx => {
+                                    const d = ctx.raw;
+                                    return [
+                                        `ISO2631: ${d.x} m/s²`,
+                                        `Tyre F:  ${d.y} N`,
+                                        `k=${d.k}  c=${d.c}  ζ=${d.zeta}`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ...chartBase.scales.x,
+                            title: { display: true, text: 'ISO 2631 (m/s²) →', color: activePalette().chartText }
+                        },
+                        y: {
+                            ...chartBase.scales.y,
+                            title: { display: true, text: 'RMS Tyre Force (N) →', color: activePalette().chartText }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ── History ──────────────────────────────────────────────────
+        async function loadHistory() {
+            try {
+                const res = await fetch(`${API}/history`);
+                const data = await res.json();
+                const list = document.getElementById('historyList');
+
+                if (!data.length) return;
+
+                list.innerHTML = data.slice(0, 10).map(r => `
+          <div class="flex justify-between items-center p-3 mb-2 bg-[#111111] border border-white/5 rounded-xl hover:bg-white/5 transition-colors shadow-inner">
+            <span class="font-mono text-[10px] text-text-muted">#${r.id}</span>
+            <span class="font-mono text-[9px] px-2.5 py-1 rounded-md border border-red-main/20 bg-red-main/10 text-red-main uppercase tracking-widest">${r.road_profile || 'step'}</span>
+            <span class="font-mono text-xs text-white">${r.iso2631_weighted_rms ? r.iso2631_weighted_rms.toFixed(3) : '—'} m/s²</span>
+          </div>
+        `).join('');
+
+                document.getElementById('runCount').textContent = `${data.length} RUNS`;
+            } catch (e) {
+                console.error('History fetch failed:', e);
+                document.getElementById('historyList').innerHTML = '<div class="font-mono text-xs text-red-main/70 p-2">⚠ Failed to load history</div>';
+            }
+        }
+
+        // ── Run simulation ───────────────────────────────────────────
+        async function runSimulation() {
+            const params = getParams();
+            const profile = buildRoadProfile();
+
+            setLoading('runBtn', true, '▶ RUN SIMULATION');
+            document.getElementById('statusText').textContent = 'COMPUTING...';
+
+            try {
+                const payload = { ...buildModelPayload(params), road_profile: profile };
+                console.log('[runSimulation] Sending payload:', payload);
+
+                const res = await fetchWithTimeout(`${API}/simulate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || 'Unknown error');
+                }
+
+                const r = await res.json();
+                console.log('[runSimulation] Response:', r);
+                if (!r || r.error) { throw new Error(r?.error || 'Invalid response from server'); }
+                runCount++;
+                lastSimResult = r;
+                lastSimData = r;   // store for diagnostics tab
+                lastParams = params;
+
+                updateMetrics(r);
+                renderTimeChart(r);
+                renderAccChart(r);
+                await renderFrfChart(params);
+                await loadHistory();
+
+                document.getElementById('statusText').textContent = 'COMPLETE';
+                const isoVal = r.iso2631_weighted_rms != null ? r.iso2631_weighted_rms.toFixed(3) : '—';
+                showToast(`✓ Simulation complete — ISO2631: ${isoVal} m/s²`);
+
+            } catch (e) {
+                document.getElementById('statusText').textContent = 'ERROR';
+                showToast(`✗ ${e.message}`, true);
+            } finally {
+                setLoading('runBtn', false, '▶ RUN SIMULATION');
+            }
+        }
+
+        // ── Run sweep ────────────────────────────────────────────────
+        async function runSweep() {
+            const params = getParams();
+            const profile = buildRoadProfile();
+
+            setLoading('sweepBtn', true, '⬡ RUN PARETO SWEEP');
+            document.getElementById('statusText').textContent = 'SWEEPING...';
+
+            try {
+                const payload = {
+                    ...buildModelPayload(params),
+                    k_range: [
+                        +document.getElementById('kMin').value,
+                        +document.getElementById('kMax').value
+                    ],
+                    c_range: [
+                        +document.getElementById('cMin').value,
+                        +document.getElementById('cMax').value
+                    ],
+                    steps: 10,
+                    road_profile: profile
+                };
+
+                console.log('[runSweep] Sending payload:', payload);
+
+                const res = await fetchWithTimeout(`${API}/sweep`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || 'Sweep failed');
+                }
+
+                const points = await res.json();
+                console.log('[runSweep] Response:', points);
+
+                if (points.length === 0) {
+                    showToast('Sweep returned no Pareto points', true);
+                    return;
+                }
+
+                renderParetoChart(points);
+                lastParetoPoints = points;
+                setMainTab('optimization');
+                document.getElementById('statusText').textContent = 'SWEEP COMPLETE';
+                showToast(`✓ Pareto front: ${points.length} optimal points found`);
+
+            } catch (e) {
+                document.getElementById('statusText').textContent = 'ERROR';
+                showToast(`✗ ${e.message}`, true);
+            } finally {
+                setLoading('sweepBtn', false, '⬡ RUN PARETO SWEEP');
+            }
+        }
+
+        // ── Init ─────────────────────────────────────────────────────
+        const themeSelect = document.getElementById('designTheme');
+        const layoutSelect = document.getElementById('layoutMode');
+        const savedTheme = localStorage.getItem('susp_anal_theme') || 'aurora';
+        const savedLayout = localStorage.getItem('susp_anal_layout') || 'layout-v3';
+        themeSelect.value = savedTheme;
+        layoutSelect.value = savedLayout;
+        setLayout(savedLayout);
+        setTheme(savedTheme);
+        themeSelect.addEventListener('change', e => {
+            localStorage.setItem('susp_anal_theme', e.target.value);
+        });
+        layoutSelect.addEventListener('change', e => {
+            localStorage.setItem('susp_anal_layout', e.target.value);
+        });
+        loadHistory();
+
+
+        // ── Screen switching ─────────────────────────────────────────
+        let currentScreen = 'dashboard';
+        let lastDerivedParams = null;
+
+        function switchScreen(screen) {
+            currentScreen = screen;
+
+            const navDash = document.getElementById('navDashboard');
+            const navVeh = document.getElementById('navVehicle');
+
+            const activeCls = 'flex items-center gap-3 px-3 py-3 rounded-xl bg-red-main/10 text-red-main font-mono text-xs uppercase tracking-wider border border-red-main/20 transition-colors';
+            const inactiveCls = 'flex items-center gap-3 px-3 py-3 rounded-xl text-text-muted hover:text-white hover:bg-white/5 font-mono text-xs uppercase tracking-wider transition-colors';
+
+            if (navDash) navDash.className = screen === 'dashboard' ? activeCls : inactiveCls;
+            if (navVeh) navVeh.className = screen === 'vehicle' ? activeCls : inactiveCls;
+
+            document.getElementById('screen-dashboard').style.display = screen === 'dashboard' ? '' : 'none';
+            document.getElementById('screen-vehicle').style.display = screen === 'vehicle' ? '' : 'none';
+            document.getElementById('screen-diagnostics').style.display = screen === 'diagnostics' ? '' : 'none';
+
+            if (screen === 'dashboard') {
+                setTimeout(() => {
+                    Object.values(charts).forEach(c => { if (c && typeof c.resize === 'function') c.resize(); });
+                }, 50);
+            }
+
+            if (screen === 'diagnostics') {
+                renderDiagnostics(lastSimData || null);
+            }
+        }
+
+        // ── Axle toggle ──────────────────────────────────────────────
+        function setVcAxle(val) {
+            document.getElementById('vc-axle_position').value = val;
+            document.querySelectorAll('.vc-axle-btn').forEach(btn => {
+                const active = btn.dataset.val === val;
+                btn.className = active
+                    ? 'vc-axle-btn flex-1 py-2 rounded-lg border border-red-main bg-red-main/10 text-white font-mono text-xs tracking-wider transition-colors'
+                    : 'vc-axle-btn flex-1 py-2 rounded-lg border border-white/5 bg-[#111] text-text-muted hover:text-white font-mono text-xs tracking-wider transition-colors';
+            });
+        }
+
+        // ── Vehicle / Moto params derivation ────────────────────────
+        async function deriveVehicleParams() {
+            const btn = document.getElementById('vcDeriveBtn');
+            btn.classList.add('loading');
+            document.getElementById('vcDeriveBtnText').textContent = '...';
+            document.getElementById('vcStatusText').textContent = 'COMPUTING...';
+
+            const fnRaw = document.getElementById('vc-fn_target_hz').value;
+            const zetaRaw = document.getElementById('vc-zeta_target').value;
+
+            let endpoint, body;
+
+            try {
+                if (currentVehicleMode === 'bike') {
+                    endpoint = `${API}/moto/params`;
+                    const baseBody = {
+                        moto_class: document.getElementById('vc-moto_class').value,
+                        dry_mass_kg: +document.getElementById('vc-moto_dry_mass').value,
+                        rider_mass_kg: +document.getElementById('vc-moto_rider_mass').value,
+                        front_weight_distribution_pct: +document.getElementById('vc-moto_front_weight_pct').value,
+                    };
+                    const rakeRaw = document.getElementById('vc-moto_rake').value;
+                    if (rakeRaw) baseBody.rake_angle_deg = +rakeRaw;
+                    if (fnRaw) baseBody.fn_target_hz = +fnRaw;
+                    if (zetaRaw) baseBody.zeta_target = +zetaRaw;
+
+                    const frontReq = {
+                        ...baseBody,
+                        axle: 'Front',
+                        susp_type: document.getElementById('vc-moto_susp_type').value
+                    };
+                    const rearReq = {
+                        ...baseBody,
+                        axle: 'Rear',
+                        susp_type: document.getElementById('vc-moto_susp_type_rear').value
+                    };
+
+                    console.log('[BikeDerive] Payloads:', { frontReq, rearReq });
+
+                    const frontRes = await fetchWithTimeout(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(frontReq)
+                    });
+                    const rearRes = await fetchWithTimeout(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(rearReq)
+                    });
+
+                    if (!frontRes.ok) {
+                        const err = await frontRes.json();
+                        throw new Error(err.error || 'Front bike request failed');
+                    }
+                    if (!rearRes.ok) {
+                        const err = await rearRes.json();
+                        throw new Error(err.error || 'Rear bike request failed');
+                    }
+
+                    const frontData = await frontRes.json();
+                    const rearData = await rearRes.json();
+                    console.log('[BikeDerive] Responses:', { frontData, rearData });
+
+                    const frontPct = +document.getElementById('vc-moto_front_weight_pct').value;
+                    const rearPct = 100 - frontPct;
+                    const wf = frontPct / 100;
+                    const wr = rearPct / 100;
+
+                    lastBikeModelPayload = {
+                        ms_front: frontData.ms,
+                        ms_rear: rearData.ms,
+                        mu_front: frontData.mu,
+                        mu_rear: rearData.mu,
+                        k_front: frontData.k,
+                        k_rear: rearData.k,
+                        c_front: frontData.c,
+                        c_rear: rearData.c,
+                        kt_front: frontData.kt,
+                        kt_rear: rearData.kt,
+                        front_weight_distribution_pct: frontPct,
+                        rider_mass_kg: +document.getElementById('vc-moto_rider_mass').value
+                    };
+
+                    body = {
+                        ms: wf * frontData.ms + wr * rearData.ms,
+                        mu: wf * frontData.mu + wr * rearData.mu,
+                        k: wf * frontData.k + wr * rearData.k,
+                        c: wf * frontData.c + wr * rearData.c,
+                        kt: wf * frontData.kt + wr * rearData.kt,
+                        fn_sprung_hz: wf * frontData.fn_sprung_hz + wr * rearData.fn_sprung_hz,
+                        fn_unsprung_hz: wf * frontData.fn_unsprung_hz + wr * rearData.fn_unsprung_hz,
+                        zeta: wf * frontData.zeta + wr * rearData.zeta,
+                        corner_load_fraction: wf,
+                        sae_notes: [
+                            `Bike split derivation: front ${frontPct}% / rear ${rearPct}%`,
+                            ...(frontData.sae_notes || []).map(n => `[Front] ${n}`),
+                            ...(rearData.sae_notes || []).map(n => `[Rear] ${n}`)
+                        ]
+                    };
+                } else {
+                    // Build VehicleConfig payload — matches POST /vehicle/params exactly
+                    endpoint = `${API}/vehicle/params`;
+                    body = {
+                        vehicle_class: document.getElementById('vc-vehicle_class').value,
+                        powertrain: document.getElementById('vc-powertrain').value,
+                        axle_position: document.getElementById('vc-axle_position').value,
+                        suspension_type: document.getElementById('vc-suspension_type').value,
+                        gross_vehicle_mass: +document.getElementById('vc-gross_vehicle_mass').value,
+                    };
+                    if (fnRaw) body.fn_target_hz = +fnRaw;
+                    if (zetaRaw) body.zeta_target = +zetaRaw;
+
+                    console.log('[CarDerive] Payload:', body);
+                }
+
+                const res = currentVehicleMode === 'bike'
+                    ? { ok: true, json: async () => body }
+                    : await fetchWithTimeout(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || 'Request failed');
+                }
+
+                const d = await res.json();
+                lastDerivedParams = d;
+                if (currentVehicleMode !== 'bike') lastBikeModelPayload = null;
+
+                // Fill metric strip — DerivedParams shape is identical for both endpoints
+                document.getElementById('vc-mv-ms').textContent = d.ms.toFixed(1);
+                document.getElementById('vc-mv-mu').textContent = d.mu.toFixed(1);
+                document.getElementById('vc-mv-k').textContent = Math.round(d.k).toLocaleString();
+                document.getElementById('vc-mv-c').textContent = Math.round(d.c).toLocaleString();
+                document.getElementById('vc-mv-kt').textContent = Math.round(d.kt).toLocaleString();
+
+                // Fill secondary card
+                document.getElementById('vc-mv-fn_sprung').textContent = d.fn_sprung_hz.toFixed(3) + ' Hz';
+                document.getElementById('vc-mv-fn_unsprung').textContent = d.fn_unsprung_hz.toFixed(2) + ' Hz';
+                document.getElementById('vc-mv-zeta').textContent = d.zeta.toFixed(3);
+                document.getElementById('vc-mv-clf').textContent = (d.corner_load_fraction * 100).toFixed(0) + '%';
+
+                const sagPercent = d.sag_percent;
+                const bottomOut = d.bottom_out;
+
+                const sagTextEl = document.getElementById('vc-mv-sag_percent');
+                const sagBarEl = document.getElementById('vc-sag-bar');
+                const bottomOutEl = document.getElementById('vc-mv-bottom_out');
+                const bottomOutRow = document.getElementById('vc-bottomout-row');
+                const bottomOutWarn = document.getElementById('vc-bottomout-warning');
+
+                if (sagTextEl) sagTextEl.textContent = sagPercent != null ? `${sagPercent.toFixed(1)}%` : '—';
+                if (sagBarEl) {
+                    const pct = sagPercent != null ? Math.max(0, Math.min(sagPercent, 100)) : 0;
+                    sagBarEl.style.width = `${pct}%`;
+                    sagBarEl.className = `h-full transition-all duration-300 ${sagPercent > 100 ? 'bg-red-500' : 'bg-red-main/80'}`;
+                }
+                if (bottomOutEl) bottomOutEl.textContent = sagPercent != null ? (bottomOut ? 'YES' : 'NO') : '—';
+                if (bottomOutRow) {
+                    bottomOutRow.className = bottomOut
+                        ? 'flex justify-between items-center bg-red-500/10 rounded-2xl p-4 border border-red-500/40'
+                        : 'flex justify-between items-center bg-[#111111] rounded-2xl p-4 border border-white/5';
+                }
+                if (bottomOutWarn) {
+                    bottomOutWarn.classList.toggle('hidden', !bottomOut);
+                }
+
+                // Render diagnostics in VC stack (inline — no grid for VC screen)
+                (function renderVcDiag(data) {
+                    const stackCont = document.getElementById('vcDiagStack');
+                    if (!stackCont || !data) return;
+                    const items = [
+                        { title: 'Sprung fn', val: data.fn_sprung_hz != null ? data.fn_sprung_hz.toFixed(2) + ' Hz' : '—' },
+                        { title: 'Damping ζ', val: data.zeta != null ? data.zeta.toFixed(3) : '—' },
+                        { title: 'Wheel-hop fn', val: data.fn_unsprung_hz != null ? data.fn_unsprung_hz.toFixed(1) + ' Hz' : '—' },
+                        {
+                            title: 'Load Frac.', val: data.corner_load_fraction != null
+                                ? (data.corner_load_fraction * 100).toFixed(0) + '%' : '—'
+                        },
+                    ];
+                    stackCont.innerHTML = items.map(it => `
+                      <div class="flex justify-between items-center font-mono text-xs py-1 border-b border-white/5">
+                        <span class="text-text-muted uppercase tracking-widest">${it.title}</span>
+                        <span class="text-white">${it.val}</span>
+                      </div>`).join('');
+                    if (data.sae_notes && data.sae_notes.length) {
+                        stackCont.innerHTML += data.sae_notes.map(n => `
+                          <div class="font-mono text-[10px] text-text-muted py-0.5 leading-relaxed">> ${n}</div>`).join('');
+                    }
+                })(d);
+
+                // Flash metric cards
+                ['ms', 'mu', 'k', 'c', 'kt'].forEach(id => {
+                    const el = document.getElementById('vc-mc-' + id);
+                    if (!el) return;
+                    el.classList.remove('updated');
+                    void el.offsetWidth;
+                    el.classList.add('updated');
+                    setTimeout(() => el.classList.remove('updated'), 800);
+                });
+
+                // Enable send button
+                document.getElementById('vcSendBtn').disabled = false;
+
+                document.getElementById('vcStatusText').textContent = 'DERIVED';
+                showVcToast(currentVehicleMode === 'bike' ? 'Moto params derived (SAE J1299)' : 'SAE parameters derived successfully');
+
+            } catch (e) {
+                document.getElementById('vcStatusText').textContent = 'ERROR';
+                showVcToast(e.message, true);
+            } finally {
+                btn.classList.remove('loading');
+                document.getElementById('vcDeriveBtnText').textContent = 'Derive Parameters';
+            }
+        }
+
+        // ── Send derived params to tuner dashboard ───────────────────
+        function sendToTuner() {
+            if (!lastDerivedParams) return;
+            const d = lastDerivedParams;
+
+            const msEl = document.getElementById('ms');
+            const muEl = document.getElementById('mu');
+            const kEl = document.getElementById('k');
+            const cEl = document.getElementById('c');
+            const ktEl = document.getElementById('kt');
+
+            if (currentVehicleMode === 'bike') {
+                // Motorcycle limits - expand sliders to allow below 150kg
+                msEl.min = "30"; msEl.max = "400"; msEl.step = "any";
+                muEl.min = "5"; muEl.max = "80"; muEl.step = "any";
+                kEl.min = "1000"; kEl.max = "60000"; kEl.step = "any";
+                cEl.min = "10"; cEl.max = "6000"; cEl.step = "any";
+                ktEl.min = "50000"; ktEl.max = "300000"; ktEl.step = "any";
+
+                // Transfer unchanged — no clamping, no Math.max, no floor substitution
+                msEl.value = d.ms;
+                muEl.value = d.mu;
+                kEl.value = d.k;
+                cEl.value = d.c;
+                ktEl.value = d.kt;
+            } else {
+                // Restore car limits
+                msEl.min = "150"; msEl.max = "500"; msEl.step = "5";
+                muEl.min = "15"; muEl.max = "80"; muEl.step = "1";
+                kEl.min = "5000"; kEl.max = "60000"; kEl.step = "500";
+                cEl.min = "100"; cEl.max = "6000"; cEl.step = "50";
+                ktEl.min = "80000"; ktEl.max = "300000"; ktEl.step = "5000";
+
+                // Car validation unchanged - clamp to dashboard sliders
+                const clamp = (v, min, max) => Math.min(Math.max(Math.round(v), min), max);
+
+                msEl.value = clamp(d.ms, +msEl.min, +msEl.max);
+                muEl.value = clamp(d.mu, +muEl.min, +muEl.max);
+                kEl.value = clamp(d.k, +kEl.min, +kEl.max);
+                cEl.value = clamp(d.c, +cEl.min, +cEl.max);
+                ktEl.value = clamp(d.kt, +ktEl.min, +ktEl.max);
+            }
+
+            // Update displayed values
+            document.getElementById('msVal').textContent = currentVehicleMode === 'bike' ? Number(msEl.value).toFixed(1) + ' kg' : msEl.value + ' kg';
+            document.getElementById('muVal').textContent = currentVehicleMode === 'bike' ? Number(muEl.value).toFixed(1) + ' kg' : muEl.value + ' kg';
+            document.getElementById('kVal').textContent = currentVehicleMode === 'bike' ? Number(kEl.value).toFixed(1) + ' N/m' : kEl.value + ' N/m';
+            document.getElementById('cVal').textContent = currentVehicleMode === 'bike' ? Number(cEl.value).toFixed(1) + ' N·s/m' : cEl.value + ' N·s/m';
+            document.getElementById('ktVal').textContent = currentVehicleMode === 'bike' ? Number(ktEl.value).toFixed(1) + ' N/m' : ktEl.value + ' N/m';
+
+            // Switch to dashboard
+            const mi = document.getElementById('modeIndicator');
+            if (mi) {
+                mi.textContent = currentVehicleMode === 'bike' ? 'BIKE EQUIVALENT MODEL' : 'CAR QUARTER-CAR';
+                mi.className = 'font-mono text-[10px] uppercase tracking-widest px-2 py-1 rounded-md border text-red-main border-red-main/30 bg-red-main/10 block';
+            }
+            switchScreen('dashboard');
+            showToast('✓ Derived parameters loaded into Tuning Deck');
+        }
+
+        function showVcToast(msg, error = false) {
+            const t = document.getElementById('vcToast');
+            t.textContent = msg;
+            t.className = 'toast show' + (error ? ' error' : '');
+            setTimeout(() => t.className = 'toast', 3000);
+        }
+
+        // Enhanced setProfile with styled tab buttons
+        window.setProfile = function (p) {
+            currentProfile = p;
+            document.querySelectorAll('.profile-tab').forEach((t, i) => {
+                const isActive = ['Step', 'Sine', 'Iso8608'][i] === p;
+                if (isActive) {
+                    t.className = 'profile-tab flex-1 py-2 rounded-xl border border-red-main bg-red-main/10 text-white font-mono text-xs tracking-wider transition-colors active shadow-[0_0_10px_rgba(232,64,69,0.15)]';
+                } else {
+                    t.className = 'profile-tab flex-1 py-2 rounded-xl border border-white/5 bg-[#111] text-text-muted hover:text-white font-mono text-xs tracking-wider transition-colors';
+                }
+            });
+            document.getElementById('stepParams').classList.toggle('hidden', p !== 'Step');
+            document.getElementById('sineParams').classList.toggle('hidden', p !== 'Sine');
+            document.getElementById('isoParams').classList.toggle('hidden', p !== 'Iso8608');
+        };
+
+        // Enhanced setMainTab with styled tab buttons
+        window.setMainTab = function (tab) {
+            currentMainTab = tab;
+            document.querySelectorAll('.main-tab').forEach(btn => {
+                const isActive = btn.dataset.tab === tab;
+                if (isActive) {
+                    btn.className = 'main-tab active px-5 py-2.5 font-mono text-[10px] uppercase tracking-widest rounded-full border border-red-main bg-red-main/10 text-white shadow-[0_0_10px_rgba(232,64,69,0.1)]';
+                } else {
+                    btn.className = 'main-tab px-5 py-2.5 font-mono text-[10px] uppercase tracking-widest rounded-full border border-transparent text-text-muted hover:text-white hover:bg-white/5 transition-colors';
+                }
+            });
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.classList.toggle('active', pane.id === `tab-${tab}`);
+            });
+
+            setTimeout(() => {
+                Object.values(charts).forEach(chart => {
+                    if (chart && typeof chart.resize === 'function') chart.resize();
+                });
+            }, 40);
+        };
+
+        // Enhanced flashMetric with null guard
+        window.flashMetric = function (id) {
+            const el = document.getElementById('mc-' + id);
+            if (!el) return;
+            el.classList.remove('updated');
+            void el.offsetWidth;
+            el.classList.add('updated');
+            setTimeout(() => el.classList.remove('updated'), 800);
+        };
+
+        // Enhanced history with error feedback
+        window.loadHistory = async function () {
+            try {
+                const res = await fetch(`${API}/history`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                const list = document.getElementById('historyList');
+
+                if (!data.length) {
+                    list.innerHTML = '<div class="font-mono text-xs text-text-muted p-2">No runs yet</div>';
+                    return;
+                }
+
+                list.innerHTML = data.slice(0, 10).map(r => `
+          <div class="flex justify-between items-center p-3 mb-2 bg-[#111111] border border-white/5 rounded-xl hover:bg-white/5 transition-colors shadow-inner">
+            <span class="font-mono text-[10px] text-text-muted">#${r.id}</span>
+            <span class="font-mono text-[9px] px-2.5 py-1 rounded-md border border-red-main/20 bg-red-main/10 text-red-main uppercase tracking-widest">${r.road_profile || 'step'}</span>
+            <span class="font-mono text-xs text-white">${r.iso2631_weighted_rms != null ? r.iso2631_weighted_rms.toFixed(3) : '—'} m/s²</span>
+          </div>
+        `).join('');
+
+                document.getElementById('runCount').textContent = `${data.length} RUNS`;
+            } catch (e) {
+                console.error('History load failed:', e);
+                document.getElementById('historyList').innerHTML = '<div class="font-mono text-xs text-red-main/70 p-2">⚠ Failed to load history</div>';
+            }
+        };
+    </script>
+
+    </div>
+    <script>
+
+        function initCustomDropdowns() {
+            document.querySelectorAll('.custom-select-wrapper').forEach(wrapper => {
+                const selectTag = wrapper.querySelector('select');
+                const selectedText = wrapper.querySelector('.selected-text');
+                const menu = wrapper.querySelector('.dropdown-menu');
+                const opts = wrapper.querySelectorAll('.dropdown-option');
+
+                // Sync initial value
+                const updateText = () => {
+                    const opt = selectTag.options[selectTag.selectedIndex];
+                    if (opt) selectedText.textContent = opt.text;
+                };
+                updateText();
+
+                // Toggle menu
+                wrapper.addEventListener('click', (e) => {
+                    // close others
+                    document.querySelectorAll('.dropdown-menu').forEach(m => {
+                        if (m !== menu) m.classList.add('hidden');
+                    });
+                    menu.classList.toggle('hidden');
+                    e.stopPropagation();
+                });
+
+                // Option click
+                opts.forEach(opt => {
+                    opt.addEventListener('click', (e) => {
+                        selectTag.value = opt.getAttribute('data-value');
+                        updateText();
+                        menu.classList.add('hidden');
+                        e.stopPropagation();
+                    });
+                });
+            });
+
+            document.addEventListener('click', () => {
+                document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
+            });
+        }
+
+        // Call it on load
+        window.addEventListener('DOMContentLoaded', initCustomDropdowns);
+    </script>
+</body>
+
+</html>
