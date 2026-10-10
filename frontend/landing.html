@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Zoph — Suspension Analysis Engine</title>
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23E84045' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 1.5V9'/%3E%3Crect x='8.6' y='8.2' width='6.8' height='3.9' rx='.4'/%3E%3Cpath d='M6.5 7.8V14.5H17.5V7.8'/%3E%3Cpath d='M12 14.5V22.5'/%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --card: #121212;
+            --line: rgba(255, 255, 255, .08);
+            --red: #E84045;
+            --red-h: #ff4d52;
+            --mut: #a3a3a3;
+            --pad: clamp(20px, 4vw, 56px)
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        html {
+            background: var(--bg)
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: #fff;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none
+        }
+
+        .mono {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            letter-spacing: .14em;
+            text-transform: uppercase
+        }
+
+        .mut {
+            color: var(--mut)
+        }
+
+        .red {
+            color: var(--red)
+        }
+
+        #gl {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0
+        }
+
+        #glow {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            background: radial-gradient(620px circle at var(--mx, 50%) var(--my, 40%), rgba(232, 64, 69, .17), transparent 60%)
+        }
+
+        main,
+        footer {
+            position: relative;
+            z-index: 2
+        }
+
+        .hdr {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 var(--pad);
+            border-bottom: 1px solid var(--line);
+            background: rgba(10, 10, 10, .6);
+            backdrop-filter: blur(12px)
+        }
+
+        .hdr nav {
+            display: flex;
+            align-items: center;
+            gap: 28px
+        }
+
+        .hdr nav a:not(.pill) {
+            color: var(--mut);
+            transition: color .2s
+        }
+
+        .hdr nav a:not(.pill):hover {
+            color: #fff
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--red);
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: .1em
+        }
+
+        .logo svg {
+            flex-shrink: 0
+        }
+
+        .pill {
+            padding: 10px 20px;
+            border-radius: 999px;
+            border: 1px solid var(--red);
+            background: rgba(232, 64, 69, .1);
+            transition: background .2s, transform .2s
+        }
+
+        .pill:hover {
+            background: var(--red);
+            transform: scale(1.05)
+        }
+
+        .hero {
+            height: 100vh;
+            min-height: 620px;
+            position: relative
+        }
+
+        .big {
+            font-size: clamp(46px, 8.4vw, 148px);
+            line-height: .93;
+            font-weight: 500;
+            letter-spacing: -.04em
+        }
+
+        .ln {
+            display: block;
+            overflow: hidden;
+            padding-bottom: .07em
+        }
+
+        .ln>span {
+            display: block
+        }
+
+        .tl {
+            position: absolute;
+            left: var(--pad);
+            top: 116px
+        }
+
+        .br {
+            position: absolute;
+            right: var(--pad);
+            bottom: 84px;
+            text-align: right
+        }
+
+        .bl {
+            position: absolute;
+            left: var(--pad);
+            bottom: 84px;
+            display: grid;
+            gap: 10px
+        }
+
+        .m {
+            margin-bottom: 14px
+        }
+
+        .bl a {
+            display: inline-block;
+            color: #fff;
+            border-bottom: 1px solid var(--red);
+            padding-bottom: 3px
+        }
+
+        .bl a:hover {
+            color: var(--red)
+        }
+
+        .hint {
+            position: absolute;
+            left: 50%;
+            bottom: 62px;
+            transform: translateX(-50%);
+            color: var(--mut);
+            transition: opacity .6s;
+            text-align: center;
+            white-space: nowrap
+        }
+
+        .hud {
+            position: fixed;
+            left: 50%;
+            bottom: 18px;
+            transform: translateX(-50%);
+            z-index: 5;
+            display: flex;
+            gap: 22px;
+            color: var(--mut);
+            font-size: 10px
+        }
+
+        .hud b {
+            color: #fff;
+            font-weight: 400
+        }
+
+        .lab {
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 4;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            white-space: nowrap;
+            margin-top: -.7em;
+            font-size: 10px
+        }
+
+        .lab i {
+            width: 30px;
+            height: 1px;
+            background: var(--red)
+        }
+
+        .sec {
+            padding: clamp(80px, 14vh, 170px) var(--pad)
+        }
+
+        .head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 24px;
+            margin-bottom: 56px
+        }
+
+        h2 {
+            font-size: clamp(40px, 6.4vw, 100px);
+            font-weight: 500;
+            letter-spacing: -.035em;
+            line-height: 1
+        }
+
+        .cards {
+            overflow: hidden;
+            margin: 0 calc(var(--pad)*-1);
+            padding: 0 var(--pad)
+        }
+
+        .track {
+            display: flex;
+            gap: 16px;
+            width: max-content;
+            will-change: transform
+        }
+
+        .card {
+            width: min(400px, 78vw);
+            height: 300px;
+            padding: 28px;
+            border-radius: 20px;
+            border: 1px solid var(--line);
+            background: rgba(18, 18, 18, .72);
+            backdrop-filter: blur(14px);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: border-color .25s, transform .25s
+        }
+
+        .card:hover {
+            border-color: rgba(232, 64, 69, .55);
+            transform: translateY(-6px)
+        }
+
+        .card h3 {
+            font-size: 28px;
+            font-weight: 500;
+            letter-spacing: -.02em;
+            margin-bottom: 10px
+        }
+
+        .card p {
+            color: var(--mut);
+            line-height: 1.5
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 90px 1fr 1.3fr;
+            gap: 24px;
+            align-items: baseline;
+            padding: 30px 0;
+            border-top: 1px solid var(--line);
+            transition: padding .35s
+        }
+
+        .row:last-of-type {
+            border-bottom: 1px solid var(--line)
+        }
+
+        .row h3 {
+            font-size: clamp(28px, 3.4vw, 52px);
+            font-weight: 500;
+            letter-spacing: -.03em;
+            transition: color .25s
+        }
+
+        .row p {
+            color: var(--mut);
+            line-height: 1.55;
+            max-width: 46ch
+        }
+
+        .row:hover {
+            padding-left: 18px
+        }
+
+        .row:hover h3 {
+            color: var(--red)
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-top: 80px
+        }
+
+        .stat {
+            padding: 28px;
+            border-radius: 20px;
+            border: 1px solid var(--line);
+            background: rgba(18, 18, 18, .72);
+            backdrop-filter: blur(14px)
+        }
+
+        .stat b {
+            display: block;
+            font-size: clamp(48px, 6vw, 88px);
+            font-weight: 500;
+            letter-spacing: -.04em;
+            line-height: 1;
+            margin-bottom: 12px
+        }
+
+        .about {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 48px;
+            align-items: start
+        }
+
+        .about p {
+            font-size: clamp(18px, 1.7vw, 24px);
+            line-height: 1.5;
+            color: #d4d4d4;
+            max-width: 34ch;
+            margin-bottom: 20px
+        }
+
+        .cta {
+            min-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            gap: 40px
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px 38px;
+            border-radius: 999px;
+            background: var(--red);
+            box-shadow: 0 8px 30px rgba(232, 64, 69, .35);
+            transition: transform .25s, background .2s
+        }
+
+        .btn:hover {
+            background: var(--red-h);
+            transform: scale(1.06)
+        }
+
+        footer {
+            display: flex;
+            justify-content: space-between;
+            padding: 28px var(--pad);
+            border-top: 1px solid var(--line);
+            background: rgba(10, 10, 10, .7);
+            color: var(--mut)
+        }
+
+        @media(max-width:800px) {
+
+            .hdr nav a:not(.pill),
+            .hud,
+            .lab,
+            #clockw {
+                display: none
+            }
+
+            .row {
+                grid-template-columns: 44px 1fr
+            }
+
+            .row p {
+                grid-column: 2
+            }
+
+            .stats {
+                grid-template-columns: 1fr 1fr
+            }
+
+            .about {
+                grid-template-columns: 1fr
+            }
+
+            .hint {
+                display: none
+            }
+
+            .br {
+                bottom: 130px
+            }
+        }
+
+        @media(prefers-reduced-motion:reduce) {
+            * {
+                scroll-behavior: auto !important
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="gl"></canvas>
+    <div id="glow"></div>
+
+    <header class="hdr">
+        <a class="logo mono" href="#top"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"
+                aria-hidden="true">
+                <path d="M12 1.5V9" />
+                <rect x="8.6" y="8.2" width="6.8" height="3.9" rx=".4" />
+                <path d="M6.5 7.8V14.5H17.5V7.8" />
+                <path d="M12 14.5V22.5" />
+            </svg>Zoph</a>
+        <div class="mono mut" id="clockw">Local <span id="clock" class="red"></span></div>
+        <nav class="mono"><a href="#cap">Capabilities</a><a href="#how">Workflow</a><a href="#model">Model</a><a
+                class="pill" href="login.html">Log in</a></nav>
+    </header>
+
+    <div class="lab mono" id="l0"><i></i>ms · 290 kg</div>
+    <div class="lab mono" id="l1"><i></i>k · 22,000 N/m</div>
+    <div class="lab mono" id="l2"><i></i>c · 1,500 N·s/m</div>
+    <div class="lab mono" id="l3"><i></i>kt · 190,000 N/m</div>
+    <div class="hud mono"><span>k <b id="hk"></b></span><span>c <b id="hc"></b></span><span>ζ <b
+                id="hz"></b></span><span>Travel <b id="hd">0.0</b> mm</span></div>
+
+    <main>
+        <section class="hero" id="top">
+            <div class="tl">
+                <div class="mono m">01. Suspension analysis engine</div>
+                <h1 class="big"><span class="ln"><span>Tuning</span></span><span
+                        class="ln"><span>Suspensions</span></span></h1>
+            </div>
+            <div class="br">
+                <div class="mono m">02. Quarter-car model</div>
+                <h2 class="big" style="font-size:inherit"><span class="ln"><span>Predicting</span></span><span
+                        class="ln"><span>Ride Quality</span></span></h2>
+            </div>
+            <div class="bl mono">
+                <div class="m">03.</div>
+                <span class="mut">ISO 2631 comfort</span><span class="mut">ISO 8608 roads</span><span
+                    class="mut">SAE-derived setup</span>
+                <a href="login.html" style="margin-top:10px;justify-self:start">04. Open the app</a>
+            </div>
+            <div class="hint mono">Move to tilt. Click to hit a bump. Scroll to roughen the road.</div>
+        </section>
+
+        <section class="sec" id="cap">
+            <div class="head rev">
+                <h2>Capabilities</h2><a class="pill mono" href="login.html">Try it</a>
+            </div>
+            <div class="cards">
+                <div class="track">
+                    <div class="card"><span class="mono red">Telemetry</span>
+                        <div>
+                            <h3>Quarter-car simulation</h3>
+                            <p>Body and wheel motion over a step, sine or ISO 8608 road.</p>
+                        </div>
+                    </div>
+                    <div class="card"><span class="mono red">Comfort</span>
+                        <div>
+                            <h3>ISO 2631 rating</h3>
+                            <p>Frequency-weighted RMS acceleration, with a plain-language comfort band.</p>
+                        </div>
+                    </div>
+                    <div class="card"><span class="mono red">Dynamics</span>
+                        <div>
+                            <h3>Frequency response</h3>
+                            <p>Body and tyre transmissibility from 0.5 to 25 Hz, with sprung and wheel-hop bands marked.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="card"><span class="mono red">Optimisation</span>
+                        <div>
+                            <h3>Pareto sweep</h3>
+                            <p>Sweep spring and damper ranges and keep the best trade-offs between comfort and grip.</p>
+                        </div>
+                    </div>
+                    <div class="card"><span class="mono red">Vehicle config</span>
+                        <div>
+                            <h3>SAE-derived setup</h3>
+                            <p>Start from class, powertrain, axle and mass instead of guessing spring rates.</p>
+                        </div>
+                    </div>
+                    <div class="card"><span class="mono red">Two wheels</span>
+                        <div>
+                            <h3>Cars and motorcycles</h3>
+                            <p>Separate front and rear bike models, combined into one equivalent for analysis.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="sec" id="how">
+            <div class="head rev">
+                <h2>Workflow</h2>
+            </div>
+            <div class="row rev"><span class="mono red">01</span>
+                <h3>Derive</h3>
+                <p>Pick a vehicle class and mass. The engine derives sprung and unsprung mass, spring rate, damping and
+                    tyre stiffness.</p>
+            </div>
+            <div class="row rev"><span class="mono red">02</span>
+                <h3>Simulate</h3>
+                <p>Run a step, sine or ISO 8608 road and watch body and wheel response.</p>
+            </div>
+            <div class="row rev"><span class="mono red">03</span>
+                <h3>Diagnose</h3>
+                <p>Check ride frequency, damping ratio, sag, bottom-out and comfort against clear limits.</p>
+            </div>
+            <div class="row rev"><span class="mono red">04</span>
+                <h3>Optimise</h3>
+                <p>Sweep spring and damper ranges, then choose from the Pareto front.</p>
+            </div>
+            <div class="stats">
+                <div class="stat rev"><b data-count="7">0</b><span class="mono mut">Car classes</span></div>
+                <div class="stat rev"><b data-count="8">0</b><span class="mono mut">Motorcycle classes</span></div>
+                <div class="stat rev"><b data-count="3">0</b><span class="mono mut">Road profiles</span></div>
+                <div class="stat rev"><b data-count="5">0</b><span class="mono mut">Diagnostic checks</span></div>
+            </div>
+        </section>
+
+        <section class="sec" id="model">
+            <div class="about">
+                <h2 class="rev">About the model</h2>
+                <div class="rev">
+                    <p>Zoph uses a linear quarter-car model. It is fast and well suited to comparing setups.</p>
+                    <p>It does not model roll, pitch, bump stops or non-linear dampers. Those limits are listed in the
+                        app beside every result.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="sec cta" id="cta">
+            <h2 class="rev">Run your first<br>simulation</h2>
+            <a class="btn mono rev" href="login.html">Log in to continue</a>
+        </section>
+    </main>
+
+    <footer class="mono"><span>Zoph © 2026</span><span>Suspension Analysis Engine v2.0</span></footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
+    <script>
+        (() => {
+            const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+            const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+            gsap.registerPlugin(ScrollTrigger);
+
+            /* smooth scroll + anchors */
+            let lenis;
+            if (window.Lenis && !RM) { lenis = new Lenis({ lerp: .1 }); lenis.on('scroll', ScrollTrigger.update); gsap.ticker.add(t => lenis.raf(t * 1000)); gsap.ticker.lagSmoothing(0) }
+            $$('a[href^="#"]').forEach(a => a.addEventListener('click', e => { const t = $(a.getAttribute('href')); if (!t) return; e.preventDefault(); lenis ? lenis.scrollTo(t) : t.scrollIntoView({ behavior: 'smooth' }) }));
+
+            /* clock */
+            const tick = () => $('#clock').textContent = new Date().toLocaleTimeString('en-GB'); tick(); setInterval(tick, 1000);
+
+            /* ---------- quarter-car physics (same defaults as the app) ---------- */
+            const P = { ms: 290, mu: 40, k: 22000, c: 1500, kt: 190000 }, S = { zs: 0, vs: 0, zu: 0, vu: 0, zr: 0 };
+            $('#hk').textContent = P.k.toLocaleString() + ' N/m'; $('#hc').textContent = P.c.toLocaleString() + ' N·s/m';
+            $('#hz').textContent = (P.c / (2 * Math.sqrt(P.k * P.ms))).toFixed(3);
+
+            /* ---------- three.js scene ---------- */
+            const cv = $('#gl'), R = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true });
+            R.setPixelRatio(Math.min(devicePixelRatio, 2));
+            const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(35, 1, .1, 100); cam.position.set(0, 0, 18);
+            const rig = new THREE.Group(), tilt = new THREE.Group(), parts = new THREE.Group(); scene.add(rig); rig.add(tilt); tilt.add(parts); parts.position.y = .6;
+
+            const W = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: .9 });
+            const Wf = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: .22 });
+            const Rd = new THREE.LineBasicMaterial({ color: 0xE84045 });
+            const Rf = new THREE.LineBasicMaterial({ color: 0xE84045, transparent: true, opacity: .45 });
+            const ed = (g, m) => new THREE.LineSegments(new THREE.EdgesGeometry(g, 15), m);
+            const wf = (g, m) => new THREE.LineSegments(new THREE.WireframeGeometry(g), m);
+
+            /* sprung mass: plate + body block */
+            const top = new THREE.Group(), box = ed(new THREE.BoxGeometry(2.4, .7, 1.6), Wf); box.position.y = .55;
+            const rp = []; for (let i = 0; i <= 64; i++) { const a = i / 64 * 6.2832; rp.push(new THREE.Vector3(Math.cos(a) * 1.2, .1, Math.sin(a) * 1.2)) }
+            top.add(ed(new THREE.CylinderGeometry(1.2, 1.2, .2, 16), W), box, new THREE.Line(new THREE.BufferGeometry().setFromPoints(rp), Rd));
+            /* damper: tube (unsprung) + rod (sprung) */
+            const dB = new THREE.Group(), perch = ed(new THREE.CylinderGeometry(1, 1, .08, 24), Rf); perch.position.y = .7;
+            dB.add(ed(new THREE.CylinderGeometry(.34, .34, 1.8, 16), W), perch);
+            const rod = ed(new THREE.CylinderGeometry(.14, .14, 3.1, 12), W);
+            /* coil spring (two phase-shifted helices, rebuilt every frame) */
+            const N = 260, TURNS = 8, hp = [new Float32Array(N * 3), new Float32Array(N * 3)], coils = hp.map((a, i) => { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(a, 3)); const l = new THREE.Line(g, i ? Rf : Rd); l.frustumCulled = false; return l });
+            function setCoil(y0, y1) { for (let j = 0; j < 2; j++) { const a = hp[j]; for (let i = 0; i < N; i++) { const t = i / (N - 1), ang = t * TURNS * 6.2832 + j * 3.1416; a[i * 3] = Math.cos(ang) * .85; a[i * 3 + 1] = y0 + (y1 - y0) * t; a[i * 3 + 2] = Math.sin(ang) * .85 } coils[j].geometry.attributes.position.needsUpdate = true } }
+            /* wheel */
+            const wh = new THREE.Group(), spin = new THREE.Group(); wh.add(spin);
+            spin.add(wf(new THREE.TorusGeometry(1.55, .55, 10, 32), Wf), wf(new THREE.TorusGeometry(.95, .1, 6, 24), W));
+            const sp = []; for (let i = 0; i < 5; i++) { const a = i / 5 * 6.2832; sp.push(Math.cos(a) * .15, Math.sin(a) * .15, 0, Math.cos(a) * .9, Math.sin(a) * .9, 0) }
+            const spg = new THREE.BufferGeometry(); spg.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3)); spin.add(new THREE.LineSegments(spg, Rd));
+            const hub = ed(new THREE.CylinderGeometry(.2, .2, .5, 12), W); hub.rotation.x = 1.5708; wh.add(hub);
+            /* hub-to-damper link + road */
+            const lk = new THREE.BufferGeometry(); lk.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
+            const link = new THREE.Line(lk, Rf); link.frustumCulled = false;
+            const road = new THREE.Group(), dash = new THREE.Group(), dp = []; for (let i = -12; i <= 12; i++)dp.push(i, -.35, 0, i + .5, -.35, 0);
+            const dg = new THREE.BufferGeometry(); dg.setAttribute('position', new THREE.Float32BufferAttribute(dp, 3)); dash.add(new THREE.LineSegments(dg, Wf));
+            road.add(dash, new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-12, 0, 0), new THREE.Vector3(12, 0, 0)]), W));
+            parts.add(top, dB, rod, coils[0], coils[1], wh, link, road);
+
+            /* ---------- state: pointer, scroll keyframes, intro ---------- */
+            const m = { x: 0, y: 0, tx: 0, ty: 0, sp: 0 };
+            addEventListener('pointermove', e => {
+                m.tx = e.clientX / innerWidth * 2 - 1; m.ty = e.clientY / innerHeight * 2 - 1; m.sp = Math.min(80, m.sp + Math.hypot(e.movementX || 0, e.movementY || 0) * .5);
+                document.documentElement.style.setProperty('--mx', e.clientX + 'px'); document.documentElement.style.setProperty('--my', e.clientY + 'px')
+            });
+            let bumpT = 1;
+            addEventListener('pointerdown', e => { if (e.target.closest('a,button')) return; bumpT = 0; $('.hint').style.opacity = 0 });
+
+            const K = [{ x: 0, s: 1, ry: 0, ex: 0, lab: 1 }, { x: 3.8, s: .85, ry: .9, ex: 0, lab: 0 }, { x: -4, s: .9, ry: -.9, ex: 1, lab: 1 }, { x: 0, s: 1.1, ry: Math.PI * 2, ex: 0, lab: 0 }, { x: 0, s: .75, ry: Math.PI * 2 + .4, ex: 0, lab: 0 }];
+            const st = { ...K[0] }, intro = { ex: RM ? 0 : 1.8, s: RM ? 1 : .55 };
+            ['#cap', '#how', '#model', '#cta'].forEach((id, i) => gsap.fromTo(st, { ...K[i] }, { ...K[i + 1], ease: 'none', immediateRender: false, scrollTrigger: { trigger: id, start: 'top bottom', end: 'top 20%', scrub: 1 } }));
+
+            /* ---------- loop ---------- */
+            const L = [0, 1, 2, 3].map(i => ({ el: $('#l' + i), v: new THREE.Vector3() }));
+            let last = performance.now(), t = 0, sv = 0, lastY = scrollY, roadOff = 0, n = 0;
+            const road_ = (tt, exc) => { let r = exc * .04 * (Math.sin(tt * 22) + .6 * Math.sin(tt * 35.3 + 1) + .5 * Math.sin(tt * 9.7)) / 1.6; if (bumpT < 1) r += .07 * Math.sin(Math.PI * bumpT); return r };
+            function resize() { R.setSize(innerWidth, innerHeight, false); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix() }
+            addEventListener('resize', resize); resize();
+
+            function frame(now) {
+                requestAnimationFrame(frame);
+                const dt = Math.min(.05, (now - last) / 1000); last = now; if (!dt) return; t += dt;
+                sv += ((scrollY - lastY) / dt - sv) * .15; lastY = scrollY;
+                m.x += (m.tx - m.x) * .06; m.y += (m.ty - m.y) * .06; m.sp *= Math.pow(.03, dt);
+                const exc = Math.min(1, Math.abs(sv) / 2500 + m.sp / 50);
+
+                /* integrate ms·zs'' and mu·zu'' (semi-implicit Euler, 600 Hz) */
+                const h = 1 / 600, steps = Math.ceil(dt / h);
+                for (let i = 0; i < steps; i++) {
+                    if (bumpT < 1) bumpT += h / .18;
+                    const zr = road_(t + i * h, exc), Fs = P.k * (S.zs - S.zu) + P.c * (S.vs - S.vu), Ft = P.kt * (S.zu - zr);
+                    S.vs += -Fs / P.ms * h; S.vu += (Fs - Ft) / P.mu * h; S.zs += S.vs * h; S.zu += S.vu * h; S.zr = zr;
+                }
+
+                /* pose the parts */
+                const ex = st.ex + intro.ex;
+                const yB = 2.8 + S.zs * 14 + ex * 1.3, yW = -3 + S.zu * 9 - ex * 1.1, yD = yW + 1.3 + ex * .9;
+                top.position.y = yB; dB.position.y = yD; rod.position.y = yB - 1.65; wh.position.y = yW;
+                setCoil(yD + .75, yB - .1);
+                const lp = lk.attributes.position.array; lp[1] = yW; lp[4] = yD - .9; lk.attributes.position.needsUpdate = true;
+                const w = 1.6 + Math.abs(sv) * .004 + m.sp * .06; spin.rotation.z -= w * dt; roadOff -= w * 1.55 * dt;
+                road.position.y = -5.1 + S.zr * 9 - ex * 1.1; dash.position.x = roadOff % 1;
+
+                /* rig: scroll keyframes + cursor tilt */
+                const asp = cam.aspect;
+                rig.position.x = st.x * Math.min(1, asp / 1.6); rig.scale.setScalar(st.s * intro.s * Math.min(1, asp / .7)); rig.rotation.y = st.ry;
+                tilt.rotation.y = m.x * .5 + Math.sin(t * .4) * .06; tilt.rotation.x = m.y * .2;
+                scene.updateMatrixWorld(true);
+
+                /* call-out labels */
+                L[0].v.set(1.3, yB + .5, 0); L[1].v.set(.9, (yD + .75 + yB) / 2, 0); L[2].v.set(.34, yD, 0); L[3].v.set(2.1, yW, 0);
+                const lo = st.lab * Math.min(1, Math.max(0, 1 - intro.ex));
+                L.forEach(l => { const p = l.v.clone(); parts.localToWorld(p); p.project(cam); l.el.style.transform = `translate3d(${(p.x * .5 + .5) * innerWidth}px,${(-p.y * .5 + .5) * innerHeight}px,0)`; l.el.style.opacity = lo });
+
+                if (++n % 6 === 0) $('#hd').textContent = Math.abs((S.zs - S.zu) * 1000).toFixed(1);
+                R.render(scene, cam);
+            }
+            requestAnimationFrame(frame);
+
+            /* ---------- page animation ---------- */
+            gsap.set('.hero .ln>span', { yPercent: 105 }); gsap.set('.hero .m,.bl>*,.hint', { opacity: 0, y: 16 }); gsap.set('.hdr', { clipPath: 'inset(0 0 100% 0)' });
+            gsap.timeline({ delay: .15 })
+                .from(cv, { opacity: 0, duration: 1.4 }, 0)
+                .to(intro, { ex: 0, s: 1, duration: RM ? .01 : 2.4, ease: 'expo.out' }, 0)
+                .to('.hdr', { clipPath: 'inset(0 0 0% 0)', duration: 1, ease: 'expo.out' }, .2)
+                .to('.hero .ln>span', { yPercent: 0, duration: 1.2, ease: 'expo.out', stagger: .1 }, .4)
+                .to('.hero .m,.bl>*,.hint', { opacity: 1, y: 0, duration: .9, ease: 'power3.out', stagger: .08 }, .9);
+
+            $$('.rev').forEach(el => gsap.fromTo(el, { clipPath: 'inset(0 0 100% 0)', y: 36 }, { clipPath: 'inset(0 0 0% 0)', y: 0, duration: 1.1, ease: 'expo.out', scrollTrigger: { trigger: el, start: 'top 90%' } }));
+
+            const tr = $('.track');
+            gsap.to(tr, { x: () => -Math.max(0, tr.scrollWidth - tr.parentElement.clientWidth), ease: 'none', scrollTrigger: { trigger: '#cap', start: 'top bottom', end: 'bottom top', scrub: .6, invalidateOnRefresh: true } });
+
+            $$('[data-count]').forEach(el => { const o = { v: 0 }; gsap.to(o, { v: +el.dataset.count, duration: 1.6, ease: 'power2.out', scrollTrigger: { trigger: el, start: 'top 92%', once: true }, onUpdate: () => el.textContent = Math.round(o.v) }) });
+        })();
+    </script>
+</body>
+
+</html>

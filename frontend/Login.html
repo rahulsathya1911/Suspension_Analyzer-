@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login — Zoph</title>
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23E84045' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 1.5V9'/%3E%3Crect x='8.6' y='8.2' width='6.8' height='3.9' rx='.4'/%3E%3Cpath d='M6.5 7.8V14.5H17.5V7.8'/%3E%3Cpath d='M12 14.5V22.5'/%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --background: #0a0a0a;
+            --foreground: #fff;
+            --muted: #111111;
+            --muted-fg: #a3a3a3;
+            --border: rgba(255, 255, 255, .1);
+            --input: rgba(255, 255, 255, .15);
+            --primary: #E84045;
+            --primary-h: #ff4d52
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--background);
+            color: var(--foreground);
+            -webkit-font-smoothing: antialiased
+        }
+
+        a {
+            color: inherit
+        }
+
+        /* page grid: min-h-svh lg:grid-cols-2 */
+        .page {
+            display: grid;
+            min-height: 100svh;
+            grid-template-columns: 1fr
+        }
+
+        @media(min-width:1024px) {
+            .page {
+                grid-template-columns: 1fr 1fr
+            }
+        }
+
+        .left {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 24px
+        }
+
+        @media(min-width:768px) {
+            .left {
+                padding: 40px
+            }
+        }
+
+        .brand {
+            display: flex;
+            justify-content: center;
+            gap: 8px
+        }
+
+        @media(min-width:768px) {
+            .brand {
+                justify-content: flex-start
+            }
+        }
+
+        .brand a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            text-decoration: none
+        }
+
+        .logo {
+            display: flex;
+            width: 24px;
+            height: 24px;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary)
+        }
+
+        .logo svg {
+            width: 22px;
+            height: 22px
+        }
+
+        .center {
+            display: flex;
+            flex: 1;
+            align-items: center;
+            justify-content: center
+        }
+
+        .wrap {
+            width: 100%;
+            max-width: 320px
+        }
+
+        /* form */
+        .fg {
+            display: flex;
+            flex-direction: column;
+            gap: 24px
+        }
+
+        .hd {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            text-align: center
+        }
+
+        .hd h1 {
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1.2
+        }
+
+        .hd p {
+            font-size: 14px;
+            color: var(--muted-fg);
+            text-wrap: balance
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 12px
+        }
+
+        .field.tight {
+            gap: 8px
+        }
+
+        label {
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1
+        }
+
+        .lr {
+            display: flex;
+            align-items: center
+        }
+
+        .lr a {
+            margin-left: auto;
+            font-size: 14px;
+            text-underline-offset: 4px;
+            text-decoration: none
+        }
+
+        .lr a:hover,
+        .sub a:hover {
+            text-decoration: underline
+        }
+
+        input {
+            height: 36px;
+            width: 100%;
+            border-radius: 6px;
+            border: 1px solid var(--input);
+            background: rgba(255, 255, 255, .04);
+            padding: 4px 12px;
+            font: 400 14px 'Outfit', sans-serif;
+            color: #fff;
+            outline: none;
+            transition: border-color .15s, box-shadow .15s
+        }
+
+        input::placeholder {
+            color: var(--muted-fg)
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(232, 64, 69, .3)
+        }
+
+        input.bad {
+            border-color: var(--primary)
+        }
+
+        .btn {
+            display: inline-flex;
+            width: 100%;
+            height: 36px;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            font: 500 14px 'Outfit', sans-serif;
+            cursor: pointer;
+            transition: background .15s, transform .15s
+        }
+
+        .btn svg {
+            width: 16px;
+            height: 16px
+        }
+
+        .btn.primary {
+            background: var(--primary);
+            color: #fff
+        }
+
+        .btn.primary:hover {
+            background: var(--primary-h)
+        }
+
+        .btn.outline {
+            border-color: var(--border);
+            background: rgba(255, 255, 255, .03);
+            color: #fff
+        }
+
+        .btn.outline:hover {
+            background: rgba(255, 255, 255, .08)
+        }
+
+        .btn:active {
+            transform: scale(.98)
+        }
+
+        .sep {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--muted-fg);
+            text-align: center
+        }
+
+        .sep::before,
+        .sep::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--border)
+        }
+
+        .sub {
+            text-align: center;
+            font-size: 14px;
+            color: var(--muted-fg)
+        }
+
+        .sub a {
+            color: #fff;
+            text-underline-offset: 4px
+        }
+
+        .sub a {
+            text-decoration: underline
+        }
+
+        .err {
+            min-height: 0;
+            font-size: 13px;
+            color: var(--primary);
+            text-align: center
+        }
+
+        /* right panel: bg-muted, hidden below lg */
+        .right {
+            position: relative;
+            display: none;
+            background: var(--muted);
+            overflow: hidden;
+            border-left: 1px solid var(--border)
+        }
+
+        @media(min-width:1024px) {
+            .right {
+                display: block
+            }
+        }
+
+        .right::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(520px circle at var(--mx, 50%) var(--my, 45%), rgba(232, 64, 69, .2), transparent 60%);
+            pointer-events: none
+        }
+
+        #gl {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1.2s
+        }
+
+        .hud {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 24px;
+            display: flex;
+            justify-content: center;
+            gap: 22px;
+            font: 400 10px 'Space Mono', monospace;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: var(--muted-fg);
+            pointer-events: none
+        }
+
+        .hud b {
+            color: #fff;
+            font-weight: 400
+        }
+
+        .hint {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 24px;
+            text-align: center;
+            font: 400 10px 'Space Mono', monospace;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: var(--muted-fg);
+            transition: opacity .6s;
+            pointer-events: none
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <div class="left">
+            <div class="brand">
+                <a href="landing.html">
+                    <div class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 1.5V9" />
+                            <rect x="8.6" y="8.2" width="6.8" height="3.9" rx=".4" />
+                            <path d="M6.5 7.8V14.5H17.5V7.8" />
+                            <path d="M12 14.5V22.5" />
+                        </svg></div>
+                    Zoph
+                </a>
+            </div>
+            <div class="center">
+                <div class="wrap">
+                    <form id="f" novalidate>
+                        <div class="fg">
+                            <div class="hd">
+                                <h1>Login to your account</h1>
+                                <p>Enter your email below to login to your account</p>
+                            </div>
+                            <div class="field tight"><label for="email">Email</label><input id="email" type="email"
+                                    placeholder="m@example.com" autocomplete="email" required></div>
+                            <div class="field tight">
+                                <div class="lr"><label for="pw">Password</label><a href="#">Forgot your password?</a>
+                                </div>
+                                <input id="pw" type="password" autocomplete="current-password" required>
+                            </div>
+                            <p class="err" id="err" role="alert"></p>
+                            <div class="field tight"><button class="btn primary" type="submit">Login</button></div>
+                            <div class="sep">Or continue with</div>
+                            <div class="field tight">
+                                <button class="btn outline" type="button"><svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path
+                                            d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.500 11.500 0 0 1 6 0c2.300-1.500 3.300-1.200 3.300-1.200.7 1.700.2 2.900.1 3.200.8.800 1.200 1.900 1.200 3.200 0 4.600-2.800 5.600-5.500 5.900.4.400.8 1.100.8 2.200v3.300c0 .3.2.7.8.6A12 12 0 0 0 12 .3" />
+                                    </svg>Login with GitHub</button>
+                                <p class="sub">Don't have an account? <a href="#">Sign up</a></p>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="right" id="panel">
+            <canvas id="gl"></canvas>
+            <div class="hint" id="hint">Move to tilt. Click to hit a bump.</div>
+            <div class="hud"><span>k <b id="hk"></b></span><span>c <b id="hc"></b></span><span>ζ <b
+                        id="hz"></b></span><span>Travel <b id="hd">0.0</b> mm</span></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        (() => {
+            const APP_URL = 'index.html'; // where to go after login
+            const $ = s => document.querySelector(s);
+
+            /* ---------- form ---------- */
+            const f = $('#f'), err = $('#err'), email = $('#email'), pw = $('#pw'); let bumpT = 1, leaving = false;
+            f.addEventListener('submit', e => {
+                e.preventDefault();
+                const okEmail = /^\S+@\S+\.\S+$/.test(email.value.trim());
+                email.classList.toggle('bad', !okEmail); pw.classList.toggle('bad', !pw.value);
+                if (!okEmail || !pw.value) { err.textContent = !okEmail ? 'Enter a valid email address.' : 'Enter your password.'; return }
+                err.textContent = ''; leaving = true; bumpT = 0;
+                // TODO: replace with a call to your auth endpoint before redirecting
+                setTimeout(() => location.href = APP_URL, 500);
+            });
+
+            /* ---------- quarter-car physics (app defaults) ---------- */
+            const P = { ms: 290, mu: 40, k: 22000, c: 1500, kt: 190000 }, S = { zs: 0, vs: 0, zu: 0, vu: 0, zr: 0 };
+            $('#hk').textContent = P.k.toLocaleString() + ' N/m'; $('#hc').textContent = P.c.toLocaleString() + ' N·s/m';
+            $('#hz').textContent = (P.c / (2 * Math.sqrt(P.k * P.ms))).toFixed(3);
+
+            /* ---------- scene ---------- */
+            const panel = $('#panel'), cv = $('#gl'), R = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true });
+            R.setPixelRatio(Math.min(devicePixelRatio, 2));
+            const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(35, 1, .1, 100); cam.position.set(0, 0, 18);
+            const tilt = new THREE.Group(), parts = new THREE.Group(); scene.add(tilt); tilt.add(parts); parts.position.y = .6;
+            const W = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: .9 }), Wf = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: .22 }),
+                Rd = new THREE.LineBasicMaterial({ color: 0xE84045 }), Rf = new THREE.LineBasicMaterial({ color: 0xE84045, transparent: true, opacity: .45 });
+            const ed = (g, m) => new THREE.LineSegments(new THREE.EdgesGeometry(g, 15), m), wf = (g, m) => new THREE.LineSegments(new THREE.WireframeGeometry(g), m);
+
+            const top = new THREE.Group(), box = ed(new THREE.BoxGeometry(2.4, .7, 1.6), Wf); box.position.y = .55;
+            const rp = []; for (let i = 0; i <= 64; i++) { const a = i / 64 * 6.2832; rp.push(new THREE.Vector3(Math.cos(a) * 1.2, .1, Math.sin(a) * 1.2)) }
+            top.add(ed(new THREE.CylinderGeometry(1.2, 1.2, .2, 16), W), box, new THREE.Line(new THREE.BufferGeometry().setFromPoints(rp), Rd));
+            const dB = new THREE.Group(), perch = ed(new THREE.CylinderGeometry(1, 1, .08, 24), Rf); perch.position.y = .7;
+            dB.add(ed(new THREE.CylinderGeometry(.34, .34, 1.8, 16), W), perch);
+            const rod = ed(new THREE.CylinderGeometry(.14, .14, 3.1, 12), W);
+            const N = 260, TURNS = 8, hp = [new Float32Array(N * 3), new Float32Array(N * 3)], coils = hp.map((a, i) => { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(a, 3)); const l = new THREE.Line(g, i ? Rf : Rd); l.frustumCulled = false; return l });
+            function setCoil(y0, y1) { for (let j = 0; j < 2; j++) { const a = hp[j]; for (let i = 0; i < N; i++) { const t = i / (N - 1), g = t * TURNS * 6.2832 + j * 3.1416; a[i * 3] = Math.cos(g) * .85; a[i * 3 + 1] = y0 + (y1 - y0) * t; a[i * 3 + 2] = Math.sin(g) * .85 } coils[j].geometry.attributes.position.needsUpdate = true } }
+            const wh = new THREE.Group(), spin = new THREE.Group(); wh.add(spin);
+            spin.add(wf(new THREE.TorusGeometry(1.55, .55, 10, 32), Wf), wf(new THREE.TorusGeometry(.95, .1, 6, 24), W));
+            const sp = []; for (let i = 0; i < 5; i++) { const a = i / 5 * 6.2832; sp.push(Math.cos(a) * .15, Math.sin(a) * .15, 0, Math.cos(a) * .9, Math.sin(a) * .9, 0) }
+            const spg = new THREE.BufferGeometry(); spg.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3)); spin.add(new THREE.LineSegments(spg, Rd));
+            const hub = ed(new THREE.CylinderGeometry(.2, .2, .5, 12), W); hub.rotation.x = 1.5708; wh.add(hub);
+            const lk = new THREE.BufferGeometry(); lk.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
+            const link = new THREE.Line(lk, Rf); link.frustumCulled = false;
+            const road = new THREE.Group(), dash = new THREE.Group(), dp = []; for (let i = -12; i <= 12; i++)dp.push(i, -.35, 0, i + .5, -.35, 0);
+            const dg = new THREE.BufferGeometry(); dg.setAttribute('position', new THREE.Float32BufferAttribute(dp, 3)); dash.add(new THREE.LineSegments(dg, Wf));
+            road.add(dash, new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-12, 0, 0), new THREE.Vector3(12, 0, 0)]), W));
+            parts.add(top, dB, rod, coils[0], coils[1], wh, link, road);
+
+            /* ---------- interaction ---------- */
+            const m = { x: 0, y: 0, tx: 0, ty: 0, sp: 0 };
+            addEventListener('pointermove', e => {
+                const r = panel.getBoundingClientRect();
+                m.tx = Math.max(-1, Math.min(1, (e.clientX - r.left - r.width / 2) / r.width * 2)); m.ty = Math.max(-1, Math.min(1, (e.clientY - r.top - r.height / 2) / r.height * 2));
+                if (panel.contains(e.target)) m.sp = Math.min(80, m.sp + Math.hypot(e.movementX || 0, e.movementY || 0) * .5);
+                panel.style.setProperty('--mx', (e.clientX - r.left) + 'px'); panel.style.setProperty('--my', (e.clientY - r.top) + 'px');
+            });
+            panel.addEventListener('pointerdown', () => { bumpT = 0; $('#hint').style.opacity = 0 });
+            const ro = new ResizeObserver(() => { const w = panel.clientWidth, h = panel.clientHeight; if (!w || !h) return; R.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix() }); ro.observe(panel);
+
+            /* ---------- loop ---------- */
+            const road_ = (tt, exc) => { let r = exc * .04 * (Math.sin(tt * 22) + .6 * Math.sin(tt * 35.3 + 1) + .5 * Math.sin(tt * 9.7)) / 1.6; if (bumpT < 1) r += .07 * Math.sin(Math.PI * bumpT); return r };
+            const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+            let last = performance.now(), t = 0, roadOff = 0, n = 0;
+            requestAnimationFrame(() => cv.style.opacity = 1);
+            function frame(now) {
+                requestAnimationFrame(frame);
+                const dt = Math.min(.05, (now - last) / 1000); last = now; if (!dt || !panel.clientWidth) return; t += dt;
+                m.x += (m.tx - m.x) * .06; m.y += (m.ty - m.y) * .06; m.sp *= Math.pow(.03, dt);
+                const exc = Math.min(1, m.sp / 50), h = 1 / 600, steps = Math.ceil(dt / h);
+                for (let i = 0; i < steps; i++) {
+                    if (bumpT < 1) bumpT += h / .18;
+                    const zr = road_(t + i * h, exc), Fs = P.k * (S.zs - S.zu) + P.c * (S.vs - S.vu), Ft = P.kt * (S.zu - zr);
+                    S.vs += -Fs / P.ms * h; S.vu += (Fs - Ft) / P.mu * h; S.zs += S.vs * h; S.zu += S.vu * h; S.zr = zr;
+                }
+                /* intro: assemble from an exploded view */
+                const p = RM ? 1 : Math.min(1, t / 2.4), e = 1 - Math.pow(1 - p, 4), ex = 1.8 * (1 - e), sc = .55 + .45 * e;
+                const yB = 2.8 + S.zs * 14 + ex * 1.3, yW = -3 + S.zu * 9 - ex * 1.1, yD = yW + 1.3 + ex * .9;
+                top.position.y = yB; dB.position.y = yD; rod.position.y = yB - 1.65; wh.position.y = yW; setCoil(yD + .75, yB - .1);
+                const lp = lk.attributes.position.array; lp[1] = yW; lp[4] = yD - .9; lk.attributes.position.needsUpdate = true;
+                const w = 1.6 + m.sp * .06; spin.rotation.z -= w * dt; roadOff -= w * 1.55 * dt;
+                road.position.y = -5.1 + S.zr * 9 - ex * 1.1; dash.position.x = roadOff % 1;
+                tilt.scale.setScalar(sc * Math.min(1, cam.aspect / .7) * .95);
+                tilt.rotation.y = m.x * .6 + Math.sin(t * .4) * .06; tilt.rotation.x = m.y * .2;
+                if (++n % 6 === 0) $('#hd').textContent = Math.abs((S.zs - S.zu) * 1000).toFixed(1);
+                R.render(scene, cam);
+            }
+            requestAnimationFrame(frame);
+        })();
+    </script>
+</body>
+
+</html>
