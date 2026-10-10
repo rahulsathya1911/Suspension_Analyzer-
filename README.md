@@ -1,4 +1,4 @@
-# Adaptive Suspension AI
+# ZOPH
 
 > A high-performance modular platform for modelling vehicle suspension behavior, analyzing ride comfort, and optimizing parameters.
 
@@ -9,7 +9,7 @@
 
 ## Demo
 
-![Adaptive Suspension UI Placeholder](https://via.placeholder.com/800x450.png?text=UI+Screenshot+Here) 
+![ZOPH UI Placeholder](https://via.placeholder.com/800x450.png?text=UI+Screenshot+Here) 
 <!-- TODO: Add a real screenshot or GIF of the web interface in action here -->
 
 ## Features
