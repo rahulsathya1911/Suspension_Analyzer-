@@ -46,6 +46,10 @@ use suspension_core::{
     RoadProfile,
 };
 
+// FUSION routes (PRD C). Must NOT sit under #[cfg(test)], or the routes
+// only exist in test builds and the running server answers 404.
+mod fusion;
+
 // ═══════════════════════════════════════════════════════════
 // SECTION 1 — Shared error type
 // ═══════════════════════════════════════════════════════════
@@ -1533,7 +1537,11 @@ fn index() -> &'static str {
      POST /frf             — frequency response function\n\
      POST /sweep           — parameter sweep + Pareto front\n\
      POST /vehicle/params  — derive SAE-grounded suspension params from vehicle config\n\
-     POST /moto/params     — derive SAE J1299 suspension params from motorcycle config"
+     POST /moto/params     — derive SAE J1299 suspension params from motorcycle config\n\
+     POST /fusion/run                      — run one fusion scenario live\n\
+     GET  /fusion/data/<name>              — fusion_summary | comfort_predictions | envelope | semiactive_ranking | run_meta\n\
+     GET  /fusion/data/timeseries/<id>     — time series for one scenario\n\
+     GET  /fusion/scenarios                — list available scenario ids"
 }
 
 // Handles browser CORS preflight OPTIONS requests
@@ -1564,7 +1572,9 @@ async fn main() -> Result<(), rocket::Error> {
     rocket::build()
         .attach(Cors)
         .manage(pool)
+        .manage(fusion::FusionConfig::from_env())
         .mount("/", routes![index, options, simulate_api, history, frf_api, sweep_api, vehicle_params_api, moto_params_api, validation_schema_api, speed_sweep_api, frf_compare_api])
+        .mount("/", fusion::routes())
         .launch()
         .await?;
 
