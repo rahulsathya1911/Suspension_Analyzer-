@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZOPH · Fusion Mode</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap">
+<style>
+:root{
+  --bg:#0a0a0a; --card:#121212; --card2:#171717; --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.14);
+  --txt:#f2f2f2; --dim:#8d8d8d; --faint:#5b5b5b; --red:#E84045; --red-soft:rgba(232,64,69,.14);
+  --green:#35c77b; --amber:#f5b942;
+  --sans:'Outfit',system-ui,-apple-system,'Segoe UI',sans-serif; --mono:'Space Mono',ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font-family:var(--sans);font-size:clamp(11px,1.5vh,15px)}
+body::before{ /* dithered red haze, echoing the halftone art on wafer.ai, in our palette */
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:radial-gradient(rgba(232,64,69,.30) 1px,transparent 1.3px);background-size:7px 7px;
+  -webkit-mask-image:radial-gradient(120% 70% at 85% 110%,#000 0%,transparent 62%);mask-image:radial-gradient(120% 70% at 85% 110%,#000 0%,transparent 62%);opacity:.55}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:linear-gradient(180deg,transparent 55%,rgba(232,64,69,.07))}
+#app{position:relative;z-index:1;display:grid;grid-template-columns:clamp(200px,16vw,250px) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);height:100vh}
+.mono{font-family:var(--mono)}
+/* top bar */
+.top{grid-column:1/3;display:flex;align-items:center;gap:1.2em;padding:.7em 1.4em;border-bottom:1px solid var(--line);background:rgba(10,10,10,.8);backdrop-filter:blur(6px)}
+.brand{display:flex;align-items:baseline;gap:.55em;font-weight:600;letter-spacing:.04em;font-size:1.25em}
+.brand .slash{color:var(--red);font-weight:300;font-size:1.3em}
+.brand small{font-family:var(--mono);font-weight:400;font-size:.55em;color:var(--dim);letter-spacing:.18em}
+.sid{margin:0 auto;font-family:var(--mono);font-size:.82em;color:var(--dim);letter-spacing:.06em;padding:.35em .9em;border:1px solid var(--line);border-radius:99px}
+.sid b{color:var(--txt);font-weight:400}
+.eb{display:inline-flex;align-items:center;gap:.5em;font-family:var(--mono);font-size:.68em;letter-spacing:.14em;text-transform:uppercase;padding:.35em .85em;border:1px solid var(--line2);border-radius:99px;color:var(--dim);white-space:nowrap}
+.eb::before{content:"";width:.55em;height:.55em;border-radius:50%;background:var(--faint)}
+.eb.green{color:var(--green);border-color:rgba(53,199,123,.35)}.eb.green::before{background:var(--green)}
+.eb.amber{color:var(--amber);border-color:rgba(245,185,66,.4)}.eb.amber::before{background:var(--amber)}
+.eb.red{color:var(--red);border-color:rgba(232,64,69,.4)}.eb.red::before{background:var(--red)}
+.btn{font-family:var(--mono);font-size:.74em;letter-spacing:.12em;text-transform:uppercase;color:var(--txt);background:transparent;border:1px solid var(--line2);border-radius:99px;padding:.55em 1.1em;cursor:pointer;transition:.15s}
+.btn:hover{border-color:var(--red);color:var(--red)}
+.btn.solid{background:var(--red);border-color:var(--red);color:#fff}.btn.solid:hover{filter:brightness(1.1);color:#fff}
+/* rail */
+.rail{display:flex;flex-direction:column;gap:.6em;padding:1em .9em;border-right:1px solid var(--line);min-height:0;background:rgba(10,10,10,.55)}
+.nav{display:flex;flex-direction:column;gap:.3em}
+.nav button{display:grid;grid-template-columns:2.2em 1fr;align-items:center;text-align:left;gap:.2em;color:var(--dim);background:transparent;border:1px solid transparent;border-radius:12px;padding:.6em .7em;cursor:pointer;font-family:var(--sans);font-size:1em;transition:.15s}
+.nav button i{font-style:normal;font-family:var(--mono);font-size:.78em;color:var(--faint)}
+.nav button span{font-weight:500;color:var(--txt)}
+.nav button em{grid-column:2;font-style:normal;font-size:.76em;color:var(--faint);margin-top:.1em}
+.nav button:hover{border-color:var(--line)}
+.nav button.on{background:var(--red-soft);border-color:rgba(232,64,69,.45)}
+.nav button.on i{color:var(--red)}
+.rail h6{font-family:var(--mono);font-weight:400;font-size:.66em;letter-spacing:.2em;color:var(--faint);text-transform:uppercase;margin-top:.5em}
+.chips{display:flex;gap:.4em;flex-wrap:wrap}
+.chip{font-family:var(--mono);font-size:.78em;color:var(--dim);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:.45em .75em;cursor:pointer;transition:.15s}
+.chip:hover{border-color:var(--line2);color:var(--txt)}
+.chip.on{color:#fff;background:var(--red-soft);border-color:var(--red)}
+.chip.dis{opacity:.35;cursor:not-allowed}
+.fixed{font-family:var(--mono);font-size:.7em;color:var(--faint);line-height:1.7}
+.fixed b{color:var(--dim);font-weight:400}
+.spacer{flex:1}
+/* stage */
+#stage{min-width:0;min-height:0;padding:1.1em 1.4em;display:flex;flex-direction:column;gap:.9em;overflow:hidden}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:1em;flex:none}
+.head .eyebrow{display:inline-flex;align-items:center;gap:.55em;font-family:var(--mono);font-size:.68em;letter-spacing:.2em;text-transform:uppercase;color:var(--red)}
+.head .eyebrow::before{content:"";width:.5em;height:.5em;border-radius:50%;background:var(--red);box-shadow:0 0 .8em var(--red)}
+.head h1{font-weight:300;font-size:1.9em;letter-spacing:-.01em;line-height:1.1;margin-top:.15em}
+.head h1 b{font-weight:500}
+.body{flex:1;min-height:0;display:grid;gap:.9em}
+.card{position:relative;min-width:0;min-height:0;background:linear-gradient(180deg,rgba(255,255,255,.025),transparent 40%),var(--card);border:1px solid var(--line);border-radius:16px;padding:.9em 1.05em;display:flex;flex-direction:column;overflow:hidden}
+.card>h3{flex:none;display:flex;align-items:center;justify-content:space-between;gap:.6em;font-family:var(--mono);font-weight:400;font-size:.68em;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:.6em}
+.card .fill{flex:1;min-height:0;position:relative}
+canvas{display:block;width:100%;height:100%}
+.stat .v{font-weight:300;font-size:2.35em;line-height:1;letter-spacing:-.02em;margin-top:.15em}
+.stat .v small{font-family:var(--mono);font-size:.3em;letter-spacing:.1em;color:var(--dim);margin-left:.4em;text-transform:uppercase}
+.stat .s{font-family:var(--mono);font-size:.68em;color:var(--dim);margin-top:.7em;letter-spacing:.04em}
+.stat.good .v{color:var(--green)}.stat.bad .v{color:var(--red)}.stat.warn .v{color:var(--amber)}
+.tag{display:inline-block;font-family:var(--mono);font-size:.66em;letter-spacing:.1em;padding:.25em .6em;border-radius:6px;border:1px solid var(--line2);color:var(--dim);text-transform:uppercase}
+.tag.good{color:var(--green);border-color:rgba(53,199,123,.4)}.tag.bad{color:var(--red);border-color:rgba(232,64,69,.45)}.tag.warn{color:var(--amber);border-color:rgba(245,185,66,.45)}
+table{width:100%;border-collapse:collapse;font-size:.92em}
+th{font-family:var(--mono);font-weight:400;font-size:.68em;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;text-align:right;padding:.35em .4em;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+td{padding:.5em .4em;border-bottom:1px solid rgba(255,255,255,.04);text-align:right;font-family:var(--mono);font-size:.9em;color:var(--txt)}
+td:first-child{font-family:var(--sans);color:var(--dim)}
+tr:last-child td{border-bottom:0}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:.45em 1em;font-size:.95em;align-content:start}
+.kv dt{color:var(--dim)}.kv dd{text-align:right;font-family:var(--mono);color:var(--txt)}
+.legend{display:flex;gap:.45em;flex-wrap:wrap}
+.lg{display:inline-flex;align-items:center;gap:.5em;font-family:var(--mono);font-size:.7em;color:var(--dim);background:transparent;border:1px solid var(--line);border-radius:99px;padding:.3em .8em;cursor:pointer}
+.lg i{width:.9em;height:.25em;border-radius:2px;background:var(--c)}
+.lg.off{opacity:.35}
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5em;color:var(--faint);text-align:center;font-family:var(--mono);font-size:.82em;letter-spacing:.08em}
+.empty b{color:var(--dim);font-weight:400;font-size:1.2em;letter-spacing:.2em;text-transform:uppercase}
+.bar{height:.5em;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden;position:relative}
+.bar>i{position:absolute;inset:0 auto 0 0;border-radius:99px;background:var(--red)}
+.bar>i.g{background:var(--green)}
+.list{list-style:none;display:flex;flex-direction:column;gap:.55em;font-size:.95em;color:var(--dim);line-height:1.35}
+.list li{display:grid;grid-template-columns:1.6em 1fr;gap:.2em}
+.list li::before{content:attr(data-n);font-family:var(--mono);font-size:.78em;color:var(--red);padding-top:.15em}
+.list li b{color:var(--txt);font-weight:500}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:.5em .6em;align-content:start}
+.form label{display:flex;flex-direction:column;gap:.25em;font-family:var(--mono);font-size:.62em;letter-spacing:.14em;color:var(--faint);text-transform:uppercase}
+.form input,.form select{font-family:var(--mono);font-size:1.45em;color:var(--txt);background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:.35em .55em;width:100%;outline:none}
+.form input:focus,.form select:focus{border-color:var(--red)}
+.form .wide{grid-column:1/3}
+.msg{font-family:var(--mono);font-size:.7em;color:var(--dim);min-height:1.3em}
+.msg.err{color:var(--red)}
+.opt{display:grid;grid-template-columns:5.2em 1fr 9em;align-items:center;gap:.8em;padding:.5em 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.opt:last-child{border-bottom:0}
+.opt .nm{font-family:var(--mono);font-size:.85em;color:var(--txt)}
+.opt .nm small{display:block;color:var(--faint);font-size:.8em}
+.track{position:relative;height:1.7em}
+.track::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--line2)}
+.track .w{position:absolute;top:50%;height:.5em;margin-top:-.25em;border-radius:99px;background:rgba(232,64,69,.35)}
+.track .d{position:absolute;top:50%;width:.9em;height:.9em;margin:-.45em 0 0 -.45em;border-radius:50%;background:var(--red);box-shadow:0 0 0 3px rgba(232,64,69,.25)}
+.opt.rec .d{background:var(--green);box-shadow:0 0 0 3px rgba(53,199,123,.25)}
+.opt.rec .w{background:rgba(53,199,123,.35)}
+.opt .st{font-family:var(--mono);font-size:.72em;text-align:right;color:var(--dim)}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div class="brand"><span class="slash">/</span>ZOPH<small>FUSION MODE</small></div>
+    <div class="sid" id="sid">no scenario</div>
+    <span id="badge"></span>
+    <button class="btn" id="refresh" title="Reload all files">Refresh</button>
+    <button class="btn solid" id="exit">Exit Fusion Mode</button>
+  </header>
+  <aside class="rail">
+    <nav class="nav" id="nav"></nav>
+    <h6>Road class</h6><div class="chips" id="c-cls"></div>
+    <h6>Damping c (N·s/m)</h6><div class="chips" id="c-c"></div>
+    <h6>Sensor dropout (%)</h6><div class="chips" id="c-d"></div>
+    <div class="spacer"></div>
+    <div class="fixed" id="fixed"></div>
+  </aside>
+  <main id="stage"></main>
+</div>
+
+<script>
+/* ================= config + state ================= */
+const qs=new URLSearchParams(location.search);
+const API=qs.get('api')!==null?qs.get('api'):((location.protocol==='file:'||location.port!=='8000')?'http://localhost:8000':'');
+const PAGES=[
+  ['overview','Overview','how much to trust it'],
+  ['signals','Signals','raw vs fused, live run'],
+  ['comfort','Comfort','prediction + interval'],
+  ['validation','Validation','errors and detection'],
+  ['envelope','Envelope & Damping','supported? best preset?'],
+  ['model','Model & Limits','what this is not']
+];
+const CH={
+  body_vel:{label:'Body vel',unit:'m/s',truth:'body_vel_mps',fused:'body_vel_mps'},
+  road_height:{label:'Road height',unit:'mm',scale:1000,truth:'road_height_m',fused:'road_height_m'},
+  susp_travel:{label:'Susp travel',unit:'mm',scale:1000,truth:'susp_travel_m',raw:'susp_travel_m',fused:'susp_travel_m'},
+  wheel_vel:{label:'Wheel vel',unit:'m/s',truth:'wheel_vel_mps',fused:'wheel_vel_mps'},
+  body_acc:{label:'Body acc',unit:'m/s²',truth:'body_acc_mps2',raw:'body_acc_mps2'},
+  wheel_acc:{label:'Wheel acc',unit:'m/s²',raw:'wheel_acc_mps2'}
+};
+const S={page:'overview',ch:'susp_travel',summary:null,comfort:null,envelope:null,semi:null,meta:null,ids:[],parsed:[],
+  sel:{cls:null,c:null,d:null},fixed:{v:20,m:440,s:0},ts:null,live:false,vis:{truth:true,raw:true,fused:true,band:true},
+  liveMsg:'',liveForm:{road_class:'B',speed_mps:20,ms_kg:440,c_nsm:1800,dropout_pct:5,seed:1,duration_s:10}};
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ================= data ================= */
+async function G(path){try{const r=await fetch(API+path);if(!r.ok)return null;return await r.json();}catch(e){return null;}}
+const ID_RE=/^r([A-D])_v(\d+)_m(\d+)_c(\d+)_d(\d+)_s(\d+)$/;
+const parseId=id=>{const m=ID_RE.exec(id);return m?{id,cls:m[1],v:+m[2],m:+m[3],c:+m[4],d:+m[5],s:+m[6]}:null;};
+const idOf=(cls,v,m,c,d,s)=>`r${cls}_v${v}_m${m}_c${c}_d${d}_s${s}`;
+function curId(){const {cls,c,d}=S.sel;if(cls==null)return null;
+  const hit=S.parsed.find(p=>p.cls===cls&&p.c===c&&p.d===d&&p.v===S.fixed.v&&p.m===S.fixed.m&&p.s===S.fixed.s)||S.parsed.find(p=>p.cls===cls&&p.c===c&&p.d===d);
+  return hit?hit.id:null;}
+async function loadTs(){const id=curId();S.live=false;S.ts=id?await G('/fusion/data/timeseries/'+id):null;}
+async function loadAll(){
+  const [summary,comfort,envelope,semi,meta,sc]=await Promise.all([
+    G('/fusion/data/fusion_summary'),G('/fusion/data/comfort_predictions'),G('/fusion/data/envelope'),
+    G('/fusion/data/semiactive_ranking'),G('/fusion/data/run_meta'),G('/fusion/scenarios')]);
+  Object.assign(S,{summary,comfort,envelope,semi,meta});
+  S.ids=(sc&&sc.timeseries)||[];S.parsed=S.ids.map(parseId).filter(Boolean);
+  if(S.parsed.length){const f=S.parsed[0];S.fixed={v:f.v,m:f.m,s:f.s};
+    if(!S.parsed.some(p=>p.cls===S.sel.cls&&p.c===S.sel.c&&p.d===S.sel.d)){const b=S.parsed.find(p=>p.cls==='B'&&p.c===1800&&p.d===5)||f;S.sel={cls:b.cls,c:b.c,d:b.d};}}
+  await loadTs();renderAll();
+}
+
+/* ================= helpers ================= */
+const fx=o=>!!(o&&((o.meta&&(o.meta.fixture||o.meta.mock))||o.fixture));
+function badgeFor(objs){const p=objs.filter(Boolean);
+  if(!p.length)return '<span class="eb">No data</span>';
+  return p.some(fx)?'<span class="eb amber">Sample data</span>':'<span class="eb green">Live data</span>';}
+const num=v=>typeof v==='number'&&isFinite(v);
+const fmt=(v,sig=3)=>!num(v)?'–':(v===0?'0':String(Number(v.toPrecision(sig))));
+const pct=(v,d=1)=>!num(v)?'–':(v*100).toFixed(d)+'%';
+const mm=v=>num(v)?v*1000:null;
+const pretty=k=>k.replace(/_/g,' ');
+const empty=(t,h)=>`<div class="empty"><b>${t}</b><span>${h||''}</span></div>`;
+const card=(title,body,cls='',style='',extra='')=>`<section class="card ${cls}" style="${style}"><h3><span>${title}</span>${extra}</h3>${body}</section>`;
+const stat=(label,val,unit,sub,tone='')=>`<section class="card stat ${tone}"><h3><span>${label}</span></h3><div class="v">${val}<small>${unit||''}</small></div><div class="s">${sub||''}</div></section>`;
+const sum=a=>a.reduce((x,y)=>x+(y||0),0);
+function head(n,title,right=''){return `<div class="head"><div><div class="eyebrow">${n} · ${esc(PAGES[+n-1][1])}</div><h1>${title}</h1></div><div>${right}</div></div>`;}
+
+/* ================= canvas charts (no external libs) ================= */
+const charts={};
+function prep(cv){const r=cv.getBoundingClientRect(),d=window.devicePixelRatio||1;cv.width=Math.max(10,Math.round(r.width*d));cv.height=Math.max(10,Math.round(r.height*d));
+  const g=cv.getContext('2d');g.setTransform(d,0,0,d,0,0);return {g,w:r.width,h:r.height};}
+function ticks(a,b,n=5){if(!(b>a)){b=a+1;}const raw=(b-a)/n,p=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/p,s=(f<1.5?1:f<3?2:f<7?5:10)*p;
+  const out=[];for(let v=Math.ceil(a/s)*s;v<=b+s*1e-6;v+=s)out.push(+v.toPrecision(12));return out;}
+const tf=v=>{const a=Math.abs(v);return a===0?'0':(a>=1000||a<0.01)?v.toExponential(1):String(+v.toPrecision(3));};
+function lineChart(id,o){
+  const cv=document.getElementById(id);if(!cv)return;
+  const X=o.x,ser=o.series.filter(s=>s&&s.y),m={l:58,r:12,t:8,b:30};
+  const draw=(hi)=>{const {g,w,h}=prep(cv);g.clearRect(0,0,w,h);
+    const pw=w-m.l-m.r,ph=h-m.t-m.b;let lo=Infinity,up=-Infinity;
+    const scan=a=>a&&a.forEach(v=>{if(num(v)){if(v<lo)lo=v;if(v>up)up=v;}});
+    ser.forEach(s=>scan(s.y));if(o.band){scan(o.band.lo);scan(o.band.hi);}
+    if(!isFinite(lo)){lo=0;up=1;}const pad=(up-lo||1)*.06;lo-=pad;up+=pad;
+    const x0=X[0],x1=X[X.length-1]||1,px=v=>m.l+(v-x0)/((x1-x0)||1)*pw,py=v=>m.t+(1-(v-lo)/(up-lo))*ph;
+    g.font='10px "Space Mono",monospace';g.fillStyle='#6a6a6a';g.strokeStyle='rgba(255,255,255,.06)';g.lineWidth=1;
+    ticks(lo,up,5).forEach(t=>{const y=py(t);g.beginPath();g.moveTo(m.l,y);g.lineTo(w-m.r,y);g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(tf(t),m.l-8,y);});
+    ticks(x0,x1,7).forEach(t=>{const x=px(t);g.beginPath();g.moveTo(x,m.t);g.lineTo(x,h-m.b);g.stroke();g.textAlign='center';g.textBaseline='top';g.fillText(tf(t),x,h-m.b+7);});
+    g.fillStyle='#777';g.textAlign='right';g.textBaseline='bottom';g.fillText(o.xlab||'',w-m.r,h-1);
+    g.save();g.translate(11,m.t+ph/2);g.rotate(-Math.PI/2);g.textAlign='center';g.textBaseline='top';g.fillText(o.ylab||'',0,0);g.restore();
+    g.save();g.beginPath();g.rect(m.l,m.t,pw,ph);g.clip();
+    if(o.band&&o.band.on){g.fillStyle='rgba(232,64,69,.20)';g.beginPath();let st=false;
+      for(let i=0;i<X.length;i++){const v=o.band.hi[i];if(!num(v))continue;st?g.lineTo(px(X[i]),py(v)):(g.moveTo(px(X[i]),py(v)),st=true);}
+      for(let i=X.length-1;i>=0;i--){const v=o.band.lo[i];if(num(v))g.lineTo(px(X[i]),py(v));}g.closePath();g.fill();}
+    if(o.marks){const by=h-m.b;o.marks.forEach(k=>{g.fillStyle=k.color;for(let i=0;i<X.length;i++)if(k.a[i])g.fillRect(px(X[i])-.5,by-k.h-k.off,Math.max(1,pw/X.length),k.h);});}
+    ser.forEach(s=>{if(s.hide)return;g.strokeStyle=s.color;g.lineWidth=s.w||1.4;g.globalAlpha=s.alpha||1;g.beginPath();let pen=false;
+      for(let i=0;i<X.length;i++){const v=s.y[i];if(!num(v)){pen=false;continue;}pen?g.lineTo(px(X[i]),py(v)):(g.moveTo(px(X[i]),py(v)),pen=true);}g.stroke();g.globalAlpha=1;});
+    g.restore();
+    if(hi!=null&&hi>=0){const x=px(X[hi]);g.strokeStyle='rgba(255,255,255,.3)';g.beginPath();g.moveTo(x,m.t);g.lineTo(x,h-m.b);g.stroke();
+      const lines=[`t = ${fmt(X[hi],4)}`].concat(ser.filter(s=>!s.hide).map(s=>`${s.label}: ${num(s.y[hi])?fmt(s.y[hi],3):'gap'}`));
+      g.font='11px "Space Mono",monospace';const tw=Math.max(...lines.map(l=>g.measureText(l).width))+16,th=lines.length*15+10;
+      let bx=x+12;if(bx+tw>w-m.r)bx=x-12-tw;g.fillStyle='rgba(20,20,20,.94)';g.strokeStyle='rgba(255,255,255,.18)';g.beginPath();g.roundRect?g.roundRect(bx,m.t+6,tw,th,6):g.rect(bx,m.t+6,tw,th);g.fill();g.stroke();
+      g.textAlign='left';g.textBaseline='top';lines.forEach((l,i)=>{g.fillStyle=i?(ser.filter(s=>!s.hide)[i-1].color):'#aaa';g.fillText(l,bx+8,m.t+12+i*15);});}
+  };
+  draw(null);
+  cv.onmousemove=e=>{const r=cv.getBoundingClientRect(),f=(e.clientX-r.left-m.l)/(r.width-m.l-m.r);if(f<0||f>1)return draw(null);draw(Math.round(f*(X.length-1)));};
+  cv.onmouseleave=()=>draw(null);charts[id]=()=>draw(null);
+}
+function scatter(id,pts,xl,yl){
+  const cv=document.getElementById(id);if(!cv)return;
+  const {g,w,h}=prep(cv),m={l:52,r:12,t:8,b:30},pw=w-m.l-m.r,ph=h-m.t-m.b;
+  let lo=Infinity,up=-Infinity;pts.forEach(p=>{lo=Math.min(lo,p.x,p.y);up=Math.max(up,p.x,p.y);});const pad=(up-lo||1)*.08;lo-=pad;up+=pad;
+  const px=v=>m.l+(v-lo)/(up-lo)*pw,py=v=>m.t+(1-(v-lo)/(up-lo))*ph;
+  g.font='10px "Space Mono",monospace';g.fillStyle='#6a6a6a';g.strokeStyle='rgba(255,255,255,.06)';
+  ticks(lo,up,5).forEach(t=>{g.beginPath();g.moveTo(m.l,py(t));g.lineTo(w-m.r,py(t));g.stroke();g.beginPath();g.moveTo(px(t),m.t);g.lineTo(px(t),h-m.b);g.stroke();
+    g.textAlign='right';g.textBaseline='middle';g.fillText(tf(t),m.l-7,py(t));g.textAlign='center';g.textBaseline='top';g.fillText(tf(t),px(t),h-m.b+7);});
+  g.strokeStyle='rgba(255,255,255,.35)';g.setLineDash([5,4]);g.beginPath();g.moveTo(px(lo),py(lo));g.lineTo(px(up),py(up));g.stroke();g.setLineDash([]);
+  pts.forEach(p=>{g.fillStyle=p.c;g.globalAlpha=.75;g.beginPath();g.arc(px(p.x),py(p.y),p.r||3,0,7);g.fill();});g.globalAlpha=1;
+  g.fillStyle='#777';g.textAlign='right';g.textBaseline='bottom';g.fillText(xl,w-m.r,h-1);
+  g.save();g.translate(11,m.t+ph/2);g.rotate(-Math.PI/2);g.textAlign='center';g.textBaseline='top';g.fillText(yl,0,0);g.restore();
+}
+
+/* ================= time-series data for a channel ================= */
+function chData(key){const c=CH[key],ts=S.ts;if(!ts||!ts.t)return null;const k=c.scale||1;
+  const g=(grp,n)=>n&&ts[grp]&&ts[grp][n]?ts[grp][n].map(v=>v==null?null:v*k):null;
+  const truth=g('truth',c.truth),raw=g('raw',c.raw),fused=g('fused',c.fused),sg=g('sigma',c.fused);
+  const band=fused&&sg?{lo:fused.map((v,i)=>v-2*sg[i]),hi:fused.map((v,i)=>v+2*sg[i]),on:S.vis.band}:null;
+  return {t:ts.t,unit:c.unit,truth,raw,fused,band};}
+function drawChannel(id){
+  const d=chData(S.ch);if(!d)return;
+  const fl=S.ts.flags||{};
+  lineChart(id,{x:d.t,xlab:'Time (s)',ylab:`${CH[S.ch].label.toLowerCase()} (${d.unit})`,band:d.band,
+    series:[d.raw&&{y:d.raw,color:'#9a9a9a',w:1,alpha:.7,label:'raw',hide:!S.vis.raw},d.truth&&{y:d.truth,color:'#ffffff',w:1.5,label:'truth',hide:!S.vis.truth},
+            d.fused&&{y:d.fused,color:'#E84045',w:1.6,label:'fused',hide:!S.vis.fused}],
+    marks:[fl.dropout&&{a:fl.dropout,color:'rgba(245,185,66,.8)',h:4,off:0},fl.anomaly_rejected&&{a:fl.anomaly_rejected,color:'rgba(255,255,255,.55)',h:4,off:5}].filter(Boolean)});
+}
+const legend=()=>{const a=[['truth','#ffffff','truth'],['raw','#9a9a9a','raw'],['fused','#E84045','fused'],['band','rgba(232,64,69,.5)','fused ± 2σ']];
+  return `<div class="legend">${a.map(([k,c,l])=>`<button class="lg ${S.vis[k]?'':'off'}" data-vis="${k}" style="--c:${c}"><i></i>${l}</button>`).join('')}</div>`;};
+const chChips=()=>`<div class="chips">${Object.entries(CH).map(([k,c])=>`<button class="chip ${S.ch===k?'on':''}" data-ch="${k}">${c.label}</button>`).join('')}</div>`;
+
+/* ================= derived values for the selected scenario ================= */
+function runInfo(){const ts=S.ts;if(!ts)return null;const n=ts.t.length,fl=ts.flags||{};
+  const rej=sum(fl.anomaly_rejected||[]),dr=sum(fl.dropout||[]),m=ts.metrics||{},sc=ts.scenario||{};
+  return {n,rej,dr,dur:ts.t[n-1]-ts.t[0],fs:ts.fs_hz,m,sc};}
+function compRow(){const id=curId();const r=S.comfort&&S.comfort.rows;return id&&r?r.find(x=>x.scenario_id===id)||null:null;}
+const groupId=()=>S.sel.cls?`r${S.sel.cls}_v${S.fixed.v}_m${S.fixed.m}_d${S.sel.d}`:null;
+
+/* ================= pages ================= */
+const P={};
+P.overview=()=>{
+  const ri=runInfo(),sm=S.summary,m=ri&&ri.m,cr=compRow(),env=S.envelope;
+  const tf_=m&&m.rmse_fused&&m.rmse_fused.susp_travel_m,tr_=m&&m.rmse_raw&&m.rmse_raw.susp_travel_m;
+  const ratio=num(tf_)&&num(tr_)&&tr_>0?tf_/tr_:null;
+  const cov=sm&&sm.consistency&&sm.consistency.within_2sigma_frac&&sm.consistency.within_2sigma_frac.susp_travel_m;
+  const ood=env&&env.ood_detection_rate;
+  const k=[
+    stat('Travel error · fused',fmt(mm(tf_)),'mm',ratio==null?'this run':`raw ${fmt(mm(tr_))} mm · ×${fmt(ratio,2)} of raw`,ratio==null?'':(ratio<1?'good':'bad')),
+    stat('Road height error',fmt(mm(m&&m.rmse_fused&&m.rmse_fused.road_height_m)),'mm','this run · no raw sensor'),
+    stat('Truth inside ±2σ',num(cov)?pct(cov,1):'–','','travel · all runs · target ≈ 95%',num(cov)?(cov>=.9&&cov<=.99?'good':'warn'):''),
+    stat('Samples rejected',ri?pct(ri.rej/ri.n,1):'–','',ri?`${ri.rej} of ${ri.n} · dropout ${ri.dr}`:'this run',ri&&ri.rej/ri.n>.1?'warn':''),
+    stat('Comfort prediction',cr?fmt(cr.comfort_pred,3):'–',cr?'m/s²':'',cr?`90% ${fmt(cr.lo,3)} – ${fmt(cr.hi,3)} · ${cr.supported?'supported':'UNSUPPORTED'}`:'no prediction row',cr&&!cr.supported?'bad':''),
+    stat('Unsupported detected',num(ood)?(ood<=1?pct(ood,0):fmt(ood)):'–','','out-of-range scenarios flagged')
+  ].join('');
+  const params=ri?`<dl class="kv"><dt>Road class</dt><dd>${esc(ri.sc.road_class)}</dd><dt>Speed</dt><dd>${fmt(ri.sc.speed_mps)} m/s</dd><dt>Sprung mass</dt><dd>${fmt(ri.sc.ms_kg)} kg</dd>
+    <dt>Damping c</dt><dd>${fmt(ri.sc.c_nsm)} N·s/m</dd><dt>Dropout target</dt><dd>${fmt(ri.sc.dropout_pct)}%</dd><dt>Dropout measured</dt><dd>${num(m.dropout_frac)?pct(m.dropout_frac,1):'–'}</dd>
+    <dt>Seed</dt><dd>${esc(ri.sc.seed)}</dd><dt>Duration · rate</dt><dd>${fmt(ri.dur)} s · ${ri.fs} Hz</dd><dt>Physics comfort p</dt><dd>${fmt(m.p_phys)}</dd><dt>Reference y</dt><dd>${fmt(m.y_ref)}</dd></dl>`:empty('No scenario','start the backend and run the matrix');
+  return head('1','Can you trust <b>the twin?</b>',badgeFor([S.ts,sm,S.comfort,env]))+
+   `<div class="body" style="grid-template-rows:auto minmax(0,1fr);grid-template-columns:repeat(6,minmax(0,1fr))">${k}
+    ${card(`${CH[S.ch].label} · truth vs fused`,S.ts?`<div class="fill"><canvas id="cv-main"></canvas></div>`:empty('No time series','run fusion_cli matrix, then Refresh'),'','grid-column:1/5',chChips())}
+    ${card('Scenario parameters',params,'','grid-column:5/7')}</div>`;
+};
+P.signals=()=>{
+  const ri=runInfo(),f=S.liveForm;
+  const stats=ri?`<dl class="kv"><dt>Samples</dt><dd>${ri.n}</dd><dt>Rate</dt><dd>${ri.fs} Hz</dd><dt>Duration</dt><dd>${fmt(ri.dur)} s</dd><dt>Rejected</dt><dd>${ri.rej}</dd><dt>Dropout samples</dt><dd>${ri.dr}</dd>
+    <dt>Source</dt><dd>${S.live?'live run':'stored'}</dd></dl>`:'<div class="msg">no run loaded</div>';
+  const form=`<div class="form"><label class="wide">Road class<select id="f-cls">${['A','B','C','D'].map(x=>`<option ${f.road_class===x?'selected':''}>${x}</option>`).join('')}</select></label>
+    <label>Speed m/s<input id="f-v" type="number" value="${f.speed_mps}"></label><label>Mass kg<input id="f-m" type="number" value="${f.ms_kg}"></label>
+    <label>Damping<input id="f-c" type="number" value="${f.c_nsm}"></label><label>Dropout %<input id="f-d" type="number" value="${f.dropout_pct}"></label>
+    <label>Seed<input id="f-s" type="number" value="${f.seed}"></label><label>Duration s<input id="f-t" type="number" value="${f.duration_s}"></label>
+    <button class="btn solid wide" id="runlive">Run live scenario</button><div class="msg wide ${S.liveMsg.startsWith('!')?'err':''}" id="livemsg">${esc(S.liveMsg.replace(/^!/,''))}</div>
+    ${S.live?'<button class="btn wide" id="backstored">Back to stored run</button>':''}</div>`;
+  return head('2','Raw sensors <b>vs fused estimate</b>',badgeFor([S.ts]))+
+   `<div class="body" style="grid-template-columns:minmax(0,1fr) clamp(220px,19vw,290px);grid-template-rows:minmax(0,1fr) auto">
+    ${card('Scenario time series',S.ts?`<div class="fill"><canvas id="cv-main"></canvas></div>`:empty('No time series','nothing loaded for this selection'),'','grid-row:1/3',chChips()+legend())}
+    ${card('This run',stats,'','')}
+    ${card('Live run · POST /fusion/run',form,'','')}</div>`;
+};
+P.comfort=()=>{
+  const cr=compRow(),cm=S.comfort,mt=cm&&cm.meta&&cm.meta.metrics;
+  const cards=cr?`<div class="stat"><div class="s">PHYSICS p</div><div class="v">${fmt(cr.p_phys)}<small>m/s²</small></div></div>
+     <div class="stat"><div class="s">ML-CORRECTED</div><div class="v" style="color:var(--red)">${fmt(cr.comfort_pred)}<small>m/s²</small></div></div>
+     <div class="stat"><div class="s">90% INTERVAL</div><div class="v" style="font-size:1.5em">${fmt(cr.lo)} – ${fmt(cr.hi)}</div></div>
+     <div class="stat"><div class="s">REFERENCE y</div><div class="v">${fmt(cr.y_ref)}<small>m/s²</small></div></div>
+     <div class="stat"><div class="s">RESIDUAL y − pred</div><div class="v">${fmt(cr.residual)}<small>m/s²</small></div></div>
+     <div><span class="tag ${cr.supported?'good':'bad'}">${cr.supported?'Supported':'Unsupported'}</span></div>`
+    :empty(cm?'No row for this scenario':'No predictions','only scenarios present in comfort_predictions.json can be shown');
+  const rows=cm&&cm.rows?cm.rows.filter(r=>r.split==='test').length?cm.rows.filter(r=>r.split==='test'):cm.rows:[];
+  const met=mt?`<dl class="kv"><dt>MAE physics only</dt><dd>${fmt(mt.mae_physics_only)}</dd><dt>MAE linear</dt><dd>${fmt(mt.mae_linear)}</dd><dt>MAE ML</dt><dd>${fmt(mt.mae_ml)}</dd>
+    <dt>Interval coverage</dt><dd>${num(mt.interval_coverage)?pct(mt.interval_coverage,1):'–'}</dd><dt>Test rows</dt><dd>${esc(mt.n_test??'–')}</dd><dt>Model</dt><dd>${esc(cm.meta.model||'–')}</dd></dl>`:empty('No metrics','');
+  return head('3','Predicted comfort, <b>with confidence</b>',badgeFor([cm,S.envelope]))+
+   `<div class="body" style="grid-template-columns:clamp(240px,22vw,320px) minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto">
+    ${card('Selected scenario',`<div style="display:flex;flex-direction:column;gap:.9em;justify-content:space-between;flex:1">${cards}</div>`,'','grid-row:1/3')}
+    ${card('Predicted vs reference · test split',rows.length?`<div class="fill"><canvas id="cv-scatter"></canvas></div>`:empty('No predictions','run ml/train.py'),'','',
+      '<span class="tag">● supported &nbsp; ○ unsupported</span>')}
+    ${card('Model quality',met,'','')}</div>`;
+};
+P.validation=()=>{
+  const sm=S.summary;if(!sm)return head('4','Errors, consistency <b>and detection</b>',badgeFor([]))+`<div class="body">${card('Validation',empty('No fusion_summary.json','run the matrix'))}</div>`;
+  const NAMES={susp_travel_m:['Suspension travel',1000,'mm'],body_vel_mps:['Body velocity',1,'m/s'],wheel_vel_mps:['Wheel velocity',1,'m/s'],road_height_m:['Road height',1000,'mm']};
+  const cell=(o,k)=>o&&num(o.mean)?fmt(o.mean*k):'–';
+  const rows=Object.entries(NAMES).map(([s,[nm,k,u]])=>{const e=(sm.state_rmse||{})[s]||{};
+    const best=Math.min(...['raw','open_loop'].map(x=>e[x]&&num(e[x].mean)?e[x].mean:Infinity));const f=e.fused&&e.fused.mean;
+    const r=isFinite(best)&&num(f)?f/best:null;const w=r==null?0:Math.min(100,r*50);
+    return `<tr><td>${nm} <span style="color:var(--faint)">${u}</span></td><td>${cell(e.raw,k)}</td><td>${cell(e.open_loop,k)}</td><td style="color:${r!=null&&r<1?'var(--green)':'var(--red)'}">${cell(e.fused,k)}</td>
+      <td style="width:26%"><div class="bar"><i class="${r!=null&&r<1?'g':''}" style="width:${w}%"></i></div></td></tr>`;}).join('');
+  const w2=(sm.consistency&&sm.consistency.within_2sigma_frac)||{};
+  const cons=Object.keys(NAMES).map(s=>{const v=w2[s];return `<div style="display:grid;grid-template-columns:8.5em 1fr 3.6em;gap:.7em;align-items:center;margin:.35em 0"><span style="color:var(--dim)">${NAMES[s][0]}</span>
+    <div class="bar"><i class="${num(v)&&v>=.9&&v<=.99?'g':''}" style="width:${num(v)?v*100:0}%"></i></div><span class="mono" style="text-align:right">${num(v)?pct(v,0):'–'}</span></div>`;}).join('');
+  const det=sm.detection||{},dl=(sm.delay_estimation||[]).slice(0,5);
+  const dt=`<div style="display:flex;gap:.6em;flex-wrap:wrap;margin-bottom:.7em">${['anomaly','dropout'].map(k=>`<span class="tag">${k} · P ${num(det[k]&&det[k].precision)?fmt(det[k].precision,2):'–'} · R ${num(det[k]&&det[k].recall)?fmt(det[k].recall,2):'–'}</span>`).join('')}</div>
+    <table><tr><th>Channel</th><th>Injected</th><th>Estimated</th></tr>${dl.map(d=>`<tr><td>${esc(d.channel)}</td><td>${fmt(d.injected_ms)} ms</td><td>${fmt(d.estimated_ms)} ms</td></tr>`).join('')||''}</table>`;
+  return head('4','Errors, consistency <b>and detection</b>',badgeFor([sm]))+
+   `<div class="body" style="grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,1fr)">
+    ${card('State error · RMSE mean over runs',`<table><tr><th>State</th><th>Raw</th><th>Open-loop</th><th>Fused</th><th>Fused vs best</th></tr>${rows}</table>`)}
+    ${card('Truth inside fused ±2σ · target ≈ 90–98%',cons)}
+    ${card('Fused RMSE vs sensor dropout',(sm.dropout_sweep||[]).length?`<div class="fill"><canvas id="cv-sweep"></canvas></div>`:empty('No sweep',''))}
+    ${card('Detection and delay estimation',dt)}</div>`;
+};
+P.envelope=()=>{
+  const e=S.envelope,sm=S.semi;
+  let cards='';
+  if(e){const known=['mahalanobis_threshold','ood_detection_rate'];const ex=[];
+    Object.entries(e).forEach(([k,v])=>{if(num(v)&&!known.includes(k))ex.push([k,v]);});Object.entries(e.meta||{}).forEach(([k,v])=>{if(num(v))ex.push([k,v]);});
+    const pv=(k,v)=>/rate|detect|false|fp/i.test(k)&&v<=1?pct(v,1):fmt(v);
+    const list=[['ood_detection_rate',e.ood_detection_rate],['mahalanobis_threshold',e.mahalanobis_threshold]].concat(ex).filter(x=>num(x[1])).slice(0,5);
+    cards=list.map(([k,v])=>stat(pretty(k),pv(k,v),'','')).join('');}
+  const feats=e&&e.features?e.features.slice(0,6):[],ood=e&&e.ood_results?e.ood_results.slice(0,6):[];
+  const ft=feats.length?`<table><tr><th>Feature</th><th>Min</th><th>Max</th></tr>${feats.map(f=>`<tr><td>${esc(f.name)}</td><td>${fmt(f.min)}</td><td>${fmt(f.max)}</td></tr>`).join('')}</table>`:'';
+  const ot=ood.length?`<table style="margin-top:.5em"><tr><th>Out-of-range test</th><th>Flagged</th><th>Why</th></tr>${ood.map(o=>`<tr><td style="font-family:var(--mono);font-size:.8em">${esc(o.scenario_id)}</td><td style="color:${o.flagged?'var(--green)':'var(--red)'}">${o.flagged?'yes':'no'}</td><td>${esc(o.reason)}</td></tr>`).join('')}</table>`:'';
+  const g=sm&&sm.groups?sm.groups.find(x=>x.group_id===groupId()):null;
+  let damp;
+  if(!sm)damp=empty('No semiactive_ranking.json','run ml/train.py');
+  else if(!g)damp=empty('No group for this scenario',esc(groupId()||''));
+  else{const vals=g.options.flatMap(o=>[o.lo,o.hi,o.comfort_pred]).filter(num),a=Math.min(...vals),b=Math.max(...vals),p=v=>((v-a)/((b-a)||1))*92+4;
+    damp=`<div style="flex:1;display:flex;flex-direction:column;justify-content:center">${g.options.map(o=>`<div class="opt ${o.preset===g.recommended?'rec':''}"><div class="nm">${esc(o.preset)}<small>c = ${fmt(o.c_nsm)}</small></div>
+      <div class="track"><div class="w" style="left:${p(o.lo)}%;width:${Math.max(1,p(o.hi)-p(o.lo))}%"></div><div class="d" style="left:${p(o.comfort_pred)}%"></div></div>
+      <div class="st">${fmt(o.comfort_pred)} m/s²<br>${o.feasible?'<span style="color:var(--green)">feasible</span>':'<span style="color:var(--red)">'+esc((o.violations||[]).join(', ')||'infeasible')+'</span>'}</div></div>`).join('')}</div>
+      <div style="margin-top:.6em">${g.recommended?`<span class="tag good">Recommended: ${esc(g.recommended)}</span>`:`<span class="tag warn">${esc(g.note||'no recommendation')}</span>`}</div>`;}
+  return head('5','Is it supported, <b>and which damping?</b>',badgeFor([e,sm]))+
+   `<div class="body" style="grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:auto minmax(0,1fr)">
+    ${cards||`<div style="grid-column:1/6">${card('Operating envelope',empty('No envelope.json','run ml/train.py'))}</div>`}
+    ${card('Training coverage and out-of-range tests',(ft+ot)||empty('No data',''),'','grid-column:1/3')}
+    ${card(`Damping options · ${esc(groupId()||'')}`,damp,'','grid-column:3/6','<span class="tag">● prediction &nbsp;━ 90% interval</span>')}</div>`;
+};
+P.model=()=>{
+  const m=S.meta,v=m&&m.vehicle,se=(m&&m.sensors)||[],fl=m&&m.filter;
+  const lim=['Simulated data only. No measured vehicle data was used.','Quarter-car (2-DOF) model: no roll, pitch or lateral coupling.','Body acceleration is the comfort proxy. Seat transmissibility is not modelled.',
+    'The filter uses a linear nominal twin. The "real" plant is synthetic: perturbed springs, tyres and an asymmetric damper.','Sensor noise, bias and delay values are assumed typical values, not measured.','No validation against a real vehicle. Results show the method, not a vehicle claim.'];
+  const left=`<ul class="list">${lim.map((t,i)=>`<li data-n="0${i+1}"><span>${esc(t)}</span></li>`).join('')}</ul>`;
+  const vt=v?`<dl class="kv">${Object.entries(v).filter(([k,x])=>num(x)).map(([k,x])=>`<dt>${pretty(k)}</dt><dd>${fmt(x)}</dd>`).join('')}</dl>`:empty('No run_meta.json','');
+  const st=se.length?`<table><tr><th>Channel</th><th>Rate</th><th>σ</th><th>Bias</th><th>Delay</th></tr>${se.slice(0,6).map(s=>`<tr><td>${esc(s.channel)}</td><td>${fmt(s.rate_hz)} Hz</td><td>${fmt(s.sigma)}</td><td>${fmt(s.bias)}</td><td>${fmt(s.delay_ms)} ms</td></tr>`).join('')}</table>`:'';
+  return head('6','What this model <b>is, and is not</b>',badgeFor([m]))+
+   `<div class="body" style="grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,1fr)">
+    ${card('Assumptions and limits',left,'','grid-row:1/3')}
+    ${card('Nominal vehicle (run_meta)',vt)}
+    ${card('Simulated sensors',st||empty('No sensor spec',''))}</div>`;
+};
+
+/* ================= render ================= */
+function drawCharts(){
+  if(S.page==='overview'||S.page==='signals')drawChannel('cv-main');
+  if(S.page==='comfort'){const cm=S.comfort,rows=cm&&cm.rows?(cm.rows.some(r=>r.split==='test')?cm.rows.filter(r=>r.split==='test'):cm.rows):[];
+    if(rows.length)scatter('cv-scatter',rows.map(r=>({x:r.y_ref,y:r.comfort_pred,c:r.supported?'#E84045':'#8d8d8d',r:r.scenario_id===curId()?6:3})),'reference y (m/s²)','predicted (m/s²)');}
+  if(S.page==='validation'&&S.summary&&(S.summary.dropout_sweep||[]).length){const sw=[...S.summary.dropout_sweep].sort((a,b)=>a.dropout_pct-b.dropout_pct),cols={susp_travel_m:'#E84045',body_vel_mps:'#ffffff',wheel_vel_mps:'#9a9a9a',road_height_m:'#f5b942'};
+    lineChart('cv-sweep',{x:sw.map(s=>s.dropout_pct),xlab:'sensor dropout (%)',ylab:'fused RMSE (SI units)',series:Object.entries(cols).map(([k,c])=>({y:sw.map(s=>s.fused_rmse&&num(s.fused_rmse[k])?s.fused_rmse[k]:null),color:c,w:2,label:k.replace(/_(m|mps)$/,'')}))});}
+}
+function renderRail(){
+  $('#nav').innerHTML=PAGES.map(([k,t,d],i)=>`<button data-page="${k}" class="${S.page===k?'on':''}"><i>0${i+1}</i><span>${t}</span><em>${d}</em></button>`).join('');
+  const av=(key,def)=>{const s=[...new Set(S.parsed.map(p=>p[key]))].sort((a,b)=>a>b?1:-1);return s.length?s:def;};
+  const mk=(el,key,def,fmtv)=>{const vals=av(key,def);$(el).innerHTML=vals.map(v=>`<button class="chip ${S.sel[el==='#c-cls'?'cls':el==='#c-c'?'c':'d']===v?'on':''} ${S.parsed.length?'':'dis'}" data-sel="${key}" data-val="${v}">${fmtv?fmtv(v):v}</button>`).join('');};
+  mk('#c-cls','cls',['A','B','C']);mk('#c-c','c',[1000,1800,3000]);mk('#c-d','d',[0,5,20],v=>v+'%');
+  $('#fixed').innerHTML=S.parsed.length?`stored runs are fixed at<br><b>speed</b> ${S.fixed.v} m/s · <b>mass</b> ${S.fixed.m} kg<br><b>seed</b> ${S.fixed.s} · use “Run live” for others`:'no stored runs found';
+  const id=S.live?'live run':curId();$('#sid').innerHTML=id?`<b>${esc(id)}</b>`:'no scenario';
+}
+function renderAll(){
+  renderRail();$('#stage').innerHTML=P[S.page]();
+  const any=[S.ts,S.summary,S.comfort,S.envelope,S.semi,S.meta];$('#badge').innerHTML=badgeFor(any);
+  requestAnimationFrame(drawCharts);
+}
+
+/* ================= events ================= */
+document.addEventListener('click',async e=>{
+  const t=e.target.closest('[data-page],[data-sel],[data-ch],[data-vis],#runlive,#backstored,#refresh,#exit');if(!t)return;
+  if(t.dataset.page){S.page=t.dataset.page;renderAll();}
+  else if(t.dataset.sel){const k=t.dataset.sel,v=k==='cls'?t.dataset.val:+t.dataset.val,key=k;S.sel[key]=v;
+    if(!curId()){const alt=S.parsed.find(p=>p[key]===v);if(alt)S.sel={cls:alt.cls,c:alt.c,d:alt.d};}await loadTs();renderAll();}
+  else if(t.dataset.ch){S.ch=t.dataset.ch;renderAll();}
+  else if(t.dataset.vis){S.vis[t.dataset.vis]=!S.vis[t.dataset.vis];renderAll();}
+  else if(t.id==='refresh')loadAll();
+  else if(t.id==='backstored'){await loadTs();S.liveMsg='';renderAll();}
+  else if(t.id==='exit'){const b=qs.get('back');if(b)location.href=b;else if(document.referrer)location.href=document.referrer;else history.back();}
+  else if(t.id==='runlive'){
+    const f={road_class:$('#f-cls').value,speed_mps:+$('#f-v').value,ms_kg:+$('#f-m').value,c_nsm:+$('#f-c').value,dropout_pct:+$('#f-d').value,seed:Math.max(0,Math.floor(+$('#f-s').value)),duration_s:+$('#f-t').value};
+    S.liveForm=f;const bad=!(f.speed_mps>0)?'speed must be > 0':!(f.ms_kg>=100&&f.ms_kg<=1500)?'mass must be 100–1500 kg':!(f.c_nsm>0)?'damping must be > 0':!(f.dropout_pct>=0&&f.dropout_pct<=50)?'dropout must be 0–50 %':!(f.duration_s>=5&&f.duration_s<=60)?'duration must be 5–60 s':'';
+    if(bad){S.liveMsg='!'+bad;return renderAll();}
+    S.liveMsg='running…';renderAll();
+    try{const r=await fetch(API+'/fusion/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(f)});const j=await r.json();
+      if(!r.ok){S.liveMsg='!'+(j.error||('error '+r.status));}else{S.ts=j;S.live=true;S.liveMsg='done';}}
+    catch(err){S.liveMsg='!backend not reachable';}renderAll();
+  }
+});
+document.addEventListener('keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;const i=+e.key;if(i>=1&&i<=PAGES.length){S.page=PAGES[i-1][0];renderAll();}});
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(drawCharts,120);});
+loadAll();
+</script>
+</body>
+</html>
