@@ -19,7 +19,7 @@ use rand_chacha::ChaCha8Rng;
 use serde::{Deserialize, Serialize};
 use nalgebra::SVector;
 
-use config::{VehicleConfig, SensorConfig, road_class_gd};
+use config::{VehicleConfig, SensorConfig, MatrixConfig, road_class_gd};
 use export::round_sig;
 
 /// Scenario specification — CONTRACTS §5.
@@ -143,10 +143,47 @@ pub struct RmseRaw {
     pub susp_travel_m: f64,
 }
 
+/// One CSV row of out/comfort_dataset.csv. Field order = CSV column order.
+#[derive(Serialize, Clone, Debug)]
+pub struct DatasetRow {
+    pub scenario_id: String,
+    pub split: String,
+    pub road_class: String,
+    pub speed_mps: f64,
+    pub ms_kg: f64,
+    pub preset: String,
+    pub c_nsm: f64,
+    pub dropout_pct: f64,
+    pub seed: u64,
+    pub p_phys: f64,
+    pub y_ref: f64,
+    pub cov_trace: f64,
+    pub dropout_frac: f64,
+    pub band_lo: f64,
+    pub band_mid: f64,
+    pub band_hi: f64,
+    pub rms_tyre_force_n: f64,
+    pub max_travel_mm: f64,
+    pub bottom_out: u8,
+}
+
 /// Run a complete fusion scenario.
 ///
 /// CONTRACTS §5: `run_scenario(&ScenarioSpec) -> Result<ScenarioResult>`
 pub fn run_scenario(spec: &ScenarioSpec) -> Result<ScenarioResult> {
+    run_scenario_full(spec).map(|(r, _)| r)
+}
+
+/// Same as `run_scenario`, but also returns the CSV dataset row.
+/// `DatasetRow::split` is left empty; the caller sets it ("train" | "test" | "ood").
+pub fn run_scenario_full(spec: &ScenarioSpec) -> Result<(ScenarioResult, DatasetRow)> {
+    run_scenario_diag(spec).map(|(r, row, _)| (r, row))
+}
+
+/// Same as `run_scenario_full`, plus per-run metrics/delays for out/fusion_summary.json.
+pub fn run_scenario_diag(
+    spec: &ScenarioSpec,
+) -> Result<(ScenarioResult, DatasetRow, metrics::RunStats)> {
     // Validate inputs
     if !["A", "B", "C", "D"].contains(&spec.road_class.as_str()) {
         bail!("Invalid road class: {}", spec.road_class);
@@ -292,7 +329,7 @@ pub fn run_scenario(spec: &ScenarioSpec) -> Result<ScenarioResult> {
         body_vel_mps: decimate_round(&truth.vs, output_decimate, n_out),
         wheel_vel_mps: decimate_round(&truth.vu, output_decimate, n_out),
         road_height_m: decimate_round(&truth.zr, output_decimate, n_out),
-        body_acc_mps2: decimate_round(&fused_body_acc, output_decimate, n_out),
+        body_acc_mps2: decimate_round(&plant_perturbed.body_acc, decimate_plant * output_decimate, n_out),
     };
 
     let raw_out = RawBlock {
@@ -337,7 +374,39 @@ pub fn run_scenario(spec: &ScenarioSpec) -> Result<ScenarioResult> {
 
     let scenario_id = spec.scenario_id();
 
-    Ok(ScenarioResult {
+    // ── 9. Dataset row (CSV) ──
+    let max_travel_mm = max_travel_m * 1000.0;
+    let bottom_out: u8 = if max_travel_mm > vehicle.travel_limit_mm { 1 } else { 0 };
+    let row_dropout_frac = dropout_detected
+        .iter()
+        .zip(anomaly_detected.iter())
+        .filter(|(d, a)| **d || **a)
+        .count() as f64
+        / n_fusion as f64;
+
+    let row = DatasetRow {
+        scenario_id: scenario_id.clone(),
+        split: String::new(), // caller sets: "train" | "test" | "ood"
+        road_class: spec.road_class.clone(),
+        speed_mps: spec.speed_mps,
+        ms_kg: spec.ms_kg,
+        preset: preset.to_string(),
+        c_nsm: spec.c_nsm,
+        dropout_pct: spec.dropout_pct,
+        seed: spec.seed,
+        p_phys: round_sig(p_phys, 5),
+        y_ref: round_sig(y_ref, 5),
+        cov_trace: round_sig(mean_cov_trace, 5),
+        dropout_frac: round_sig(row_dropout_frac, 5),
+        band_lo: round_sig(band_lo, 5),
+        band_mid: round_sig(band_mid, 5),
+        band_hi: round_sig(band_hi, 5),
+        rms_tyre_force_n: round_sig(rms_tyre, 5),
+        max_travel_mm: round_sig(max_travel_mm, 5),
+        bottom_out,
+    };
+
+    let result = ScenarioResult {
         fixture: false,
         scenario_id,
         scenario: ScenarioInfo {
@@ -371,7 +440,90 @@ pub fn run_scenario(spec: &ScenarioSpec) -> Result<ScenarioResult> {
             y_ref: round_sig(y_ref, 5),
             dropout_frac: round_sig(dropout_frac, 5),
         },
-    })
+    };
+
+    let stats = metrics::RunStats {
+        dropout_pct: spec.dropout_pct,
+        seed: spec.seed,
+        m: scenario_metrics,
+        delays: sync_out.estimated_delays,
+    };
+    Ok((result, row, stats))
+}
+
+/// Load the scenario matrix from a TOML file.
+pub fn load_matrix(path: &str) -> Result<MatrixConfig> {
+    let text = std::fs::read_to_string(path)?;
+    Ok(toml::from_str(&text)?)
+}
+
+/// Run every scenario in the matrix (train, test, ood) and write
+/// out/comfort_dataset.csv (or any path). Row order is deterministic.
+pub fn write_dataset_csv(matrix: &MatrixConfig, out_path: &str) -> Result<()> {
+    use rayon::prelude::*;
+
+    let mut jobs: Vec<(&'static str, ScenarioSpec)> = Vec::new();
+    for rc in &matrix.road_classes {
+        for &v in &matrix.speeds_mps {
+            for &m in &matrix.loads_kg {
+                for p in &matrix.presets {
+                    for &d in &matrix.dropout_pcts {
+                        for (split, seeds) in [("train", &matrix.seeds_train), ("test", &matrix.seeds_test)] {
+                            for &seed in seeds.iter() {
+                                jobs.push((split, ScenarioSpec {
+                                    road_class: rc.clone(),
+                                    speed_mps: v,
+                                    ms_kg: m,
+                                    c_nsm: p.c_nsm,
+                                    dropout_pct: d,
+                                    seed,
+                                    duration_s: matrix.duration_s,
+                                    k_nm: None,
+                                    mu_kg: None,
+                                    kt_nm: None,
+                                }));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if let Some(o) = &matrix.ood {
+        for &seed in &o.seeds {
+            jobs.push(("ood", ScenarioSpec {
+                road_class: o.road_class.clone(),
+                speed_mps: o.speed_mps,
+                ms_kg: o.load_kg,
+                c_nsm: o.c_nsm,
+                dropout_pct: o.dropout_pct,
+                seed,
+                duration_s: matrix.duration_s,
+                k_nm: None,
+                mu_kg: None,
+                kt_nm: None,
+            }));
+        }
+    }
+
+    let rows: Vec<DatasetRow> = jobs
+        .par_iter()
+        .map(|(split, spec)| -> Result<DatasetRow> {
+            let (_, mut row) = run_scenario_full(spec)?;
+            row.split = split.to_string();
+            Ok(row)
+        })
+        .collect::<Result<Vec<_>>>()?;
+
+    if let Some(dir) = std::path::Path::new(out_path).parent() {
+        std::fs::create_dir_all(dir)?;
+    }
+    let mut wtr = csv::Writer::from_path(out_path)?;
+    for row in &rows {
+        wtr.serialize(row)?;
+    }
+    wtr.flush()?;
+    Ok(())
 }
 
 // ── Helper functions ──
@@ -420,7 +572,6 @@ fn decimate_flags(v: &[bool], step: usize, n_out: usize) -> Vec<u8> {
 
 #[cfg(test)]
 mod tests {
-    use serde_json::Value;
     use super::*;
 
     #[test]
@@ -503,5 +654,82 @@ mod tests {
         let j2 = serde_json::to_string(&r2).unwrap();
         assert_eq!(j1, j2, "Same seed must produce byte-identical output");
     }
-}
 
+    #[test]
+    fn dataset_row_matches_csv_contract() {
+        let spec = ScenarioSpec {
+            road_class: "B".into(),
+            speed_mps: 20.0,
+            ms_kg: 440.0,
+            c_nsm: 1800.0,
+            dropout_pct: 20.0,
+            seed: 3,
+            duration_s: 5.0,
+            k_nm: None, mu_kg: None, kt_nm: None,
+        };
+        let (result, mut row) = run_scenario_full(&spec).unwrap();
+        row.split = "train".into();
+
+        // wrapper returns the same ScenarioResult
+        let r2 = run_scenario(&spec).unwrap();
+        assert_eq!(
+            serde_json::to_string(&result).unwrap(),
+            serde_json::to_string(&r2).unwrap()
+        );
+
+        // header must match the contract exactly
+        let mut wtr = csv::Writer::from_writer(Vec::new());
+        wtr.serialize(&row).unwrap();
+        let out = String::from_utf8(wtr.into_inner().unwrap()).unwrap();
+        assert_eq!(
+            out.lines().next().unwrap(),
+            "scenario_id,split,road_class,speed_mps,ms_kg,preset,c_nsm,dropout_pct,seed,p_phys,y_ref,cov_trace,dropout_frac,band_lo,band_mid,band_hi,rms_tyre_force_n,max_travel_mm,bottom_out"
+        );
+
+        // sanity checks on values
+        assert!(row.band_lo >= 0.0 && row.band_mid >= 0.0 && row.band_hi >= 0.0);
+        assert!(row.rms_tyre_force_n > 0.0);
+        assert!(row.max_travel_mm > 0.0);
+        assert!(row.cov_trace.is_finite() && row.cov_trace > 0.0);
+        assert!(row.p_phys.is_finite() && row.y_ref.is_finite());
+        assert!(row.bottom_out <= 1);
+        assert!((0.0..=1.0).contains(&row.dropout_frac));
+        // row counts rejected steps too, so it can't be below the JSON value
+        assert!(row.dropout_frac >= result.metrics.dropout_frac);
+    }
+
+    #[test]
+    fn matrix_writes_csv_with_splits() {
+        let m = MatrixConfig {
+            road_classes: vec!["B".into()],
+            speeds_mps: vec![20.0],
+            loads_kg: vec![440.0],
+            presets: vec![config::MatrixPreset { name: "medium".into(), c_nsm: 1800.0 }],
+            dropout_pcts: vec![5.0],
+            seeds_train: vec![0],
+            seeds_test: vec![100],
+            duration_s: 5.0,
+            ood: Some(config::OodConfig {
+                road_class: "D".into(),
+                speed_mps: 40.0,
+                load_kg: 700.0,
+                dropout_pct: 25.0,
+                c_nsm: 1800.0,
+                seeds: vec![200],
+            }),
+        };
+        let path = std::env::temp_dir().join("fusion_test_dataset.csv");
+        let path_str = path.to_str().unwrap();
+        write_dataset_csv(&m, path_str).unwrap();
+
+        let text = std::fs::read_to_string(&path).unwrap();
+        let lines: Vec<&str> = text.lines().collect();
+        assert_eq!(lines.len(), 4, "header + train + test + ood");
+        let splits: Vec<&str> = lines[1..]
+            .iter()
+            .map(|l| l.split(',').nth(1).unwrap())
+            .collect();
+        assert_eq!(splits, vec!["train", "test", "ood"]);
+        let _ = std::fs::remove_file(&path);
+    }
+}

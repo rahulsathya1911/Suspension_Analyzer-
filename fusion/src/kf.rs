@@ -78,9 +78,17 @@ impl KfParams {
         q[(1, 1)] = 1e-4;   // vs velocity uncertainty
         q[(2, 2)] = 1e-8;   // zu position uncertainty
         q[(3, 3)] = 1e-4;   // vu velocity uncertainty
-        q[(4, 4)] = 1e-2;   // zr road random walk intensity
+        let q_road = 3e-4;  // zr road random walk intensity; ISO B @ 20 m/s ~ 2.5e-4
+        q[(4, 4)] = q_road;
 
-        Self { ms, mu, k, c, kt, q, q_road: 1e-2, dt }
+        Self { ms, mu, k, c, kt, q, q_road, dt }
+    }
+
+    /// Override the road random-walk intensity (also updates Q[4,4]).
+    pub fn with_road_q(mut self, q_road: f64) -> Self {
+        self.q_road = q_road;
+        self.q[(4, 4)] = q_road;
+        self
     }
 }
 
@@ -157,7 +165,9 @@ pub fn predict(state: &mut KalmanState, params: &KfParams) {
     let f = matrix_exp(&a_c, params.dt);
 
     state.x = f * state.x;
-    state.p = f * state.p * f.transpose() + params.q * params.dt;
+    // trapezoidal Qd: carries road/velocity noise through the dynamics within the step
+    let qd = (f * params.q * f.transpose() + params.q) * (0.5 * params.dt);
+    state.p = f * state.p * f.transpose() + qd;
 }
 
 /// Measurement model: returns (h_row, predicted_measurement) for a given channel.
@@ -486,5 +496,150 @@ mod tests {
             "Mean cov trace with 20% dropout ({mean_trace_20:.6}) should exceed 0% ({mean_trace_0:.6})"
         );
     }
-}
 
+    fn diag_case(label: &str, delay: bool, bias: bool, perturbed: bool) {
+        let dt = 0.001;
+        let n = 20_001;
+        let road: Vec<f64> = (0..n)
+            .map(|i| {
+                let t = i as f64 * dt;
+                0.01 * (2.0 * std::f64::consts::PI * 2.0 * t).sin()
+            })
+            .collect();
+
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let plant_out = if perturbed {
+            let pert = plant::PlantPerturbation::draw(&mut rng, 10.0, 5.0, 2.0);
+            plant::run_perturbed(440.0, 78.0, 21_000.0, 1_800.0, 200_000.0, 0.12, &road, dt, &pert)
+        } else {
+            plant::run_nominal(440.0, 78.0, 21_000.0, 1_800.0, 200_000.0, 0.12, &road, dt)
+        };
+
+        let mut configs = SensorConfig::defaults();
+        for cfg in configs.iter_mut() {
+            if !delay { cfg.delay_ms = 0.0; }
+            if !bias { cfg.bias = 0.0; }
+        }
+        let sensor_out = sensors::simulate_sensors(&plant_out, dt, 20.0, &configs, 0.0, &mut rng);
+        let sync_out = sync::synchronise(&sensor_out);
+        let kf_params = KfParams::from_nominal(440.0, 78.0, 21_000.0, 1_800.0, 200_000.0, 1.0 / 200.0);
+        let kf_out = run_filter(&sync_out.frames, &kf_params, &MeasNoise::default());
+
+        let n_kf = kf_out.states.len();
+        let skip = 200; // first 1 s = initial transient
+        let mut sq_all = 0.0;
+        let mut sq_ss = 0.0;
+        let mut n_ss = 0usize;
+        let mut raw_sq = 0.0;
+        let mut raw_n = 0usize;
+        let mut inside = [0usize; 4];
+
+        for i in 0..n_kf {
+            let pi = (i * 5).min(plant_out.zs.len() - 1);
+            let truth = [
+                plant_out.zs[pi] - plant_out.zu[pi],
+                plant_out.vs[pi],
+                plant_out.vu[pi],
+                plant_out.road[pi],
+            ];
+            let s = &kf_out.states[i];
+            let est = [s[0] - s[2], s[1], s[3], s[4]];
+            let d = &kf_out.cov_diag[i];
+            let sig = [(d[0] + d[2]).sqrt(), d[1].sqrt(), d[3].sqrt(), d[4].sqrt()];
+            for j in 0..4 {
+                if (est[j] - truth[j]).abs() <= 2.0 * sig[j] {
+                    inside[j] += 1;
+                }
+            }
+            let e = est[0] - truth[0];
+            sq_all += e * e;
+            if i >= skip {
+                sq_ss += e * e;
+                n_ss += 1;
+            }
+            if let Some(raw) = sensor_out.susp_travel[i] {
+                raw_sq += (raw - truth[0]).powi(2);
+                raw_n += 1;
+            }
+        }
+
+        let rmse = |sq: f64, c: usize| (sq / c.max(1) as f64).sqrt() * 1e3;
+        let pct = |c: usize| 100.0 * c as f64 / n_kf.max(1) as f64;
+        println!("\n=== case {label}: delay={delay} bias={bias} perturbed={perturbed} ===");
+        println!(
+            "travel RMSE [mm]: fused={:.3} (after 1 s: {:.3})  raw={:.3}",
+            rmse(sq_all, n_kf), rmse(sq_ss, n_ss), rmse(raw_sq, raw_n)
+        );
+        println!(
+            "truth within 2 sigma [%] (ideal ~95): travel={:.1} body_vel={:.1} wheel_vel={:.1} road={:.1}",
+            pct(inside[0]), pct(inside[1]), pct(inside[2]), pct(inside[3])
+        );
+        for ch in ["body_acc", "wheel_acc", "susp_travel"] {
+            let v: Vec<&InnovationEntry> =
+                kf_out.innovations.iter().filter(|e| e.channel == ch).collect();
+            let m = v.len().max(1) as f64;
+            let nis = v.iter().map(|e| e.nis).sum::<f64>() / m;
+            let inn = v.iter().map(|e| e.innovation).sum::<f64>() / m;
+            let gated = 100.0 * v.iter().filter(|e| e.gated).count() as f64 / m;
+            println!(
+                "  {ch:<12} n={:<5} mean NIS={nis:.2} (ideal ~1)  mean innov={inn:.5}  gated={gated:.1}%",
+                v.len()
+            );
+        }
+    }
+
+    #[test]
+    fn diagnose_filter() {
+        diag_case("i   clean (no delay, no bias, nominal plant)", false, false, false);
+        diag_case("i1  + sensor delay", true, false, false);
+        diag_case("i2  + bias (= failing-test config)", true, true, false);
+        diag_case("ii1 + perturbed plant", true, true, true);
+    }
+
+    #[test]
+    fn diagnose_q_road() {
+        let dt = 0.001;
+        let road: Vec<f64> = (0..20_001)
+            .map(|i| 0.01 * (2.0 * std::f64::consts::PI * 2.0 * i as f64 * dt).sin())
+            .collect();
+        let plant_out = plant::run_nominal(440.0, 78.0, 21_000.0, 1_800.0, 200_000.0, 0.12, &road, dt);
+        let mut rng = ChaCha8Rng::seed_from_u64(42);
+        let sensor_out =
+            sensors::simulate_sensors(&plant_out, dt, 20.0, &SensorConfig::defaults(), 0.0, &mut rng);
+        let sync_out = sync::synchronise(&sensor_out);
+        println!();
+        for q_road in [1e-2, 1e-3, 3e-4, 1e-4, 3e-5, 1e-5] {
+            let p = KfParams::from_nominal(440.0, 78.0, 21_000.0, 1_800.0, 200_000.0, 1.0 / 200.0)
+                .with_road_q(q_road);
+            let out = run_filter(&sync_out.frames, &p, &MeasNoise::default());
+            let n = out.states.len();
+            let (mut f_sq, mut r_sq, mut rc) = (0.0_f64, 0.0_f64, 0usize);
+            for i in 0..n {
+                let pi = (i * 5).min(plant_out.zs.len() - 1);
+                let truth = plant_out.zs[pi] - plant_out.zu[pi];
+                f_sq += (out.states[i][0] - out.states[i][2] - truth).powi(2);
+                if let Some(raw) = sensor_out.susp_travel[i] {
+                    r_sq += (raw - truth).powi(2);
+                    rc += 1;
+                }
+            }
+            let stat = |ch: &str| {
+                let v: Vec<&InnovationEntry> =
+                    out.innovations.iter().filter(|e| e.channel == ch).collect();
+                let m = v.len().max(1) as f64;
+                (
+                    v.iter().map(|e| e.nis).sum::<f64>() / m,
+                    100.0 * v.iter().filter(|e| e.gated).count() as f64 / m,
+                )
+            };
+            let (nb, gb) = stat("body_acc");
+            let (nw, _) = stat("wheel_acc");
+            let (nt, gt) = stat("susp_travel");
+            println!(
+                "q_road={q_road:.0e}: fused={:.3} mm raw={:.3} mm | NIS body={nb:.2} wheel={nw:.2} travel={nt:.2} | gated% body={gb:.1} travel={gt:.1}",
+                (f_sq / n as f64).sqrt() * 1e3,
+                (r_sq / rc.max(1) as f64).sqrt() * 1e3
+            );
+        }
+    }
+}

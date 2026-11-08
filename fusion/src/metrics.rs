@@ -6,6 +6,7 @@
 use crate::kf::KfOutput;
 use crate::sensors::FaultEvent;
 use nalgebra::SVector;
+use serde_json::{json, Value};
 
 /// RMSE result for one state variable.
 #[derive(Debug, Clone, Default)]
@@ -42,6 +43,9 @@ pub struct ConsistencyMetrics {
 pub struct DetectionMetrics {
     pub precision: f64,
     pub recall: f64,
+    pub tp: usize,
+    pub fp: usize,
+    pub fn_: usize,
 }
 
 /// Truth data at the fusion clock rate.
@@ -150,7 +154,7 @@ fn compute_detection(
     let precision = if tp + fp > 0 { tp as f64 / (tp + fp) as f64 } else { 0.0 };
     let recall = if tp + fn_count > 0 { tp as f64 / (tp + fn_count) as f64 } else { 0.0 };
 
-    DetectionMetrics { precision, recall }
+    DetectionMetrics { precision, recall, tp, fp, fn_: fn_count }
 }
 
 /// Compute all metrics for a scenario.
@@ -253,3 +257,103 @@ pub fn compute_metrics(
     }
 }
 
+/// Per-run record kept for the matrix summary.
+pub struct RunStats {
+    pub dropout_pct: f64,
+    pub seed: u64,
+    pub m: ScenarioMetrics,
+    /// Estimated delay per channel [samples at 200 Hz]
+    pub delays: Vec<(String, f64)>,
+}
+
+const STATE_KEYS: [&str; 4] = ["susp_travel_m", "body_vel_mps", "wheel_vel_mps", "road_height_m"];
+
+fn rmses(m: &ScenarioMetrics) -> [&RmseResult; 4] {
+    [&m.rmse_susp_travel, &m.rmse_body_vel, &m.rmse_wheel_vel, &m.rmse_road_height]
+}
+
+fn w2s(m: &ScenarioMetrics) -> [f64; 4] {
+    let c = &m.within_2sigma;
+    [c.susp_travel, c.body_vel, c.wheel_vel, c.road_height]
+}
+
+fn mean_std(v: &[f64]) -> (f64, f64) {
+    let n = v.len();
+    if n == 0 { return (0.0, 0.0); }
+    let m = v.iter().sum::<f64>() / n as f64;
+    let var = if n > 1 {
+        v.iter().map(|x| (x - m).powi(2)).sum::<f64>() / (n - 1) as f64
+    } else {
+        0.0
+    };
+    (m, var.sqrt())
+}
+
+fn opt_ms(v: Vec<f64>) -> Value {
+    if v.is_empty() { return Value::Null; }
+    let (mean, std) = mean_std(&v);
+    json!({"mean": mean, "std": std})
+}
+
+fn pooled<'a>(it: impl Iterator<Item = &'a DetectionMetrics>) -> Value {
+    let (tp, fp, fn_) = it.fold((0usize, 0usize, 0usize), |a, d| (a.0 + d.tp, a.1 + d.fp, a.2 + d.fn_));
+    let ratio = |a: usize, b: usize| if b == 0 { 0.0 } else { a as f64 / b as f64 };
+    json!({"precision": ratio(tp, tp + fp), "recall": ratio(tp, tp + fn_)})
+}
+
+/// CONTRACTS §4.2. `injected_ms`: (channel, configured delay).
+pub fn build_fusion_summary(
+    runs: &[RunStats],
+    injected_ms: &[(String, f64)],
+    duration_s: f64,
+    sweep_pcts: &[f64],
+) -> Value {
+    let mut seeds: Vec<u64> = runs.iter().map(|r| r.seed).collect();
+    seeds.sort_unstable();
+    seeds.dedup();
+
+    let mut state_rmse = serde_json::Map::new();
+    let mut cover = serde_json::Map::new();
+    for (k, key) in STATE_KEYS.iter().enumerate() {
+        let col = |f: fn(&RmseResult) -> Option<f64>| -> Vec<f64> {
+            runs.iter().filter_map(|r| f(rmses(&r.m)[k])).collect()
+        };
+        state_rmse.insert(key.to_string(), json!({
+            "raw": opt_ms(col(|r| r.raw)),
+            "open_loop": opt_ms(col(|r| r.open_loop)),
+            "fused": opt_ms(col(|r| Some(r.fused))),
+        }));
+        let f: Vec<f64> = runs.iter().map(|r| w2s(&r.m)[k]).collect();
+        cover.insert(key.to_string(), json!(mean_std(&f).0));
+    }
+    let nees: Vec<f64> = runs.iter().map(|r| r.m.nees_mean).collect();
+
+    let sweep: Vec<Value> = sweep_pcts.iter().map(|&d| {
+        let sel: Vec<&RunStats> = runs.iter().filter(|r| (r.dropout_pct - d).abs() < 1e-9).collect();
+        let mut o = serde_json::Map::new();
+        for (k, key) in STATE_KEYS.iter().enumerate() {
+            let v: Vec<f64> = sel.iter().map(|r| rmses(&r.m)[k].fused).collect();
+            o.insert(key.to_string(), json!(mean_std(&v).0));
+        }
+        json!({"dropout_pct": d, "fused_rmse": o})
+    }).collect();
+
+    let delay: Vec<Value> = injected_ms.iter().map(|(ch, inj)| {
+        let v: Vec<f64> = runs.iter()
+            .filter_map(|r| r.delays.iter().find(|(c, _)| c == ch).map(|(_, s)| s * 5.0)) // 5 ms/sample @ 200 Hz
+            .collect();
+        json!({"channel": ch, "injected_ms": inj, "estimated_ms": mean_std(&v).0})
+    }).collect();
+
+    json!({
+        "meta": {"fixture": false, "n_runs": runs.len(), "seeds": seeds, "duration_s": duration_s},
+        "state_rmse": state_rmse,
+        "consistency": {"within_2sigma_frac": cover, "nees_mean": mean_std(&nees).0},
+        "dropout_sweep": sweep,
+        "detection": {
+            "anomaly": pooled(runs.iter().map(|r| &r.m.anomaly_detection)),
+            "dropout": pooled(runs.iter().map(|r| &r.m.dropout_detection)),
+        },
+        "delay_estimation": delay,
+    })
+}
