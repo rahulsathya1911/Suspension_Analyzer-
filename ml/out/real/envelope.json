@@ -1,0 +1,134 @@
+{
+  "meta": {
+    "fixture": false,
+    "mock": false
+  },
+  "features": {
+    "min": {
+      "p_phys": 0.0095856,
+      "speed_mps": 10.0,
+      "ms_kg": 300.0,
+      "c_nsm": 1000.0,
+      "cov_trace": 0.019222,
+      "dropout_frac": 0.10722,
+      "band_lo": 0.083806,
+      "band_mid": 0.08632,
+      "band_hi": 0.066824,
+      "road_class_A": 0.0,
+      "road_class_B": 0.0,
+      "road_class_C": 0.0
+    },
+    "max": {
+      "p_phys": 0.22071,
+      "speed_mps": 30.0,
+      "ms_kg": 580.0,
+      "c_nsm": 3000.0,
+      "cov_trace": 0.022543,
+      "dropout_frac": 0.95301,
+      "band_lo": 0.9199,
+      "band_mid": 1.6461,
+      "band_hi": 1.0464,
+      "road_class_A": 1.0,
+      "road_class_B": 1.0,
+      "road_class_C": 1.0
+    }
+  },
+  "mahalanobis_threshold": 5.652449287427005,
+  "ood_detection_rate": 1.0,
+  "false_positive_rate": {
+    "train": 0.011522633744855968,
+    "test": 0.019753086419753086
+  },
+  "ood_results": [
+    {
+      "scenario_id": "rD_v40_m700_c1000_d30_s100",
+      "flagged": true,
+      "reason": "unseen_road_class:D",
+      "all_reasons": "unseen_road_class:D;range:p_phys;range:speed_mps;range:ms_kg;range:cov_trace;range:dropout_frac;mahalanobis"
+    },
+    {
+      "scenario_id": "rD_v40_m700_c1000_d30_s101",
+      "flagged": true,
+      "reason": "unseen_road_class:D",
+      "all_reasons": "unseen_road_class:D;range:p_phys;range:speed_mps;range:ms_kg;range:cov_trace;range:dropout_frac;mahalanobis"
+    },
+    {
+      "scenario_id": "rD_v40_m700_c1000_d30_s102",
+      "flagged": true,
+      "reason": "unseen_road_class:D",
+      "all_reasons": "unseen_road_class:D;range:p_phys;range:speed_mps;range:ms_kg;range:cov_trace;range:dropout_frac;mahalanobis"
+    },
+    {
+      "scenario_id": "rD_v40_m700_c1000_d30_s103",
+      "flagged": true,
+      "reason": "unseen_road_class:D",
+      "all_reasons": "unseen_road_class:D;range:p_phys;range:speed_mps;range:ms_kg;range:cov_trace;range:dropout_frac;mahalanobis"
+    },
+    {
+      "scenario_id": "rD_v40_m700_c1000_d30_s104",
+      "flagged": true,
+      "reason": "unseen_road_class:D",
+      "all_reasons": "unseen_road_class:D;range:p_phys;range:speed_mps;range:ms_kg;range:cov_trace;range:dropout_frac;mahalanobis"
+    },
+    {
+      "scenario_id": "rD_v40_m700_c1800_d30_s100",
+      "flagged": true,
+      "reason": "unseen_road_class:D",
+      "all_reasons": "unseen_road_class:D;range:p_phys;range:speed_mps;range:ms_kg;range:cov_trace;range:dropout_frac;mahalanobis"
+    },
+    {
+      "scenario_id": "rD_v40_m700_c1800_d30_s101",
+      "flagged": true,
+      "reason": "unseen_road_class:D",
+      "all_reasons": "unseen_road_class:D;range:p_phys;range:speed_mps;range:ms_kg;range:cov_trace;range:dropout_frac;mahalanobis"
+    },
+    {
+      "scenario_id": "rD_v40_m700_c1800_d30_s102",
+      "flagged": true,
+      "reason": "unseen_road_class:D",
+      "all_reasons": "unseen_road_class:D;range:p_phys;range:speed_mps;range:ms_kg;range:cov_trace;range:dropout_frac;mahalanobis"
+    },
+    {
+      "scenario_id": "rD_v40_m700_c1800_d30_s103",
+      "flagged": true,
+      "reason": "unseen_road_class:D",
+      "all_reasons": "unseen_road_class:D;range:p_phys;range:speed_mps;range:ms_kg;range:cov_trace;range:dropout_frac;mahalanobis"
+    },
+    {
+      "scenario_id": "rD_v40_m700_c1800_d30_s104",
+      "flagged": true,
+      "reason": "unseen_road_class:D",
+      "all_reasons": "unseen_road_class:D;range:p_phys;range:speed_mps;range:ms_kg;range:cov_trace;range:dropout_frac;mahalanobis"
+    },
+    {
+      "scenario_id": "rD_v40_m700_c3000_d30_s100",
+      "flagged": true,
+      "reason": "unseen_road_class:D",
+      "all_reasons": "unseen_road_class:D;range:speed_mps;range:ms_kg;range:cov_trace;range:dropout_frac;mahalanobis"
+    },
+    {
+      "scenario_id": "rD_v40_m700_c3000_d30_s101",
+      "flagged": true,
+      "reason": "unseen_road_class:D",
+      "all_reasons": "unseen_road_class:D;range:speed_mps;range:ms_kg;range:cov_trace;range:dropout_frac;mahalanobis"
+    },
+    {
+      "scenario_id": "rD_v40_m700_c3000_d30_s102",
+      "flagged": true,
+      "reason": "unseen_road_class:D",
+      "all_reasons": "unseen_road_class:D;range:speed_mps;range:ms_kg;range:cov_trace;range:dropout_frac;mahalanobis"
+    },
+    {
+      "scenario_id": "rD_v40_m700_c3000_d30_s103",
+      "flagged": true,
+      "reason": "unseen_road_class:D",
+      "all_reasons": "unseen_road_class:D;range:speed_mps;range:ms_kg;range:cov_trace;range:dropout_frac;mahalanobis"
+    },
+    {
+      "scenario_id": "rD_v40_m700_c3000_d30_s104",
+      "flagged": true,
+      "reason": "unseen_road_class:D",
+      "all_reasons": "unseen_road_class:D;range:speed_mps;range:ms_kg;range:cov_trace;range:dropout_frac;mahalanobis"
+    }
+  ]
+}

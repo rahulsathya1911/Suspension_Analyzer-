@@ -8,6 +8,7 @@ try:
 except ImportError:
     from features import get_features
 
+
 def fit_envelope(train_df: pd.DataFrame):
     """
     Build the supported operating envelope from training data.
@@ -16,6 +17,7 @@ def fit_envelope(train_df: pd.DataFrame):
     - feature-wise min/max limits
     - Mahalanobis distance threshold
     - training mean/covariance information
+    - the set of road classes seen in training
     """
 
     X = get_features(train_df).copy()
@@ -70,6 +72,9 @@ def fit_envelope(train_df: pd.DataFrame):
         "mean_vector": mean_vector,
         "inverse_covariance": inverse_covariance,
         "mahalanobis_threshold": mahalanobis_threshold,
+        "road_classes": sorted(
+            train_df["road_class"].unique().tolist()
+        ),
     }
 
 
@@ -101,24 +106,26 @@ def encode_features(
     return X_encoded
 
 
-def check_row(
+def collect_reasons(
     row,
     envelope,
 ):
-    """Check one row against the supported envelope."""
+    """Return every envelope violation for one encoded row."""
 
     feature_columns = envelope["feature_columns"]
 
     values = row.to_numpy(dtype=float)
 
-    # Range check.
+    reasons = []
+
+    # Range checks (all features, not just the first violation).
     for index, feature in enumerate(feature_columns):
         value = values[index]
         minimum = envelope["feature_min"][feature]
         maximum = envelope["feature_max"][feature]
 
         if value < minimum or value > maximum:
-            return False, f"range:{feature}"
+            reasons.append(f"range:{feature}")
 
     # Mahalanobis check.
     distance = mahalanobis(
@@ -128,7 +135,24 @@ def check_row(
     )
 
     if distance > envelope["mahalanobis_threshold"]:
-        return False, "mahalanobis"
+        reasons.append("mahalanobis")
+
+    return reasons
+
+
+def check_row(
+    row,
+    envelope,
+):
+    """Check one row against the supported envelope.
+
+    Returns (supported, first_reason). Signature unchanged.
+    """
+
+    reasons = collect_reasons(row, envelope)
+
+    if reasons:
+        return False, reasons[0]
 
     return True, "none"
 
@@ -143,7 +167,8 @@ def evaluate_envelope(
     Returns a DataFrame containing:
     - scenario_id
     - flagged
-    - reason
+    - reason       (first violation, or "none")
+    - all_reasons  (every violation, ";"-separated)
     """
 
     X_encoded = encode_features(
@@ -151,18 +176,34 @@ def evaluate_envelope(
         envelope["feature_columns"],
     )
 
+    known_road_classes = set(
+        envelope.get("road_classes", [])
+    )
+
     results = []
 
     for index, row in X_encoded.iterrows():
-        supported, reason = check_row(
+        reasons = collect_reasons(
             row,
             envelope,
         )
 
+        # A road class never seen in training is its own reason.
+        # (One-hot encoding silently drops it, so it needs an
+        # explicit check.)
+        road_class = df.loc[index, "road_class"]
+
+        if known_road_classes and road_class not in known_road_classes:
+            reasons.insert(
+                0,
+                f"unseen_road_class:{road_class}",
+            )
+
         results.append({
             "scenario_id": df.loc[index, "scenario_id"],
-            "flagged": not supported,
-            "reason": reason,
+            "flagged": bool(reasons),
+            "reason": reasons[0] if reasons else "none",
+            "all_reasons": ";".join(reasons) if reasons else "none",
         })
 
     return pd.DataFrame(results)

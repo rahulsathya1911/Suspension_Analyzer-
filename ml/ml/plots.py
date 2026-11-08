@@ -132,29 +132,39 @@ def plot_prediction_intervals(predictions_df, out_dir):
     plt.close()
 
 
-def plot_envelope(ood_results_df, out_dir):
+def plot_envelope(results_df, out_dir):
     """
-    Plot envelope/OOD detection results.
+    Plot the envelope flag rate for each split.
+
+    results_df must contain a boolean "flagged" column and a
+    "split" column (train / test / ood).
     """
     os.makedirs(out_dir, exist_ok=True)
 
-    if len(ood_results_df) == 0:
+    if len(results_df) == 0:
         return
 
-    counts = ood_results_df["flagged"].value_counts()
+    order = ["train", "test", "ood"]
 
-    labels = ["Supported", "Flagged"]
-    values = [
-        int(counts.get(False, 0)),
-        int(counts.get(True, 0))
-    ]
+    rates = (
+        results_df.groupby("split")["flagged"].mean() * 100.0
+    ).reindex(order).fillna(0.0)
 
     plt.figure(figsize=(6, 5))
 
-    plt.bar(labels, values)
+    bars = plt.bar(rates.index, rates.values)
 
-    plt.ylabel("Number of Samples")
-    plt.title("Envelope / OOD Detection")
+    for bar, value in zip(bars, rates.values):
+        plt.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 1.0,
+            f"{value:.1f}%",
+            ha="center",
+        )
+
+    plt.ylabel("Flagged rows (%)")
+    plt.ylim(0, 110)
+    plt.title("Envelope: flag rate by split")
     plt.grid(axis="y", alpha=0.3)
 
     plt.tight_layout()

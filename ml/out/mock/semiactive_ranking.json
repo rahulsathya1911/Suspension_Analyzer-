@@ -1,0 +1,2764 @@
+{
+  "meta": {
+    "fixture": true,
+    "mock": true,
+    "dlc_limit": 0.33,
+    "travel_limit_mm": 120.0
+  },
+  "groups": [
+    {
+      "group_id": "A_10_300_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 1.7486046432077234,
+          "lo": 1.698952519050944,
+          "hi": 1.8196423952951133,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 1.6821189388075009,
+          "lo": 1.6346205716510784,
+          "hi": 1.752309071020137,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 1.6305923676171012,
+          "lo": 1.5819772792818203,
+          "hi": 1.7004170330456947,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": null,
+      "note": "no clear winner"
+    },
+    {
+      "group_id": "A_10_300_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 1.7486046432077234,
+          "lo": 1.698952519050944,
+          "hi": 1.8194441876439182,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 1.6820817297156663,
+          "lo": 1.6346205716510784,
+          "hi": 1.752309071020137,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 1.6305923676171012,
+          "lo": 1.5819772792818203,
+          "hi": 1.7004170330456947,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": null,
+      "note": "no clear winner"
+    },
+    {
+      "group_id": "A_10_300_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 1.7486046432077234,
+          "lo": 1.698952519050944,
+          "hi": 1.8199699789426114,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 1.6820817297156663,
+          "lo": 1.6346205716510784,
+          "hi": 1.752309071020137,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 1.6305923676171012,
+          "lo": 1.5819772792818203,
+          "hi": 1.7004170330456947,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": null,
+      "note": "no clear winner"
+    },
+    {
+      "group_id": "A_10_440_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.1859595081534855,
+          "lo": 2.1380236599657354,
+          "hi": 2.2562272491984463,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.0842186829265064,
+          "lo": 2.0359098222163805,
+          "hi": 2.1538859229813836,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.001409564962651,
+          "lo": 1.9547039801621278,
+          "hi": 2.073051983123401,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": null,
+      "note": "no clear winner"
+    },
+    {
+      "group_id": "A_10_440_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.1859595081534855,
+          "lo": 2.1380236599657354,
+          "hi": 2.2562272491984463,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.0842186829265064,
+          "lo": 2.0359098222163805,
+          "hi": 2.1538859229813836,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.001385975936771,
+          "lo": 1.9547039801621278,
+          "hi": 2.073051983123401,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": null,
+      "note": "no clear winner"
+    },
+    {
+      "group_id": "A_10_440_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.1859595081534855,
+          "lo": 2.1380236599657354,
+          "hi": 2.2562272491984463,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.0842186829265064,
+          "lo": 2.0359098222163805,
+          "hi": 2.1538859229813836,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.001385975936771,
+          "lo": 1.9547039801621278,
+          "hi": 2.073051983123401,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": null,
+      "note": "no clear winner"
+    },
+    {
+      "group_id": "A_10_580_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.62531768215662,
+          "lo": 2.577095365171228,
+          "hi": 2.6951168117190933,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.485791394243943,
+          "lo": 2.4381855896830387,
+          "hi": 2.556654715657392,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.374029918288755,
+          "lo": 2.322726961995447,
+          "hi": 2.441869362695694,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": null,
+      "note": "no clear winner"
+    },
+    {
+      "group_id": "A_10_580_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.62531768215662,
+          "lo": 2.577102386481671,
+          "hi": 2.6951168117190933,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.485791394243943,
+          "lo": 2.4384595424166795,
+          "hi": 2.556654715657392,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.374029918288755,
+          "lo": 2.3227379480891144,
+          "hi": 2.442011761082526,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": null,
+      "note": "no clear winner"
+    },
+    {
+      "group_id": "A_10_580_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.62531768215662,
+          "lo": 2.577102386481671,
+          "hi": 2.6951168117190933,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.485791394243943,
+          "lo": 2.4381855896830387,
+          "hi": 2.556654715657392,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.374029918288755,
+          "lo": 2.3227309904410935,
+          "hi": 2.442011761082526,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": null,
+      "note": "no clear winner"
+    },
+    {
+      "group_id": "A_20_300_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 1.8711432264950925,
+          "lo": 1.8231363886267566,
+          "hi": 1.9410018075391857,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 1.7952721685880557,
+          "lo": 1.7465610275421823,
+          "hi": 1.8654037186665022,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 1.7354659636854237,
+          "lo": 1.6828134346284664,
+          "hi": 1.8053791806751007,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "A_20_300_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 1.8711432264950925,
+          "lo": 1.8231363886267566,
+          "hi": 1.9408825089390973,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 1.7952721685880557,
+          "lo": 1.7465610275421823,
+          "hi": 1.8654037186665022,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 1.735465058593983,
+          "lo": 1.6828134346284664,
+          "hi": 1.8053791806751007,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "A_20_300_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 1.8711432264950925,
+          "lo": 1.8231363886267566,
+          "hi": 1.9408101411098442,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 1.7952721685880557,
+          "lo": 1.7465610275421823,
+          "hi": 1.8654037186665022,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 1.735462372276461,
+          "lo": 1.6828134346284664,
+          "hi": 1.8053791806751007,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "A_20_440_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.365270122069337,
+          "lo": 2.316289012695888,
+          "hi": 2.4337918661015068,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.2477457622744774,
+          "lo": 2.199005251944162,
+          "hi": 2.317458998884372,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.1527810482319487,
+          "lo": 2.101732860606319,
+          "hi": 2.223361931684323,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": null,
+      "note": "no clear winner"
+    },
+    {
+      "group_id": "A_20_440_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.365270122069337,
+          "lo": 2.316289012695888,
+          "hi": 2.4337918661015068,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.2477457622744774,
+          "lo": 2.199235352930523,
+          "hi": 2.317458998884372,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.1527810482319487,
+          "lo": 2.101732860606319,
+          "hi": 2.223361931684323,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": null,
+      "note": "no clear winner"
+    },
+    {
+      "group_id": "A_20_440_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.365270122069337,
+          "lo": 2.316289012695888,
+          "hi": 2.4337918661015068,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.2477457622744774,
+          "lo": 2.199005251944162,
+          "hi": 2.317458998884372,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.1527810482319487,
+          "lo": 2.101732860606319,
+          "hi": 2.223361931684323,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": null,
+      "note": "no clear winner"
+    },
+    {
+      "group_id": "A_20_580_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.85938011992095,
+          "lo": 2.810797585833844,
+          "hi": 2.929081737100641,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.6990529670620704,
+          "lo": 2.65054876006269,
+          "hi": 2.769298057274044,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.570488119493545,
+          "lo": 2.523269164913636,
+          "hi": 2.637734577458116,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "A_20_580_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.85938011992095,
+          "lo": 2.810797585833844,
+          "hi": 2.928833919750686,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.6990529670620704,
+          "lo": 2.65054876006269,
+          "hi": 2.769298057274044,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.5702847388777914,
+          "lo": 2.5214170750964895,
+          "hi": 2.637734577458116,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "A_20_580_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.85938011992095,
+          "lo": 2.810797585833844,
+          "hi": 2.929081737100641,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.6990529670620704,
+          "lo": 2.65054876006269,
+          "hi": 2.769298057274044,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.5702847388777914,
+          "lo": 2.52348347601784,
+          "hi": 2.637734577458116,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "A_30_300_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 1.9279557119681336,
+          "lo": 1.880486750502212,
+          "hi": 2.014091928588625,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 1.8420834330101268,
+          "lo": 1.792490992228347,
+          "hi": 1.929824114939788,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 1.7734834961352113,
+          "lo": 1.7253091402282756,
+          "hi": 1.8430227114439528,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "A_30_300_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 1.9278648221681371,
+          "lo": 1.880486750502212,
+          "hi": 2.014091928588625,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 1.8422185736396561,
+          "lo": 1.792490992228347,
+          "hi": 1.929824114939788,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 1.773456715748263,
+          "lo": 1.7253091402282756,
+          "hi": 1.8465151977995007,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "A_30_300_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 1.9279053212534556,
+          "lo": 1.880486750502212,
+          "hi": 2.014091928588625,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 1.8422185736396561,
+          "lo": 1.792490992228347,
+          "hi": 1.929824114939788,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 1.773456715748263,
+          "lo": 1.7253091402282756,
+          "hi": 1.8430227114439528,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "A_30_440_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.47728305906597,
+          "lo": 2.428398309374677,
+          "hi": 2.5504125443558223,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.3441905741537736,
+          "lo": 2.2963820859336836,
+          "hi": 2.4174162160808894,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.2379665283789385,
+          "lo": 2.189886127540371,
+          "hi": 2.3062349211489015,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": null,
+      "note": "no clear winner"
+    },
+    {
+      "group_id": "A_30_440_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.4772768846862885,
+          "lo": 2.428398309374677,
+          "hi": 2.5504125443558223,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.3441905741537736,
+          "lo": 2.2963820859336836,
+          "hi": 2.4174162160808894,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.2379665283789385,
+          "lo": 2.189886127540371,
+          "hi": 2.3062349211489015,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": null,
+      "note": "no clear winner"
+    },
+    {
+      "group_id": "A_30_440_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.4772768846862885,
+          "lo": 2.428398309374677,
+          "hi": 2.5504125443558223,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.3441905741537736,
+          "lo": 2.2963820859336836,
+          "hi": 2.4174162160808894,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.2379665283789385,
+          "lo": 2.189886127540371,
+          "hi": 2.3062349211489015,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": null,
+      "note": "no clear winner"
+    },
+    {
+      "group_id": "A_30_580_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 3.0264604449283263,
+          "lo": 2.9784428218013255,
+          "hi": 3.0960809586810463,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.846411108463394,
+          "lo": 2.7983114850843123,
+          "hi": 2.9152555416901014,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.7028871194600166,
+          "lo": 2.652592090922643,
+          "hi": 2.7729601099100902,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "A_30_580_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 3.026458517749122,
+          "lo": 2.9784428218013255,
+          "hi": 3.0960809586810463,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.846415355663871,
+          "lo": 2.7983114850843123,
+          "hi": 2.9152555416901014,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.7028871194600166,
+          "lo": 2.6513766541409867,
+          "hi": 2.7729601099100902,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "A_30_580_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 3.026458517749122,
+          "lo": 2.9784428218013255,
+          "hi": 3.0960809586810463,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.846415355663871,
+          "lo": 2.7983114850843123,
+          "hi": 2.9152555416901014,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.7028871194600166,
+          "lo": 2.652592090922643,
+          "hi": 2.7729601099100902,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "B_10_300_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 1.9085702571224874,
+          "lo": 1.8591219849054248,
+          "hi": 1.980088149754834,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 1.8282410456253053,
+          "lo": 1.7806136813694315,
+          "hi": 1.898149980111046,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 1.7651345623677337,
+          "lo": 1.716423147906557,
+          "hi": 1.8349670330456949,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "B_10_300_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 1.9085702571224874,
+          "lo": 1.8591219849054248,
+          "hi": 1.980088149754834,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 1.8282410456253053,
+          "lo": 1.7806136813694315,
+          "hi": 1.898149980111046,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 1.7651345623677337,
+          "lo": 1.716423147906557,
+          "hi": 1.8349670330456949,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "B_10_300_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 1.9085702571224874,
+          "lo": 1.8591219849054248,
+          "hi": 1.980088149754834,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 1.8282410456253053,
+          "lo": 1.7806136813694315,
+          "hi": 1.898149980111046,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 1.7651345623677337,
+          "lo": 1.716423147906557,
+          "hi": 1.8349670330456949,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "B_10_440_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.4210404856932204,
+          "lo": 2.37262856485112,
+          "hi": 2.4907844887523023,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.298425974952181,
+          "lo": 2.2498188322152983,
+          "hi": 2.3677806743628484,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.199641399986416,
+          "lo": 2.1520031145628984,
+          "hi": 2.270745210308021,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": null,
+      "note": "no clear winner"
+    },
+    {
+      "group_id": "B_10_440_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.4210404856932204,
+          "lo": 2.37262856485112,
+          "hi": 2.4907844887523023,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.298425974952181,
+          "lo": 2.2498188322152983,
+          "hi": 2.3677806743628484,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.199641399986416,
+          "lo": 2.1520031145628984,
+          "hi": 2.270745210308021,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": null,
+      "note": "no clear winner"
+    },
+    {
+      "group_id": "B_10_440_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.4210404856932204,
+          "lo": 2.37262856485112,
+          "hi": 2.4907844887523023,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.298425974952181,
+          "lo": 2.2498188322152983,
+          "hi": 2.3677806743628484,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.199641399986416,
+          "lo": 2.1520031145628984,
+          "hi": 2.270745210308021,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": null,
+      "note": "no clear winner"
+    },
+    {
+      "group_id": "B_10_580_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.934537781763135,
+          "lo": 2.886383516875526,
+          "hi": 3.004354136401177,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.7679317346322514,
+          "lo": 2.718531450416159,
+          "hi": 2.838487517502014,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.6341746738320517,
+          "lo": 2.581193243931374,
+          "hi": 2.7022184931743243,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "B_10_580_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.934537781763135,
+          "lo": 2.886383516875526,
+          "hi": 3.004354136401177,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.7679317346322514,
+          "lo": 2.718531450416159,
+          "hi": 2.838487517502014,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.6341746738320517,
+          "lo": 2.581193243931374,
+          "hi": 2.702360891561156,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "B_10_580_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.934537781763135,
+          "lo": 2.886383516875526,
+          "hi": 3.004354136401177,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.7679317346322514,
+          "lo": 2.718531450416159,
+          "hi": 2.838487517502014,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.6341746738320517,
+          "lo": 2.581193243931374,
+          "hi": 2.702360891561156,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "B_20_300_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.0520094594956655,
+          "lo": 2.0037498960859526,
+          "hi": 2.12178035155404,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 1.960224780519694,
+          "lo": 1.9116395843057539,
+          "hi": 2.030267355030138,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 1.8876434674242053,
+          "lo": 1.8345287302408988,
+          "hi": 1.9574791806751004,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "B_20_300_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.0520094594956655,
+          "lo": 2.0037498960859526,
+          "hi": 2.1217919482857037,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 1.960224780519694,
+          "lo": 1.9116395843057539,
+          "hi": 2.030267355030138,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 1.8876434674242053,
+          "lo": 1.8345287302408988,
+          "hi": 1.9574791806751004,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "B_20_300_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.0520094594956655,
+          "lo": 2.0037498960859526,
+          "hi": 2.1217919482857037,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 1.9602496110732524,
+          "lo": 1.9116395843057539,
+          "hi": 2.030267355030138,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 1.8876434674242053,
+          "lo": 1.8345287302408988,
+          "hi": 1.9574791806751004,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "B_20_440_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.6304793104531337,
+          "lo": 2.582528575751873,
+          "hi": 2.699130680193659,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.4894681125325393,
+          "lo": 2.4412532196952967,
+          "hi": 2.559209991438271,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.375976519781384,
+          "lo": 2.325256489845354,
+          "hi": 2.446529958311925,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": null,
+      "note": "no clear winner"
+    },
+    {
+      "group_id": "B_20_440_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.6304793104531337,
+          "lo": 2.582528575751873,
+          "hi": 2.699130680193659,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.4894681125325393,
+          "lo": 2.4412532196952967,
+          "hi": 2.559209991438271,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.3759381974530998,
+          "lo": 2.325256489845354,
+          "hi": 2.446529958311925,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": null,
+      "note": "no clear winner"
+    },
+    {
+      "group_id": "B_20_440_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.6304793104531337,
+          "lo": 2.582528575751873,
+          "hi": 2.699130680193659,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.4894681125325393,
+          "lo": 2.4412532196952967,
+          "hi": 2.559209991438271,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.3759381974530998,
+          "lo": 2.325256489845354,
+          "hi": 2.446529958311925,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": null,
+      "note": "no clear winner"
+    },
+    {
+      "group_id": "B_20_580_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 3.208968757047431,
+          "lo": 3.160374791303211,
+          "hi": 3.278757726557187,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 3.017790749438666,
+          "lo": 2.9693280151467913,
+          "hi": 3.088047364729698,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.8646098454955187,
+          "lo": 2.8119802261271722,
+          "hi": 2.9320743512024956,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "B_20_580_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 3.208968757047431,
+          "lo": 3.160374791303211,
+          "hi": 3.2783606317014553,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 3.017790749438666,
+          "lo": 2.9693280151467913,
+          "hi": 3.088047364729698,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.8646098454955187,
+          "lo": 2.8119802261271722,
+          "hi": 2.9320743512024956,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "B_20_580_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 3.208968757047431,
+          "lo": 3.160374791303211,
+          "hi": 3.278757726557187,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 3.017790749438666,
+          "lo": 2.9693280151467913,
+          "hi": 3.088047364729698,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.8646098454955187,
+          "lo": 2.8119802261271722,
+          "hi": 2.9320743512024956,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "B_30_300_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.1299545393008072,
+          "lo": 2.081296450191049,
+          "hi": 2.215661741137863,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.0260117947138716,
+          "lo": 1.9766650312938274,
+          "hi": 2.1137104785761514,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 1.9431230583993901,
+          "lo": 1.8948835574075098,
+          "hi": 2.012672711443953,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "B_30_300_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.130083505550655,
+          "lo": 2.081296450191049,
+          "hi": 2.215661741137863,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.0261407977771193,
+          "lo": 1.9766650312938274,
+          "hi": 2.1137104785761514,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 1.9431190661303102,
+          "lo": 1.8948835574075098,
+          "hi": 2.012672711443953,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "B_30_300_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.130083505550655,
+          "lo": 2.081296450191049,
+          "hi": 2.215661741137863,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.0261407977771193,
+          "lo": 1.9766650312938274,
+          "hi": 2.1137104785761514,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 1.9431190661303102,
+          "lo": 1.8948835574075098,
+          "hi": 2.012672711443953,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "B_30_440_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.7730946362251645,
+          "lo": 2.724021900652281,
+          "hi": 2.8476692903751597,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.6139315477744205,
+          "lo": 2.566826898338886,
+          "hi": 2.6871306236412313,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.486813158586958,
+          "lo": 2.438644880390643,
+          "hi": 2.5550801056340124,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "B_30_440_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.773088461845483,
+          "lo": 2.724021900652281,
+          "hi": 2.8476692903751597,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.6139315477744205,
+          "lo": 2.566826898338886,
+          "hi": 2.6871306236412313,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.486813158586958,
+          "lo": 2.438644880390643,
+          "hi": 2.5550801056340124,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "B_30_440_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.773088461845483,
+          "lo": 2.724021900652281,
+          "hi": 2.8476692903751597,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.6139315477744205,
+          "lo": 2.566826898338886,
+          "hi": 2.6871306236412313,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.486813158586958,
+          "lo": 2.438644880390643,
+          "hi": 2.5550801056340124,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "B_30_580_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 3.416380825253411,
+          "lo": 3.3683893961480136,
+          "hi": 3.4861224449772346,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 3.2019281751114415,
+          "lo": 3.1538327965419244,
+          "hi": 3.2716941204834016,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 3.0305296802135078,
+          "lo": 2.9793461662328595,
+          "hi": 3.1010814241828673,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "B_30_580_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 3.416378898074206,
+          "lo": 3.3683893961480136,
+          "hi": 3.4861224449772346,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 3.2019324223119185,
+          "lo": 3.1538327965419244,
+          "hi": 3.2716941204834016,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 3.0305296802135078,
+          "lo": 2.9793461662328595,
+          "hi": 3.1010814241828673,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "B_30_580_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 3.416378898074206,
+          "lo": 3.3683893961480136,
+          "hi": 3.4861224449772346,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 3.2019324223119185,
+          "lo": 3.1538327965419244,
+          "hi": 3.2716941204834016,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 3.0305296802135078,
+          "lo": 2.9793461662328595,
+          "hi": 3.1010814241828673,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "C_10_300_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.12219902198752,
+          "lo": 2.07226003187613,
+          "hi": 2.1933608770275614,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.0226323061914515,
+          "lo": 1.9748388989151326,
+          "hi": 2.0926045255655916,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 1.9445387979489197,
+          "lo": 1.895993420629712,
+          "hi": 2.0143670330456946,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "C_10_300_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.12219902198752,
+          "lo": 2.07226003187613,
+          "hi": 2.1933608770275614,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.0226323061914515,
+          "lo": 1.9748388989151326,
+          "hi": 2.0926045255655916,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 1.9445387979489197,
+          "lo": 1.895993420629712,
+          "hi": 2.0143670330456946,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "C_10_300_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.12219902198752,
+          "lo": 2.07226003187613,
+          "hi": 2.1933608770275614,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.0226323061914515,
+          "lo": 1.9748388989151326,
+          "hi": 2.0926045255655916,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 1.9445387979489197,
+          "lo": 1.895993420629712,
+          "hi": 2.0143670330456946,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "C_10_440_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.7338326845461194,
+          "lo": 2.6865187014686946,
+          "hi": 2.803583223988636,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.583610484523342,
+          "lo": 2.534830959639175,
+          "hi": 2.6530528770797304,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.4627575939248616,
+          "lo": 2.4149398530150066,
+          "hi": 2.5340033473563843,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "C_10_440_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.7338326845461194,
+          "lo": 2.6865187014686946,
+          "hi": 2.803583223988636,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.583610484523342,
+          "lo": 2.534830959639175,
+          "hi": 2.6530528770797304,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.4627575939248616,
+          "lo": 2.4149398530150066,
+          "hi": 2.5340033473563843,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "C_10_440_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.7338326845461194,
+          "lo": 2.6865187014686946,
+          "hi": 2.803583223988636,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.583610484523342,
+          "lo": 2.534830959639175,
+          "hi": 2.6530528770797304,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.4627575939248616,
+          "lo": 2.4149398530150066,
+          "hi": 2.5340033473563843,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "C_10_580_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 3.3469167173688894,
+          "lo": 3.298697262084056,
+          "hi": 3.416660955559032,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 3.143902279986332,
+          "lo": 3.0944672253382404,
+          "hi": 3.2144379121918556,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.9810386352158322,
+          "lo": 2.9285013211264213,
+          "hi": 3.04949178890718,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "C_10_580_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 3.3469167173688894,
+          "lo": 3.298697262084056,
+          "hi": 3.416660955559032,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 3.143902279986332,
+          "lo": 3.0944672253382404,
+          "hi": 3.2144379121918556,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.9810386352158322,
+          "lo": 2.9285013211264213,
+          "hi": 3.0496341872940125,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "C_10_580_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 3.3469167173688894,
+          "lo": 3.298697262084056,
+          "hi": 3.416660955559032,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 3.143902279986332,
+          "lo": 3.0944672253382404,
+          "hi": 3.2144379121918556,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.9810386352158322,
+          "lo": 2.9285013211264213,
+          "hi": 3.0496341872940125,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "C_20_300_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.293087524740432,
+          "lo": 2.2449020029031694,
+          "hi": 2.3628712606449485,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.180156908402726,
+          "lo": 2.132734527968726,
+          "hi": 2.2500855368483204,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.0904762718792655,
+          "lo": 2.0388557672946033,
+          "hi": 2.1602791806751003,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "C_20_300_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.293087524740432,
+          "lo": 2.2449020029031694,
+          "hi": 2.362866678194215,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.180156908402726,
+          "lo": 2.132734527968726,
+          "hi": 2.2500855368483204,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.0904762718792655,
+          "lo": 2.0388557672946033,
+          "hi": 2.1602791806751003,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "C_20_300_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.293087524740432,
+          "lo": 2.2449020029031694,
+          "hi": 2.362866678194215,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.180156908402726,
+          "lo": 2.132734527968726,
+          "hi": 2.2500855368483204,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.0904762718792655,
+          "lo": 2.0388557672946033,
+          "hi": 2.1602791806751003,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "C_20_440_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.9840634265149184,
+          "lo": 2.9361374337782173,
+          "hi": 3.053811351724953,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.811973047671401,
+          "lo": 2.7635903169455753,
+          "hi": 2.881681578239073,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.67337606702253,
+          "lo": 2.622474272356506,
+          "hi": 2.7439045600504057,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "C_20_440_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.9840634265149184,
+          "lo": 2.9361374337782173,
+          "hi": 3.053811351724953,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.811973047671401,
+          "lo": 2.7635903169455753,
+          "hi": 2.881681578239073,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.67337606702253,
+          "lo": 2.622474272356506,
+          "hi": 2.7439045600504057,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "C_20_440_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.9840634265149184,
+          "lo": 2.9361374337782173,
+          "hi": 3.053811351724953,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.811973047671401,
+          "lo": 2.7635903169455753,
+          "hi": 2.881681578239073,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.67337606702253,
+          "lo": 2.622474272356506,
+          "hi": 2.7439045600504057,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "C_20_580_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 3.675056858025408,
+          "lo": 3.626510248105317,
+          "hi": 3.7448337147705644,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 3.4427767846162958,
+          "lo": 3.3943045721287923,
+          "hi": 3.513080518547537,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 3.2564451939420294,
+          "lo": 3.2040602261271722,
+          "hi": 3.325056373183731,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "C_20_580_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 3.675056858025408,
+          "lo": 3.626510248105317,
+          "hi": 3.7447762752963962,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 3.4427767846162958,
+          "lo": 3.3943045721287923,
+          "hi": 3.513080518547537,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 3.2564451939420294,
+          "lo": 3.2040602261271722,
+          "hi": 3.325056373183731,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "C_20_580_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 3.675056858025408,
+          "lo": 3.626510248105317,
+          "hi": 3.7448644484344227,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 3.4427767846162958,
+          "lo": 3.3943045721287923,
+          "hi": 3.513080518547537,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 3.2564451939420294,
+          "lo": 3.2040602261271722,
+          "hi": 3.325056373183731,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "C_30_300_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.398782124320738,
+          "lo": 2.3504247708757973,
+          "hi": 2.484792035605947,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.2715606215564548,
+          "lo": 2.221913871146258,
+          "hi": 2.3588894102792124,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.169058676877443,
+          "lo": 2.121179623704272,
+          "hi": 2.238872711443953,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "C_30_300_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.3989110905705857,
+          "lo": 2.3504247708757973,
+          "hi": 2.484792035605947,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.271695762185984,
+          "lo": 2.221913871146258,
+          "hi": 2.3588894102792124,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.169182385373318,
+          "lo": 2.121179623704272,
+          "hi": 2.238872711443953,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "C_30_300_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 2.3989110905705857,
+          "lo": 2.3504247708757973,
+          "hi": 2.484792035605947,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.271695762185984,
+          "lo": 2.221913871146258,
+          "hi": 2.3588894102792124,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.169182385373318,
+          "lo": 2.121179623704272,
+          "hi": 2.238872711443953,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "C_30_440_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 3.1675012948870838,
+          "lo": 3.118486997758468,
+          "hi": 3.242115717093366,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.9736117280739833,
+          "lo": 2.9263729079849643,
+          "hi": 3.0465519518895303,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.8185848563552174,
+          "lo": 2.77046752315335,
+          "hi": 2.887143060991067,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "C_30_440_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 3.1674951205074025,
+          "lo": 3.118486997758468,
+          "hi": 3.242115717093366,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.9736117280739833,
+          "lo": 2.9263729079849643,
+          "hi": 3.0465519518895303,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.8185848563552174,
+          "lo": 2.77046752315335,
+          "hi": 2.887143060991067,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "C_30_440_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 3.1674951205074025,
+          "lo": 3.118486997758468,
+          "hi": 3.242115717093366,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 2.9736117280739833,
+          "lo": 2.9263729079849643,
+          "hi": 3.0465519518895303,
+          "feasible": false,
+          "violations": "dlc"
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 2.8185848563552174,
+          "lo": 2.77046752315335,
+          "hi": 2.887143060991067,
+          "feasible": false,
+          "violations": "dlc"
+        }
+      ],
+      "recommended": null,
+      "note": "no feasible option"
+    },
+    {
+      "group_id": "C_30_580_0",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 3.9362715740615775,
+          "lo": 3.8879574460262454,
+          "hi": 4.006031653919105,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 3.6759621616496956,
+          "lo": 3.627851122500549,
+          "hi": 3.7458294839292954,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 3.4678539403894093,
+          "lo": 3.4166661662328592,
+          "hi": 3.5381639622591288,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "C_30_580_20",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 3.936269646882373,
+          "lo": 3.8879574460262454,
+          "hi": 4.0060185344944275,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 3.675966408850173,
+          "lo": 3.627851122500549,
+          "hi": 3.745828381166541,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 3.4678539403894093,
+          "lo": 3.4166661662328592,
+          "hi": 3.5381639622591288,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    },
+    {
+      "group_id": "C_30_580_5",
+      "options": [
+        {
+          "preset": "firm",
+          "c_nsm": 4500.0,
+          "comfort_pred": 3.936269646882373,
+          "lo": 3.8879574460262454,
+          "hi": 4.006003864476259,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "medium",
+          "c_nsm": 3000.0,
+          "comfort_pred": 3.675966408850173,
+          "lo": 3.627851122500549,
+          "hi": 3.745842953702256,
+          "feasible": true,
+          "violations": ""
+        },
+        {
+          "preset": "soft",
+          "c_nsm": 1800.0,
+          "comfort_pred": 3.4678539403894093,
+          "lo": 3.4166661662328592,
+          "hi": 3.5381639622591288,
+          "feasible": true,
+          "violations": ""
+        }
+      ],
+      "recommended": "soft",
+      "note": "recommended"
+    }
+  ]
+}

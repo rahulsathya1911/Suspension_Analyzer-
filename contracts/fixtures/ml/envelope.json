@@ -1,0 +1,68 @@
+{
+  "meta": {
+    "fixture": true,
+    "mock": true
+  },
+  "features": {
+    "min": {
+      "p_phys": 1.56245,
+      "speed_mps": 10.0,
+      "ms_kg": 300.0,
+      "c_nsm": 1800.0,
+      "cov_trace": 0.028,
+      "dropout_frac": 0.0,
+      "band_lo": 1.47845,
+      "band_mid": 1.56245,
+      "band_hi": 1.6424500000000002,
+      "road_class_A": 0.0,
+      "road_class_B": 0.0,
+      "road_class_C": 0.0
+    },
+    "max": {
+      "p_phys": 3.9193454545454554,
+      "speed_mps": 30.0,
+      "ms_kg": 580.0,
+      "c_nsm": 4500.0,
+      "cov_trace": 0.041,
+      "dropout_frac": 0.2,
+      "band_lo": 3.8393454545454544,
+      "band_mid": 3.9193454545454554,
+      "band_hi": 4.003345454545454,
+      "road_class_A": 1.0,
+      "road_class_B": 1.0,
+      "road_class_C": 1.0
+    }
+  },
+  "mahalanobis_threshold": 4.48934669862194,
+  "ood_detection_rate": 1.0,
+  "false_positive_rate": {
+    "train": 0.00823045267489712,
+    "test": 0.00823045267489712
+  },
+  "ood_results": [
+    {
+      "scenario_id": "OOD_D_20_440",
+      "flagged": true,
+      "reason": "unseen_road_class:D",
+      "all_reasons": "unseen_road_class:D;mahalanobis"
+    },
+    {
+      "scenario_id": "OOD_A_40_440",
+      "flagged": true,
+      "reason": "range:speed_mps",
+      "all_reasons": "range:speed_mps;range:cov_trace"
+    },
+    {
+      "scenario_id": "OOD_A_20_700",
+      "flagged": true,
+      "reason": "range:ms_kg",
+      "all_reasons": "range:ms_kg"
+    },
+    {
+      "scenario_id": "OOD_A_20_440",
+      "flagged": true,
+      "reason": "range:dropout_frac",
+      "all_reasons": "range:dropout_frac"
+    }
+  ]
+}

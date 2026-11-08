@@ -2,7 +2,6 @@ import argparse
 import json
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 from sklearn.linear_model import LinearRegression
@@ -26,7 +25,11 @@ from envelope import (
     calculate_ood_detection_rate,
 )
 
-from semiactive import rank_groups
+from semiactive import (
+    rank_groups,
+    DEFAULT_DLC_LIMIT,
+    DEFAULT_TRAVEL_LIMIT_MM,
+)
 
 
 def calculate_linear_baseline(
@@ -78,8 +81,14 @@ def build_comfort_predictions(
     linear_mae,
     fixture=False,
     mock=False,
+    test_flagged=None,
 ):
-    """Build the contract-defined comfort prediction rows."""
+    """Build the contract-defined comfort prediction rows.
+
+    test_flagged: optional boolean array (one entry per test row)
+    from the envelope. True means the row is outside the supported
+    envelope, so supported=False. If omitted, all rows are supported.
+    """
 
     test_df = result["test_df"].copy()
     predictions = result["predictions"]
@@ -104,6 +113,11 @@ def build_comfort_predictions(
             + predictions["q95"][i]
         )
 
+        if test_flagged is None:
+            supported = True
+        else:
+            supported = not bool(test_flagged[i])
+
         rows.append({
             "scenario_id": row["scenario_id"],
             "split": row["split"],
@@ -117,7 +131,7 @@ def build_comfort_predictions(
             "residual": float(
                 row["y_ref"] - comfort_pred
             ),
-            "supported": True,
+            "supported": supported,
         })
 
     metrics = result["metrics"]
@@ -144,6 +158,15 @@ def build_comfort_predictions(
     }
 
 
+def _flag_rate(flagged, mask):
+    """Fraction of flagged rows within a mask (0.0 if empty)."""
+
+    if not mask.any():
+        return 0.0
+
+    return float(flagged[mask].mean())
+
+
 def build_envelope_json(
     envelope,
     envelope_results,
@@ -168,11 +191,11 @@ def build_envelope_json(
         ].items()
     }
 
+    split = source_df["split"].to_numpy()
+
     # envelope_results does not contain the original
     # split column. Use source_df to identify OOD rows.
-    ood_mask = (
-        source_df["split"].to_numpy() == "ood"
-    )
+    ood_mask = split == "ood"
 
     ood_rows = envelope_results.loc[ood_mask]
 
@@ -183,7 +206,19 @@ def build_envelope_json(
             "scenario_id": row["scenario_id"],
             "flagged": bool(row["flagged"]),
             "reason": row["reason"],
+            "all_reasons": str(
+                row.get("all_reasons", row["reason"])
+            ),
         })
+
+    # False-alarm rates on in-distribution rows. A detector that
+    # flags everything would score 1.0 on OOD, so report these.
+    flagged = envelope_results["flagged"].to_numpy()
+
+    false_positive_rate = {
+        "train": _flag_rate(flagged, split == "train"),
+        "test": _flag_rate(flagged, split == "test"),
+    }
 
     return {
         "meta": {
@@ -200,13 +235,17 @@ def build_envelope_json(
         "ood_detection_rate": float(
             ood_detection_rate
         ),
+        "false_positive_rate": false_positive_rate,
         "ood_results": ood_results,
     }
+
 
 def build_semiactive_json(
     groups,
     fixture=False,
     mock=False,
+    dlc_limit=DEFAULT_DLC_LIMIT,
+    travel_limit_mm=DEFAULT_TRAVEL_LIMIT_MM,
 ):
     """Build the contract-defined semi-active JSON."""
 
@@ -226,8 +265,8 @@ def build_semiactive_json(
         "meta": {
             "fixture": fixture,
             "mock": mock,
-            "dlc_limit": 0.33,
-            "travel_limit_mm": 120.0,
+            "dlc_limit": dlc_limit,
+            "travel_limit_mm": travel_limit_mm,
         },
         "groups": output_groups,
     }
@@ -292,15 +331,9 @@ def main():
         test_df,
     )
 
-    comfort_json = build_comfort_predictions(
-        result,
-        linear_mae,
-        fixture=fixture,
-        mock=mock,
-    )
-
     # -------------------------
-    # B3: Envelope
+    # B3: Envelope (runs before the predictions are built so that
+    # the per-row `supported` flag can be filled in)
     # -------------------------
 
     envelope = fit_envelope(
@@ -326,6 +359,22 @@ def main():
         df,
         fixture=fixture,
         mock=mock,
+    )
+
+    # envelope_results has the same row order/index as df,
+    # so test_df.index selects the matching rows.
+    test_flagged = (
+        envelope_results
+        .loc[test_df.index, "flagged"]
+        .to_numpy()
+    )
+
+    comfort_json = build_comfort_predictions(
+        result,
+        linear_mae,
+        fixture=fixture,
+        mock=mock,
+        test_flagged=test_flagged,
     )
 
     # -------------------------
@@ -356,7 +405,9 @@ def main():
     )
 
     groups = rank_groups(
-        ranking_input
+        ranking_input,
+        dlc_limit=DEFAULT_DLC_LIMIT,
+        travel_limit_mm=DEFAULT_TRAVEL_LIMIT_MM,
     )
 
     semiactive_json = (
@@ -364,6 +415,8 @@ def main():
             groups,
             fixture=fixture,
             mock=mock,
+            dlc_limit=DEFAULT_DLC_LIMIT,
+            travel_limit_mm=DEFAULT_TRAVEL_LIMIT_MM,
         )
     )
 
@@ -371,29 +424,32 @@ def main():
     # B5: Plots
     # -------------------------
 
+    predictions_df = pd.DataFrame(
+        comfort_json["rows"]
+    )
+
     plot_predictions(
-        pd.DataFrame(
-            comfort_json["rows"]
-        ),
+        predictions_df,
         output_dir,
     )
 
     plot_residuals(
-        pd.DataFrame(
-            comfort_json["rows"]
-        ),
+        predictions_df,
         output_dir,
     )
 
     plot_prediction_intervals(
-        pd.DataFrame(
-            comfort_json["rows"]
-        ),
+        predictions_df,
         output_dir,
     )
 
+    # The envelope plot needs the split of each row.
+    envelope_plot_df = envelope_results.assign(
+        split=df["split"].to_numpy()
+    )
+
     plot_envelope(
-        envelope_results,
+        envelope_plot_df,
         output_dir,
     )
 
@@ -407,109 +463,55 @@ def main():
     # -------------------------
 
     with open(
-        output_dir
-        / "comfort_predictions.json",
+        output_dir / "comfort_predictions.json",
         "w",
     ) as f:
-
-        json.dump(
-            comfort_json,
-            f,
-            indent=2,
-        )
+        json.dump(comfort_json, f, indent=2)
 
     with open(
-        output_dir
-        / "envelope.json",
+        output_dir / "envelope.json",
         "w",
     ) as f:
-
-        json.dump(
-            envelope_json,
-            f,
-            indent=2,
-        )
+        json.dump(envelope_json, f, indent=2)
 
     with open(
-        output_dir
-        / "semiactive_ranking.json",
+        output_dir / "semiactive_ranking.json",
         "w",
     ) as f:
-
-        json.dump(
-            semiactive_json,
-            f,
-            indent=2,
-        )
+        json.dump(semiactive_json, f, indent=2)
 
     # -------------------------
     # Console summary
     # -------------------------
 
-    print(
-        "Training pipeline complete."
-    )
+    m = comfort_json["meta"]["metrics"]
+    fpr = envelope_json["false_positive_rate"]
 
+    print("Training pipeline complete.")
     print()
-
-    print(
-        f"Input rows: {len(df)}"
-    )
-
-    print(
-        f"Test rows: {len(test_df)}"
-    )
-
+    print(f"Input rows: {len(df)}")
+    print(f"Test rows: {len(test_df)}")
     print()
-
-    print(
-        "Comfort MAE:"
-    )
-
-    print(
-        f"  Physics only: "
-        f"{comfort_json['meta']['metrics']['mae_physics_only']:.6f}"
-    )
-
-    print(
-        f"  Linear:       "
-        f"{comfort_json['meta']['metrics']['mae_linear']:.6f}"
-    )
-
-    print(
-        f"  ML:           "
-        f"{comfort_json['meta']['metrics']['mae_ml']:.6f}"
-    )
-
-    print(
-        f"  Coverage:     "
-        f"{comfort_json['meta']['metrics']['interval_coverage']:.3f}"
-    )
-
+    print("Comfort MAE:")
+    print(f"  Physics only: {m['mae_physics_only']:.6f}")
+    print(f"  Linear:       {m['mae_linear']:.6f}")
+    print(f"  ML:           {m['mae_ml']:.6f}")
+    print(f"  Coverage:     {m['interval_coverage']:.3f}")
     print()
-
+    print(f"OOD detection rate: {ood_detection_rate:.3f}")
     print(
-        f"OOD detection rate: "
-        f"{ood_detection_rate:.3f}"
+        f"False-positive rate: train {fpr['train']:.3f}, "
+        f"test {fpr['test']:.3f}"
     )
-
+    print(
+        f"Test rows marked unsupported: "
+        f"{int(test_flagged.sum())} of {len(test_flagged)}"
+    )
     print()
-
-    print(
-        "Created:"
-    )
-
-    print(
-        f"  {output_dir / 'comfort_predictions.json'}"
-    )
-
-    print(
-        f"  {output_dir / 'envelope.json'}"
-    )
-
-    print(
-        f"  {output_dir / 'semiactive_ranking.json'}"
-    )
+    print("Created:")
+    print(f"  {output_dir / 'comfort_predictions.json'}")
+    print(f"  {output_dir / 'envelope.json'}")
+    print(f"  {output_dir / 'semiactive_ranking.json'}")
 
 
 if __name__ == "__main__":
