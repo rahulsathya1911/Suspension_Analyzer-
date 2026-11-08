@@ -1,0 +1,255 @@
+//! Metrics computation: RMSE, consistency, detection performance.
+//!
+//! PRD §5.7: RMSE per state vs truth (raw, open-loop, fused),
+//! fraction within ±2σ, NEES, anomaly/dropout detection P/R.
+
+use crate::kf::KfOutput;
+use crate::sensors::FaultEvent;
+use nalgebra::SVector;
+
+/// RMSE result for one state variable.
+#[derive(Debug, Clone, Default)]
+pub struct RmseResult {
+    pub raw: Option<f64>,
+    pub open_loop: Option<f64>,
+    pub fused: f64,
+}
+
+/// Full metrics for a scenario run.
+#[derive(Debug, Clone)]
+pub struct ScenarioMetrics {
+    pub rmse_susp_travel: RmseResult,
+    pub rmse_body_vel: RmseResult,
+    pub rmse_wheel_vel: RmseResult,
+    pub rmse_road_height: RmseResult,
+    pub within_2sigma: ConsistencyMetrics,
+    pub nees_mean: f64,
+    pub anomaly_detection: DetectionMetrics,
+    pub dropout_detection: DetectionMetrics,
+}
+
+/// Consistency metrics: fraction of truth within ±2σ.
+#[derive(Debug, Clone, Default)]
+pub struct ConsistencyMetrics {
+    pub susp_travel: f64,
+    pub body_vel: f64,
+    pub wheel_vel: f64,
+    pub road_height: f64,
+}
+
+/// Detection precision and recall.
+#[derive(Debug, Clone, Default)]
+pub struct DetectionMetrics {
+    pub precision: f64,
+    pub recall: f64,
+}
+
+/// Truth data at the fusion clock rate.
+pub struct TruthData {
+    pub zs: Vec<f64>,
+    pub vs: Vec<f64>,
+    pub zu: Vec<f64>,
+    pub vu: Vec<f64>,
+    pub zr: Vec<f64>,
+}
+
+/// Compute RMSE between two signals.
+fn rmse(estimated: &[f64], truth: &[f64]) -> f64 {
+    let n = estimated.len().min(truth.len());
+    if n == 0 { return 0.0; }
+    let sum_sq: f64 = estimated.iter().zip(truth.iter())
+        .map(|(e, t)| (e - t).powi(2))
+        .sum();
+    (sum_sq / n as f64).sqrt()
+}
+
+/// Compute RMSE for optional raw sensor data.
+fn rmse_optional(raw: &[Option<f64>], truth: &[f64]) -> Option<f64> {
+    let pairs: Vec<(f64, f64)> = raw.iter().zip(truth.iter())
+        .filter_map(|(r, t)| r.map(|rv| (rv, *t)))
+        .collect();
+    if pairs.is_empty() { return None; }
+    let sum_sq: f64 = pairs.iter().map(|(r, t)| (r - t).powi(2)).sum();
+    Some((sum_sq / pairs.len() as f64).sqrt())
+}
+
+/// Compute fraction of truth within ±2σ of the fused estimate.
+fn within_2sigma(
+    fused: &[f64],
+    truth: &[f64],
+    sigma: &[f64],
+) -> f64 {
+    let n = fused.len().min(truth.len()).min(sigma.len());
+    if n == 0 { return 0.0; }
+    let count = fused.iter().zip(truth.iter()).zip(sigma.iter())
+        .filter(|((f, t), s)| (*f - *t).abs() <= 2.0 * *s)
+        .count();
+    count as f64 / n as f64
+}
+
+/// Compute Normalised Estimation Error Squared (NEES).
+fn compute_nees(
+    states: &[SVector<f64, 5>],
+    truth: &TruthData,
+    cov_diag: &[[f64; 5]],
+) -> f64 {
+    let n = states.len().min(truth.zs.len());
+    if n == 0 { return 0.0; }
+
+    let mut sum_nees = 0.0;
+    for i in 0..n {
+        let err = [
+            states[i][0] - truth.zs[i],
+            states[i][1] - truth.vs[i],
+            states[i][2] - truth.zu[i],
+            states[i][3] - truth.vu[i],
+            states[i][4] - truth.zr[i],
+        ];
+        let nees: f64 = err.iter().zip(cov_diag[i].iter())
+            .map(|(e, p)| if *p > 1e-15 { e * e / p } else { 0.0 })
+            .sum();
+        sum_nees += nees;
+    }
+
+    sum_nees / n as f64
+}
+
+/// Compute detection precision and recall for fault events.
+fn compute_detection(
+    detected_flags: &[bool],
+    fault_log: &[FaultEvent],
+    fault_type: &str,
+    total_samples: usize,
+) -> DetectionMetrics {
+    // Build ground truth mask from fault log
+    let mut truth_mask = vec![false; total_samples];
+    for event in fault_log {
+        if event.fault_type == fault_type {
+            for &idx in &event.sample_indices {
+                if idx < total_samples {
+                    truth_mask[idx] = true;
+                }
+            }
+        }
+    }
+
+    let mut tp = 0;
+    let mut fp = 0;
+    let mut _tn = 0;
+    let mut fn_count = 0;
+
+    for i in 0..total_samples.min(detected_flags.len()) {
+        match (detected_flags[i], truth_mask[i]) {
+            (true, true) => tp += 1,
+            (true, false) => fp += 1,
+            (false, true) => fn_count += 1,
+            (false, false) => _tn += 1,
+        }
+    }
+
+    let precision = if tp + fp > 0 { tp as f64 / (tp + fp) as f64 } else { 0.0 };
+    let recall = if tp + fn_count > 0 { tp as f64 / (tp + fn_count) as f64 } else { 0.0 };
+
+    DetectionMetrics { precision, recall }
+}
+
+/// Compute all metrics for a scenario.
+pub fn compute_metrics(
+    kf_out: &KfOutput,
+    truth: &TruthData,
+    raw_susp_travel: &[Option<f64>],
+    open_loop_states: Option<&[SVector<f64, 5>]>,
+    fault_log: &[FaultEvent],
+    anomaly_detected: &[bool],
+    dropout_detected: &[bool],
+) -> ScenarioMetrics {
+    let n = kf_out.states.len();
+
+    // Extract fused state time series
+    let fused_travel: Vec<f64> = kf_out.states.iter().map(|s| s[0] - s[2]).collect();
+    let fused_body_vel: Vec<f64> = kf_out.states.iter().map(|s| s[1]).collect();
+    let fused_wheel_vel: Vec<f64> = kf_out.states.iter().map(|s| s[3]).collect();
+    let fused_road: Vec<f64> = kf_out.states.iter().map(|s| s[4]).collect();
+
+    // Truth state time series
+    let truth_travel: Vec<f64> = truth.zs.iter().zip(truth.zu.iter())
+        .map(|(zs, zu)| zs - zu).collect();
+
+    // RMSE: fused
+    let rmse_fused_travel = rmse(&fused_travel, &truth_travel);
+    let rmse_fused_body_vel = rmse(&fused_body_vel, &truth.vs);
+    let rmse_fused_wheel_vel = rmse(&fused_wheel_vel, &truth.vu);
+    let rmse_fused_road = rmse(&fused_road, &truth.zr);
+
+    // RMSE: raw (only for susp_travel — others don't have direct sensor)
+    let rmse_raw_travel = rmse_optional(raw_susp_travel, &truth_travel);
+
+    // RMSE: open-loop nominal twin
+    let (ol_travel, ol_bv, ol_wv, ol_road) = if let Some(ol) = open_loop_states {
+        let ol_t: Vec<f64> = ol.iter().map(|s| s[0] - s[2]).collect();
+        let ol_bv: Vec<f64> = ol.iter().map(|s| s[1]).collect();
+        let ol_wv: Vec<f64> = ol.iter().map(|s| s[3]).collect();
+        let ol_r: Vec<f64> = ol.iter().map(|s| s[4]).collect();
+        (
+            Some(rmse(&ol_t, &truth_travel)),
+            Some(rmse(&ol_bv, &truth.vs)),
+            Some(rmse(&ol_wv, &truth.vu)),
+            Some(rmse(&ol_r, &truth.zr)),
+        )
+    } else {
+        (None, None, None, None)
+    };
+
+    // Consistency: fraction within ±2σ
+    let sigma_travel: Vec<f64> = kf_out.cov_diag.iter()
+        .map(|d| (d[0] + d[2]).sqrt()) // approximate σ(zs-zu)
+        .collect();
+    let sigma_bv: Vec<f64> = kf_out.cov_diag.iter().map(|d| d[1].sqrt()).collect();
+    let sigma_wv: Vec<f64> = kf_out.cov_diag.iter().map(|d| d[3].sqrt()).collect();
+    let sigma_road: Vec<f64> = kf_out.cov_diag.iter().map(|d| d[4].sqrt()).collect();
+
+    let w2s_travel = within_2sigma(&fused_travel, &truth_travel, &sigma_travel);
+    let w2s_bv = within_2sigma(&fused_body_vel, &truth.vs, &sigma_bv);
+    let w2s_wv = within_2sigma(&fused_wheel_vel, &truth.vu, &sigma_wv);
+    let w2s_road = within_2sigma(&fused_road, &truth.zr, &sigma_road);
+
+    // NEES
+    let nees = compute_nees(&kf_out.states, truth, &kf_out.cov_diag);
+
+    // Detection metrics
+    let anomaly_det = compute_detection(anomaly_detected, fault_log, "spike", n);
+    let dropout_det = compute_detection(dropout_detected, fault_log, "dropout", n);
+
+    ScenarioMetrics {
+        rmse_susp_travel: RmseResult {
+            raw: rmse_raw_travel,
+            open_loop: ol_travel,
+            fused: rmse_fused_travel,
+        },
+        rmse_body_vel: RmseResult {
+            raw: None,
+            open_loop: ol_bv,
+            fused: rmse_fused_body_vel,
+        },
+        rmse_wheel_vel: RmseResult {
+            raw: None,
+            open_loop: ol_wv,
+            fused: rmse_fused_wheel_vel,
+        },
+        rmse_road_height: RmseResult {
+            raw: None,
+            open_loop: ol_road,
+            fused: rmse_fused_road,
+        },
+        within_2sigma: ConsistencyMetrics {
+            susp_travel: w2s_travel,
+            body_vel: w2s_bv,
+            wheel_vel: w2s_wv,
+            road_height: w2s_road,
+        },
+        nees_mean: nees,
+        anomaly_detection: anomaly_det,
+        dropout_detection: dropout_det,
+    }
+}
+
