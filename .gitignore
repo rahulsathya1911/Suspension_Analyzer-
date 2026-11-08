@@ -13,4 +13,8 @@ target/
 .idea/
 
 # OS
-.DS_Store
+.DS_Storeout/
+out_a/
+out_b/
+out_mock/
+*.zip
