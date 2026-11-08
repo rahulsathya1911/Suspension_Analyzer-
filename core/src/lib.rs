@@ -1,48 +1,48 @@
-/// core/src/lib.rs
-///
-/// Quarter-Car Suspension Analysis Engine
-/// =======================================
-/// Implements:
-///   - 2-DOF quarter-car model (RK4, dt = 0.001 s, T = 5 s)
-///   - Pluggable road profiles (Step, Sine, ISO 8608 random)
-///   - Time-domain metrics: RMS body acc, RMS tire force, max travel
-///   - ISO 2631-1 frequency-weighted RMS acceleration (ride comfort standard)
-///   - Frequency Response Function (FRF) sweep
-///   - Parameter sweep + Pareto front extraction
-///
-/// State vector: [x1, x2, x3, x4]
-///   x1 = sprung mass displacement   [m]
-///   x2 = sprung mass velocity       [m/s]
-///   x3 = unsprung mass displacement [m]
-///   x4 = unsprung mass velocity     [m/s]
+// core/src/lib.rs
+//
+// Quarter-Car Suspension Analysis Engine
+// =======================================
+// Implements:
+//   - 2-DOF quarter-car model (RK4, dt = 0.001 s, T = 5 s)
+//   - Pluggable road profiles (Step, Sine, ISO 8608 random)
+//   - Time-domain metrics: RMS body acc, RMS tire force, max travel
+//   - ISO 2631-1 frequency-weighted RMS acceleration (ride comfort standard)
+//   - Frequency Response Function (FRF) sweep
+//   - Parameter sweep + Pareto front extraction
+//
+// State vector: [x1, x2, x3, x4]
+//   x1 = sprung mass displacement   [m]
+//   x2 = sprung mass velocity       [m/s]
+//   x3 = unsprung mass displacement [m]
+//   x4 = unsprung mass velocity     [m/s]
 
 // ═══════════════════════════════════════════════════════════
 // SECTION 1 — Road profiles
 // ═══════════════════════════════════════════════════════════
 
-/// Selectable road input profile.
-///
-/// # Variants
-/// - `Step`      — instantaneous bump at t = 0.5 s (original behaviour)
-/// - `Sine`      — sinusoidal excitation at a given frequency [Hz]
-/// - `Iso8608`   — stationary random road roughness (class A–E)
-///
-/// Pass one of these to `run_simulation` to control excitation type.
+// Selectable road input profile.
+//
+// # Variants
+// - `Step`      — instantaneous bump at t = 0.5 s (original behaviour)
+// - `Sine`      — sinusoidal excitation at a given frequency [Hz]
+// - `Iso8608`   — stationary random road roughness (class A–E)
+//
+// Pass one of these to `run_simulation` to control excitation type.
 #[derive(Debug, Clone)]
 pub enum RoadProfile {
-    /// Single step of given height [m] applied at t = 0.5 s
+    // Single step of given height [m] applied at t = 0.5 s
     Step { height: f64 },
 
-    /// Sinusoidal road: r(t) = amplitude · sin(2π · freq · t)
+    // Sinusoidal road: r(t) = amplitude · sin(2π · freq · t)
     Sine { amplitude: f64, freq_hz: f64 },
 
-    /// ISO 8608 random road profile.
-    /// `roughness_coefficient` (Gd) controls severity:
-    ///   Class A (smooth): ~64e-6 m³/cycle
-    ///   Class B (good):   ~256e-6
-    ///   Class C (average):~1024e-6
-    ///   Class D (poor):   ~4096e-6
-    /// `vehicle_speed_mps` is forward speed [m/s].
+    // ISO 8608 random road profile.
+    // `roughness_coefficient` (Gd) controls severity:
+    //   Class A (smooth): ~64e-6 m³/cycle
+    //   Class B (good):   ~256e-6
+    //   Class C (average):~1024e-6
+    //   Class D (poor):   ~4096e-6
+    // `vehicle_speed_mps` is forward speed [m/s].
     Iso8608 {
         roughness_coefficient: f64,
         vehicle_speed_mps: f64,
@@ -51,8 +51,8 @@ pub enum RoadProfile {
 }
 
 impl RoadProfile {
-    /// Build a pre-computed lookup table of road displacement values.
-    /// Length = N_STEPS, indexed by step number.
+    // Build a pre-computed lookup table of road displacement values.
+    // Length = N_STEPS, indexed by step number.
     fn precompute(&self, dt: f64, n_steps: usize) -> Vec<f64> {
         match self {
             RoadProfile::Step { height } => {
@@ -129,16 +129,16 @@ const PI: f64 = std::f64::consts::PI;
 // SECTION 3 — ISO 2631-1 frequency weighting (Wk filter)
 // ═══════════════════════════════════════════════════════════
 
-/// ISO 2631-1 Wk weighting applied in the frequency domain.
-///
-/// The standard defines a frequency-weighted RMS that penalises
-/// accelerations in the 4–12.5 Hz range (most sensitive to humans
-/// for vertical whole-body vibration).
-///
-/// Implementation: approximate Wk gain curve as piecewise linear
-/// in log-frequency space, matching the standard's tabulated values.
-///
-/// Returns the weighted gain W(f) for a given frequency f [Hz].
+// ISO 2631-1 Wk weighting applied in the frequency domain.
+//
+// The standard defines a frequency-weighted RMS that penalises
+// accelerations in the 4–12.5 Hz range (most sensitive to humans
+// for vertical whole-body vibration).
+//
+// Implementation: approximate Wk gain curve as piecewise linear
+// in log-frequency space, matching the standard's tabulated values.
+//
+// Returns the weighted gain W(f) for a given frequency f [Hz].
 fn wk_gain(f: f64) -> f64 {
     // ISO 2631-1:1997 Table B.2 — Wk vertical weighting
     // Piecewise defined (simplified continuous approximation):
@@ -152,14 +152,14 @@ fn wk_gain(f: f64) -> f64 {
     }
 }
 
-/// Compute ISO 2631-1 frequency-weighted RMS acceleration from a
-/// time-series of body accelerations sampled at `1/dt` Hz.
-///
-/// Method: Goertzel algorithm on each DFT bin that falls inside the
-/// Wk passband (0.5–80 Hz). This is O(N·M) where M is the number of
-/// in-band bins (~400 for N=5001, fs=1000 Hz) — fast enough for tests.
-///
-/// Returns weighted RMS [m/s²] — the number you put in a comfort report.
+// Compute ISO 2631-1 frequency-weighted RMS acceleration from a
+// time-series of body accelerations sampled at `1/dt` Hz.
+//
+// Method: Goertzel algorithm on each DFT bin that falls inside the
+// Wk passband (0.5–80 Hz). This is O(N·M) where M is the number of
+// in-band bins (~400 for N=5001, fs=1000 Hz) — fast enough for tests.
+//
+// Returns weighted RMS [m/s²] — the number you put in a comfort report.
 fn iso2631_weighted_rms(acc: &[f64], dt: f64) -> f64 {
     let n   = acc.len();
     let n_f = n as f64;
@@ -200,7 +200,7 @@ fn iso2631_weighted_rms(acc: &[f64], dt: f64) -> f64 {
 // SECTION 4 — Result types
 // ═══════════════════════════════════════════════════════════
 
-/// Full simulation output for a single (k, c, road_profile) run.
+// Full simulation output for a single (k, c, road_profile) run.
 #[derive(Debug, Clone)]
 pub struct SimulationResult {
     // ── Existing fields (unchanged) ──────────────────────────
@@ -212,26 +212,26 @@ pub struct SimulationResult {
     pub wheel_user: Vec<f64>,
 
     // ── Time-domain metrics ───────────────────────────────────
-    /// RMS body acceleration [m/s²]
+    // RMS body acceleration [m/s²]
     pub rms_body_acc: f64,
-    /// RMS tire force [N]
+    // RMS tire force [N]
     pub rms_tire_force: f64,
-    /// Maximum absolute suspension travel [m]
+    // Maximum absolute suspension travel [m]
     pub max_suspension_travel: f64,
 
     // ── ISO 2631-1 metric ─────────────────────────────────────
-    /// Frequency-weighted RMS body acceleration per ISO 2631-1 Wk [m/s²].
-    /// This is the internationally recognised ride comfort number.
-    /// Comfort thresholds (ISO 2631-1 Table 3):
-    ///   < 0.315  : not uncomfortable
-    ///   0.315–0.63 : a little uncomfortable
-    ///   0.5–1.0  : fairly uncomfortable
-    ///   0.8–1.6  : uncomfortable
-    ///   > 2.0    : extremely uncomfortable
+    // Frequency-weighted RMS body acceleration per ISO 2631-1 Wk [m/s²].
+    // This is the internationally recognised ride comfort number.
+    // Comfort thresholds (ISO 2631-1 Table 3):
+    //   < 0.315  : not uncomfortable
+    //   0.315–0.63 : a little uncomfortable
+    //   0.5–1.0  : fairly uncomfortable
+    //   0.8–1.6  : uncomfortable
+    //   > 2.0    : extremely uncomfortable
     pub iso2631_weighted_rms: f64,
 }
 
-/// A single point on the Pareto front from a parameter sweep.
+// A single point on the Pareto front from a parameter sweep.
 #[derive(Debug, Clone)]
 pub struct ParetoPoint {
     pub k: f64,
@@ -243,22 +243,22 @@ pub struct ParetoPoint {
     pub iso2631_weighted_rms: f64,
 }
 
-/// One point in the Frequency Response Function sweep.
+// One point in the Frequency Response Function sweep.
 #[derive(Debug, Clone)]
 pub struct FrfPoint {
-    /// Excitation frequency [Hz]
+    // Excitation frequency [Hz]
     pub freq_hz: f64,
-    /// Ratio of RMS body acceleration to road RMS amplitude [1/s²]
-    /// (acceleration transmissibility)
+    // Ratio of RMS body acceleration to road RMS amplitude [1/s²]
+    // (acceleration transmissibility)
     pub body_acc_transmissibility: f64,
-    /// Ratio of RMS tire force to road RMS amplitude [N/m]
+    // Ratio of RMS tire force to road RMS amplitude [N/m]
     pub tire_force_transmissibility: f64,
 }
 
 // ═══════════════════════════════════════════════════════════
 // SECTION 5 — Core physics
 // ═══════════════════════════════════════════════════════════
-
+#[allow(clippy::too_many_arguments)]
 fn derivatives(
     x1: f64, x2: f64,
     x3: f64, x4: f64,
@@ -285,15 +285,15 @@ fn derivatives(
 // SECTION 6 — Main simulation
 // ═══════════════════════════════════════════════════════════
 
-/// Run a full quarter-car simulation.
-///
-/// # Arguments
-/// * `ms`      — sprung mass [kg]
-/// * `mu`      — unsprung mass [kg]
-/// * `k`       — suspension spring rate [N/m]
-/// * `c`       — damping coefficient [N·s/m]
-/// * `kt`      — tyre stiffness [N/m]
-/// * `profile` — road excitation profile (Step / Sine / Iso8608)
+// Run a full quarter-car simulation.
+//
+// # Arguments
+// * `ms`      — sprung mass [kg]
+// * `mu`      — unsprung mass [kg]
+// * `k`       — suspension spring rate [N/m]
+// * `c`       — damping coefficient [N·s/m]
+// * `kt`      — tyre stiffness [N/m]
+// * `profile` — road excitation profile (Step / Sine / Iso8608)
 pub fn run_simulation(
     ms: f64,
     mu: f64,
@@ -404,7 +404,7 @@ pub fn run_simulation(
 // SECTION 7 — Frequency Response Function (analytical)
 // ═══════════════════════════════════════════════════════════
 
-/// Minimal complex number — no external crate needed.
+// Minimal complex number — no external crate needed.
 #[derive(Clone, Copy)]
 struct Complex { re: f64, im: f64 }
 
@@ -437,17 +437,17 @@ impl From<f64> for Complex {
     fn from(x: f64) -> Self { Self::new(x, 0.0) }
 }
 
-/// Analytical FRF at one frequency via Cramer's rule on the 2-DOF system matrix.
-///
-/// Equations of motion (Laplace, s = jω):
-///   [ms·s²+c·s+k,      -(c·s+k)         ] [X1]   [   0   ]
-///   [-(c·s+k),   mu·s²+c·s+k+kt         ] [X3] = [kt · R ]
-///
-///   X1/R = kt·(c·s+k) / det(M)
-///   X3/R = kt·(ms·s²+c·s+k) / det(M)
-///
-/// Body acc transmissibility = ω²·|X1/R|   [m/s² per m of road]
-/// Tire force transmissibility = kt·|X3/R - 1|  [N per m of road]
+// Analytical FRF at one frequency via Cramer's rule on the 2-DOF system matrix.
+//
+// Equations of motion (Laplace, s = jω):
+//   [ms·s²+c·s+k,      -(c·s+k)         ] [X1]   [   0   ]
+//   [-(c·s+k),   mu·s²+c·s+k+kt         ] [X3] = [kt · R ]
+//
+//   X1/R = kt·(c·s+k) / det(M)
+//   X3/R = kt·(ms·s²+c·s+k) / det(M)
+//
+// Body acc transmissibility = ω²·|X1/R|   [m/s² per m of road]
+// Tire force transmissibility = kt·|X3/R - 1|  [N per m of road]
 fn frf_at_freq(ms: f64, mu: f64, k: f64, c: f64, kt: f64, freq_hz: f64, amplitude: f64) -> FrfPoint {
     let omega = 2.0 * PI * freq_hz;
     let jw    = Complex::new(0.0, omega);   // s = jω
@@ -470,14 +470,14 @@ fn frf_at_freq(ms: f64, mu: f64, k: f64, c: f64, kt: f64, freq_hz: f64, amplitud
     }
 }
 
-/// Compute the analytical FRF across a frequency range.
-///
-/// Uses the exact transfer function — no time-domain simulation, no transient
-/// contamination. Valid at any frequency, instant to compute.
-///
-/// Plot `body_acc_transmissibility` vs `freq_hz` to see:
-///   - Sprung resonance peak:   sqrt(k/ms)/(2π)       [~1–2 Hz]
-///   - Unsprung resonance peak: sqrt((k+kt)/mu)/(2π)  [~10–15 Hz]
+// Compute the analytical FRF across a frequency range.
+//
+// Uses the exact transfer function — no time-domain simulation, no transient
+// contamination. Valid at any frequency, instant to compute.
+//
+// Plot `body_acc_transmissibility` vs `freq_hz` to see:
+//   - Sprung resonance peak:   sqrt(k/ms)/(2π)       [~1–2 Hz]
+//   - Unsprung resonance peak: sqrt((k+kt)/mu)/(2π)  [~10–15 Hz]
 pub fn compute_frf(
     ms: f64,
     mu: f64,
@@ -492,9 +492,9 @@ pub fn compute_frf(
         .collect()
 }
 
-/// Convenience: build a logarithmically spaced frequency vector.
-///
-/// Returns `n` frequencies from `f_min` to `f_max` Hz (log spacing).
+// Convenience: build a logarithmically spaced frequency vector.
+//
+// Returns `n` frequencies from `f_min` to `f_max` Hz (log spacing).
 pub fn log_freq_range(f_min: f64, f_max: f64, n: usize) -> Vec<f64> {
     let log_min = f_min.ln();
     let log_max = f_max.ln();
@@ -507,17 +507,17 @@ pub fn log_freq_range(f_min: f64, f_max: f64, n: usize) -> Vec<f64> {
 // SECTION 8 — Parameter sweep + Pareto front
 // ═══════════════════════════════════════════════════════════
 
-/// Run a 2D grid sweep over spring rate `k` and damping `c`.
-///
-/// # Arguments
-/// * `ms`, `mu`, `kt`  — fixed vehicle parameters
-/// * `k_values`        — spring rates to evaluate [N/m]
-/// * `c_values`        — damping coefficients to evaluate [N·s/m]
-/// * `profile`         — road profile to use for all runs
-///
-/// # Returns
-/// All sweep results as `ParetoPoint`s (full grid, not filtered).
-/// Pass to `extract_pareto_front` to get the optimal subset.
+// Run a 2D grid sweep over spring rate `k` and damping `c`.
+//
+// # Arguments
+// * `ms`, `mu`, `kt`  — fixed vehicle parameters
+// * `k_values`        — spring rates to evaluate [N/m]
+// * `c_values`        — damping coefficients to evaluate [N·s/m]
+// * `profile`         — road profile to use for all runs
+//
+// # Returns
+// All sweep results as `ParetoPoint`s (full grid, not filtered).
+// Pass to `extract_pareto_front` to get the optimal subset.
 pub fn parameter_sweep(
     ms:       f64,
     mu:       f64,
@@ -546,15 +546,15 @@ pub fn parameter_sweep(
     results
 }
 
-/// Extract the Pareto-optimal front from sweep results.
-///
-/// A point is Pareto-optimal if no other point is strictly better
-/// on ALL of: iso2631_weighted_rms, rms_tire_force, max_suspension_travel.
-///
-/// These three objectives directly encode:
-///   iso2631_weighted_rms   → ride comfort   (minimise)
-///   rms_tire_force         → road holding   (minimise)
-///   max_suspension_travel  → packaging      (minimise)
+// Extract the Pareto-optimal front from sweep results.
+//
+// A point is Pareto-optimal if no other point is strictly better
+// on ALL of: iso2631_weighted_rms, rms_tire_force, max_suspension_travel.
+//
+// These three objectives directly encode:
+//   iso2631_weighted_rms   → ride comfort   (minimise)
+//   rms_tire_force         → road holding   (minimise)
+//   max_suspension_travel  → packaging      (minimise)
 pub fn extract_pareto_front(points: &[ParetoPoint]) -> Vec<ParetoPoint> {
     points.iter().filter(|candidate| {
         !points.iter().any(|other| {
@@ -571,12 +571,32 @@ pub fn extract_pareto_front(points: &[ParetoPoint]) -> Vec<ParetoPoint> {
     }).cloned().collect()
 }
 
-/// Build a linearly spaced vector of `n` values from `start` to `end` inclusive.
+// Build a linearly spaced vector of `n` values from `start` to `end` inclusive.
 pub fn linspace(start: f64, end: f64, n: usize) -> Vec<f64> {
     if n == 1 { return vec![start]; }
     (0..n)
         .map(|i| start + (end - start) * i as f64 / (n - 1) as f64)
         .collect()
+}
+
+// ═══════════════════════════════════════════════════════════
+// SECTION 8b — Public wrappers for fusion crate
+// ═══════════════════════════════════════════════════════════
+
+// Generate a pre-computed road displacement profile.
+//
+// Thin public wrapper around `RoadProfile::precompute`.
+// Added for the fusion crate (PRD A) — does not change any existing signature.
+pub fn generate_road_profile(profile: &RoadProfile, dt: f64, n_steps: usize) -> Vec<f64> {
+    profile.precompute(dt, n_steps)
+}
+
+// Public wrapper around the ISO 2631-1 weighted RMS computation.
+//
+// Exposed for cross-checking against the fusion crate's biquad implementation.
+// The core implementation uses a Goertzel/frequency-domain approximation.
+pub fn iso2631_weighted_rms_pub(acc: &[f64], dt: f64) -> f64 {
+    iso2631_weighted_rms(acc, dt)
 }
 
 // ═══════════════════════════════════════════════════════════
