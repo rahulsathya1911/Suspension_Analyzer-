@@ -6,4 +6,4 @@ services:
       - "5432:5432"
     environment:
       POSTGRES USER: postgres
-      POSTGRES PASSWORD: Rahul1911*
+      
