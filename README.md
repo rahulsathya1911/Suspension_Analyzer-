@@ -1,172 +1,187 @@
-# Adaptive Suspension AI
+# Suspension Analyzer
 
-> A high-performance modular platform for modelling vehicle suspension behavior, analyzing ride comfort, and optimizing parameters.
+**AI-enabled suspension digital twin with sensor fusion for ride comfort prediction.**
+
+A proof of concept that links four things in one pipeline: simulated vehicle sensors, an Extended Kalman Filter (EKF) that estimates suspension and road states, a quarter-car digital twin, and a machine-learning model that predicts an ISO 2631-1 ride-comfort score with a 90% prediction interval. The model also reports whether a condition is inside the range it was validated on, and a semi-active mode compares preset damping settings and recommends one only when the evidence is clear.
+
+> **Scope:** everything here runs on **simulated data**. There is no real-vehicle validation yet. See [Known limitations](#known-limitations) before relying on any number.
 
 [![Rust](https://img.shields.io/badge/rust-%23000000.svg?style=for-the-badge&logo=rust&logoColor=white)](#)
-[![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)](#)
-[![License: Academic](https://img.shields.io/badge/License-Academic-blue.svg?style=for-the-badge)](#)
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen?style=for-the-badge)](#)
+[![Python](https://img.shields.io/badge/python-3776AB?style=for-the-badge&logo=python&logoColor=white)](#)
+[![License: Academic](https://img.shields.io/badge/License-Academic-blue.svg?style=for-the-badge)](#license)
 
-## Demo
+## What it does
 
-![Adaptive Suspension UI Placeholder](https://via.placeholder.com/800x450.png?text=UI+Screenshot+Here) 
-<!-- TODO: Add a real screenshot or GIF of the web interface in action here -->
+**1. Suspension analysis tools** (the original platform)
+- Time-domain quarter-car simulation (RK4) against step, sine and ISO 8608 random roads
+- ISO 2631-1 weighted ride comfort, analytical frequency-response sweep, speed sweep
+- Spring-rate vs damping parameter sweep with Pareto front
+- Vehicle and motorcycle parameter helpers, with simulation history stored in PostgreSQL
 
-## Features
-
-- **Fast Time-Domain Simulation:** Custom 2-DOF quarter-car model using an optimized RK4 integrator (`dt = 0.001s`).
-- **Standardized Road Profiles:** Evaluate against Step, Sine, and ISO 8608 random road profiles.
-- **Ride Comfort Analysis:** On-the-fly ISO 2631-1 frequency-weighted RMS acceleration calculation.
-- **Analytical FRF Sweep:** Instantaneous Frequency Response Function via exact Laplace-domain matrix inversion (avoids FFT transient artifacts).
-- **Multi-Objective Optimization:** 2D parameter sweeps (Spring Rate vs. Damping) with automatic Pareto front extraction.
-- **SAE Standards Compliant:** Pluggable vehicle templates based on SAE J2168, J670, and J2704 guidelines.
+**2. Fusion and comfort pipeline** (the digital-twin extension)
+- Synchronises five simulated sensors (body acceleration, wheel acceleration, suspension travel, wheel speed, vehicle speed) onto a 200 Hz clock, with noise, bias, delay, dropout and spike or stuck-at faults
+- 5-state EKF (sprung and unsprung displacement and velocity, plus road height) with innovation gating; dropped readings skip the update step
+- Quarter-car twin driven by the fused road estimate to give a physics comfort value (`p_phys`)
+- Residual ML model (quantile gradient boosting plus conformal widening) predicting comfort with a 90% interval
+- Supported-range check: flags inputs outside the training range, far from it (Mahalanobis distance), or from an unseen road class
+- Semi-active ranking of soft / medium / firm damping, recommended only when the two best 90% intervals do not overlap and the tyre-load and travel limits hold
+- Dashboard "Fusion Mode" showing raw signals, fused states, simulated response, predicted comfort, confidence and validation results
 
 ## Architecture
 
 ```mermaid
 graph TD
-    A[Web UI <br> React/Vite & HTML] -->|HTTP JSON| B(Backend API <br> Rocket)
-    B --> C{Validation Schema}
-    B --> D[Core Physics Engine <br> suspension_core]
-    D --> E[Simulate: RK4 Time Domain]
-    D --> F[FRF: Analytical Frequency Sweep]
-    D --> G[Sweep: Pareto Front Extractor]
-    B --> H[(PostgreSQL Database)]
+    CLI["fusion_cli matrix (Rust)"] --> DS["comfort_dataset.csv + timeseries/*.json"]
+    CLI --> SUM["fusion_summary.json + run_meta.json"]
+    DS --> ML["ml/ml/train.py (Python)"]
+    ML --> RES["comfort_predictions / envelope / semiactive_ranking .json"]
+    UI["frontend/Index.html"] -->|HTTP JSON| API["Rocket backend :8000"]
+    RES --> API
+    SUM --> API
+    API --> CORE["core: simulate / FRF / sweep"]
+    API -->|"/fusion/run"| FUS["fusion crate: sensors, sync, EKF, twin"]
+    API --> DB[("PostgreSQL: simulation history")]
 ```
 
-The system employs a clear separation of concerns. The interactive frontend dispatches JSON configuration payloads to a robust Rocket backend. The backend validates physical constraints before delegating the heavy mathematical lifting to the isolated `suspension_core` crate. Simulation history and metrics can be logged to a PostgreSQL database.
+The Rust CLI runs the scenario matrix and writes the dataset. The Python script trains on it and writes the result files. The backend serves those files (`FUSION_OUT_DIR`, default `out/`) and can also run one fusion scenario live. The dashboard is a static page that calls the backend at `http://localhost:8000`.
 
-## Tech Stack
-
-| Layer | Technology | Why |
-| --- | --- | --- |
-| **Core Engine** | Rust | Maximum performance for RK4 simulation, strong mathematical typing |
-| **Backend API** | Rust (Rocket, SQLx) | Memory safety, blazing fast request handling, async PostgreSQL integration |
-| **Database** | PostgreSQL | Reliable persistent storage of simulation history and parameter sets |
-| **Frontend** | React (Vite) / HTML | Responsive, component-driven configuration panels and interactive charting |
-
-## Project Structure
+## Project structure
 
 ```text
-suspension_app/
-├── backend/            # Rocket API server
-│   ├── Cargo.toml      # Backend dependencies (Rocket, SQLx)
-│   └── src/            
-│       └── main.rs     # API routes, parameter validation, DB queries
-├── core/               # Physics engine (suspension_core)
-│   ├── Cargo.toml
-│   └── src/
-│       └── lib.rs      # RK4 solver, ISO 2631-1 logic, FRF, Pareto sweeps
-├── frontend/           # Legacy/alternative HTML frontend layer
-├── ui/                 # Modern React/Vite UI application
-│   ├── package.json    # UI dependencies (React, Tailwind)
-│   └── src/            # UI components and API client code
-├── compose.yml         # Docker configuration for PostgreSQL database
-└── Cargo.toml          # Cargo Workspace root manifest
+Suspension_Analyzer-/
+├── core/                 # Quarter-car physics: simulate, FRF, sweep (Rust)
+├── fusion/               # Sensors, sync, EKF, twin, comfort metric (Rust)
+│   └── src/bin/fusion_cli.rs   # `fusion_cli matrix` builds the whole dataset
+├── ml/ml/                # Comfort model, envelope, semi-active ranking (Python)
+│   ├── train.py          # Entry point
+│   └── tests/
+├── backend/              # Rocket API (+ fusion routes in src/fusion.rs)
+├── frontend/             # Index.html (dashboard), fusion_mode.html, landing, login
+├── contracts/fixtures/   # Small sample outputs for the dashboard (shown with a SAMPLE DATA badge)
+├── out/                  # Generated dataset, predictions, envelope, plots, time series
+├── check_runs.py         # Prints per-scenario filter diagnostics from a running backend
+├── compose.yml           # PostgreSQL for simulation history
+└── Cargo.toml            # Cargo workspace (backend, core, frontend, fusion)
 ```
 
-## Getting Started
+## Getting started
 
 ### Prerequisites
 
-- [Rust](https://rustup.rs/) (latest stable)
-- [Node.js](https://nodejs.org/) & npm
-- [Docker](https://www.docker.com/) (optional, for PostgreSQL DB)
+- [Rust](https://rustup.rs/) (stable)
+- Python 3.11+ with `pip install -r ml/ml/requirements.txt`
+- [Docker](https://www.docker.com/) (for PostgreSQL)
 
-### Installation & Running
+### 1. Start PostgreSQL
 
-**1. Start the Database**
-```bash
-docker-compose up -d
-```
-<!-- TODO: Document any sqlx database migration/setup steps needed for `simulations` table creation -->
-
-**2. Run the Backend API**
-```bash
-cd backend
-cargo run
-```
-*The server will start on port 8000.*
-
-**3. Run the Frontend UI**
-Open a new terminal session:
-```bash
-cd ui
-npm install
-npm run dev
-```
-*Vite will provide a localhost URL to view the interface.*
-
-## Usage
-
-Trigger a single quarter-car simulation programmatically via the backend API:
+The backend **exits at startup** if it cannot connect to PostgreSQL, so start the database first. Choose a password and keep it out of git.
 
 ```bash
-curl -X POST http://localhost:8000/simulate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "ms": 290.0, 
-    "mu": 40.0, 
-    "k": 22000.0, 
-    "c": 1500.0, 
-    "kt": 190000.0,
-    "travel_limit_mm": 120.0,
-    "road_profile": { "type": "Step", "height": 0.05 }
-  }'
+export POSTGRES_PASSWORD='choose-a-password'
+docker compose up -d
 ```
 
-**Expected Output (Snippet):**
-```json
-{
-  "zeta": 0.297,
-  "mass_ratio": 0.138,
-  "rms_body_acc": 0.842,
-  "rms_tire_force": 412.5,
-  "max_suspension_travel": 0.045,
-  "iso2631_weighted_rms": 0.512,
-  "bottom_out": false
-}
+Create the history table once (columns inferred from the backend's `INSERT` and `/history` query):
+
+```sql
+CREATE TABLE IF NOT EXISTS simulations (
+  id SERIAL PRIMARY KEY,
+  ms DOUBLE PRECISION, mu DOUBLE PRECISION, k DOUBLE PRECISION,
+  c DOUBLE PRECISION, kt DOUBLE PRECISION, road_profile TEXT,
+  zeta DOUBLE PRECISION, mass_ratio DOUBLE PRECISION, recommended_mu DOUBLE PRECISION,
+  rms_body_acc DOUBLE PRECISION, rms_tire_force DOUBLE PRECISION,
+  max_suspension_travel DOUBLE PRECISION, iso2631_weighted_rms DOUBLE PRECISION
+);
 ```
 
-## Configuration & Environment Variables
+### 2. Run the backend (from the repository root)
 
-Create a `.env` file in the root or `backend` directory:
+```bash
+export DATABASE_URL="postgres://postgres:${POSTGRES_PASSWORD}@localhost:5432/postgres"
+cargo run --release -p backend
+```
 
-| Variable | Description | Default |
+The API listens on port 8000. Run it from the repository root so the default `FUSION_OUT_DIR=out/` resolves.
+
+### 3. Open the dashboard
+
+Open `frontend/Index.html` in a browser and choose **Fusion Mode**. It reads the generated files through the backend.
+
+### Rebuild the dataset and models
+
+```bash
+# 1. Simulate the full matrix (3,660 runs; about 8 minutes on 2 CPU cores)
+cargo run --release -p suspension_fusion --bin fusion_cli -- matrix --out out/
+
+# 2. Train the comfort model, envelope and damping ranking (a few seconds)
+cd ml/ml
+python train.py --in ../../out/comfort_dataset.csv --out ../../out
+```
+
+Run `train.py` from inside `ml/ml/`; it imports its sibling modules directly. Add `--mock` to mark outputs as generated from mock data.
+
+### Tests
+
+```bash
+cargo test --workspace      # 51 Rust tests
+```
+
+The Python tests in `ml/ml/tests/` currently look for data under `ml/out/` instead of `out/`, so they fail until that path is fixed (see [Known limitations](#known-limitations)).
+
+## Configuration
+
+| Variable | Required | Description |
 | --- | --- | --- |
-| `DATABASE_URL` | Connection string for PostgreSQL | `postgres://postgres:Rahul1911*@localhost:5432/postgres` (implied by compose.yml) |
+| `DATABASE_URL` | yes | PostgreSQL connection string. No default; the backend exits without it. |
+| `POSTGRES_PASSWORD` | for `compose.yml` | Password for the database container. Never commit it. |
+| `FUSION_OUT_DIR` | no | Folder the `/fusion/*` routes read from. Default `out/`. |
 
-## Testing
+## API
 
-The core engine includes a comprehensive test suite covering mathematical validation and edge cases.
+| Method | Route | Purpose |
+| --- | --- | --- |
+| POST | `/simulate` | Run one quarter-car simulation and store it |
+| GET | `/history` | Past simulations |
+| POST | `/frf` | Frequency-response function |
+| POST | `/sweep` | Parameter sweep with Pareto front |
+| POST | `/speed_sweep`, `/frf_compare` | Speed sweep, FRF comparison |
+| POST | `/vehicle/params`, `/moto/params` | Derive suspension parameters from a vehicle or motorcycle config |
+| GET | `/validation-schema` | Allowed parameter ranges |
+| POST | `/fusion/run` | Run one fusion scenario live |
+| GET | `/fusion/scenarios` | List available scenario ids |
+| GET | `/fusion/data/<name>` | `fusion_summary`, `comfort_predictions`, `envelope`, `semiactive_ranking`, `run_meta` |
+| GET | `/fusion/data/timeseries/<id>` | Time series for one scenario |
 
-```bash
-cargo test -p core
-```
+## Results (simulated data)
 
-## Design Decisions & Trade-offs
+Scenario matrix: road classes A to C, 10 / 20 / 30 m/s, 300 / 440 / 580 kg, damping 1000 / 1800 / 3000 N·s/m, dropout 0 / 5 / 20%, 15 seeds, plus an out-of-distribution set (road D, 40 m/s, 700 kg, 30% dropout). That gives 3,660 runs: 2,430 train, 1,215 test (new seeds, same grid) and 15 out-of-distribution.
 
-- **Quarter-Car 2-DOF Model:** Chosen over a full 7-DOF model to isolate fundamental spring/damper tuning and ensure sub-millisecond API response times. A 4-DOF pitch model is planned.
-- **Analytical FRF Calculation:** The Frequency Response Function is computed via exact matrix inversion (Cramer's rule) in the Laplace domain rather than running a time-domain sweep and performing an FFT. This entirely eliminates transient contamination and windowing artifacts.
-- **ISO 2631-1 Implementation:** The standard's complex Wk weighting filter is implemented via a simplified piecewise log-linear approximation using the Goertzel algorithm. This permits extremely efficient evaluation directly inside the time-domain processor loop.
-- **Pareto Front Extraction in Core:** During parameter sweeps, the core calculates and extracts the Pareto front locally, discarding strictly dominated configurations before responding to the client. This dramatically reduces JSON payload sizes.
+| Check | Result |
+| --- | --- |
+| Comfort MAE on test (m/s²): linear baseline / ML | 0.047 / 0.033 |
+| 90% interval coverage on test | 89.8% |
+| Out-of-distribution runs flagged | 100% (false flags: 1.2% train, 2.0% test) |
+| Semi-active: soft recommended / no clear winner (81 groups) | 17 / 64 |
+| Suspension-travel RMSE: raw sensor / fused | 1.5 mm / 8.2 mm |
+
+## Known limitations
+
+- **Simulated data only.** No real-vehicle or measured-data validation yet.
+- **Sensor fusion is not validated.** The filter uses three of the five channels (body acceleration, wheel acceleration, suspension travel); wheel and vehicle speed are simulated but not used. Fused suspension-travel error is larger than the raw sensor's. The velocity and road-height estimates are poor, and the filter's uncertainty is too narrow (truth lies within its ±2σ band about 34% of the time for the velocity states). The innovation gate rejects most samples and needs retuning.
+- **The twin adds no measured accuracy yet.** In an ablation, a model on scenario inputs alone is as accurate as one that also uses the twin output `p_phys`. Within one road class `p_phys` tracks comfort, but its level is far too low.
+- **The test set measures interpolation.** Test runs use new seeds on the same scenario grid. The out-of-distribution check uses a single configuration.
+- **Quarter-car only.** 13 of 3,660 runs exceed the 120 mm travel limit; how to handle this is still undecided.
+- **Python tests** resolve the data folder one level too deep (`ml/out/` instead of `out/`).
+- **Standards:** the comfort weighting follows ISO 2631-1 and the road profiles follow ISO 8608. Any SAE references in the vehicle and motorcycle parameter helpers should be re-verified before you cite them.
 
 ## Roadmap
 
-- [ ] Implement a 4-DOF half-car pitch model (adding wheelbase, CoG height, and pitch inertia).
-- [ ] Separate compression and rebound damping parameters (`c_comp`, `c_reb`).
-- [ ] UI: Add visual overlays for the last 3 simulation runs on charts.
-- [ ] Incorporate vehicle speed sweeps for comprehensive ISO 2631-1 comfort mapping.
-- [ ] Implement a bottoming-out flag warning for when max travel limits are exceeded.
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Ensure code builds and tests pass (`cargo check && cargo test`)
-4. Commit your changes (`git commit -m 'Add amazing feature'`)
-5. Push to the branch (`git push origin feature/amazing-feature`)
-6. Open a Pull Request
+- [ ] Retune the filter gate and noise settings, then rerun the matrix
+- [ ] Use wheel speed and vehicle speed in the filter
+- [ ] Fix the road-estimate level so the twin output tracks comfort across road classes
+- [ ] Decide how to handle suspension travel beyond the limit
+- [ ] Test against public measured vehicle data
+- [ ] Half-car (4-DOF) pitch model
 
 ## License
 
